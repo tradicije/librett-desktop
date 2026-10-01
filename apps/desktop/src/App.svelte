@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Select from './Select.svelte';
   import { onMount } from 'svelte';
   import Players from './Players.svelte';
   import Icon from './Icon.svelte';
@@ -83,8 +84,8 @@
     <header>
       <span class="eyebrow">{text.tournaments} / LibreTT</span>
       <div class="preferences">
-        <label><Icon name={theme === 'system' ? 'desktop' : theme === 'dark' ? 'moon' : 'sun'} size={18} />{text.theme}<select aria-label={text.theme} bind:value={theme}><option value="system">{text.themeSystem}</option><option value="light">{text.themeLight}</option><option value="dark">{text.themeDark}</option></select></label>
-        <label><Icon name="globe" size={18} />{text.language}<select aria-label={text.language} bind:value={language}><option value="sr">Srpski</option><option value="en">English</option></select></label>
+        <label><Icon name={theme === 'system' ? 'desktop' : theme === 'dark' ? 'moon' : 'sun'} size={18} />{text.theme}<Select label={text.theme} bind:value={theme} options={[{ value: 'system', label: text.themeSystem }, { value: 'light', label: text.themeLight }, { value: 'dark', label: text.themeDark }]} /></label>
+        <label><Icon name="globe" size={18} />{text.language}<Select label={text.language} bind:value={language} options={[{ value: 'sr', label: 'Srpski' }, { value: 'en', label: 'English' }]} /></label>
       </div>
     </header>
     {#if !desktopAvailable}<p class="banner">{text.preview}</p>{/if}
@@ -104,8 +105,8 @@
         <section class="panel form-panel"><h2 class="icon-label"><Icon name="layer-group" />{text.addCategory}</h2>
           <form onsubmit={saveCategory}>
             <label>{text.categoryName}<input bind:value={categoryName} required disabled={busy} /></label>
-            <label>{text.discipline}<select bind:value={discipline} disabled={busy}><option value="singles">{text.singles}</option><option value="doubles">{text.doubles}</option></select></label>
-            <label>{text.format}<select bind:value={format} disabled={busy}><option value="groups_knockout">{text.groups_knockout}</option><option value="knockout">{text.knockout}</option></select></label>
+            <label>{text.discipline}<Select label={text.discipline} bind:value={discipline} options={[{ value: 'singles', label: text.singles }, { value: 'doubles', label: text.doubles }]} disabled={busy} /></label>
+            <label>{text.format}<Select label={text.format} bind:value={format} options={[{ value: 'groups_knockout', label: text.groups_knockout }, { value: 'knockout', label: text.knockout }]} disabled={busy} /></label>
             <button class="primary" disabled={busy || !desktopAvailable}><Icon name="check-circle" size={18} />{busy ? text.saving : text.save}</button>
           </form>
         </section>

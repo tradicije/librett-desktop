@@ -6,6 +6,12 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Added
 
+- Locally bundled Libre Franklin variable font for offline typography.
+- Bilingual README disclosure of AI-assisted programming and human authorship,
+  review, and verification.
+- Theme-colored selection menus with keyboard navigation and typeahead, replacing
+  system-rendered dropdown popups; consistent icon/text alignment.
+
 - Shared light/dark design tokens using the LibreTT palette across the interface.
 - Persisted Light/Dark/System theme selection, live system-theme tracking, and
   theme-specific LibreTT logo variants.

@@ -17,6 +17,13 @@ and uses the corresponding LibreTT logo. Tabler Icons are bundled locally and
 work offline. Their MIT license is preserved separately from LibreTT's AGPL
 license; see [third-party notices](THIRD_PARTY_NOTICES.md).
 
+## AI-assisted development
+
+LibreTT is developed with AI assistance for programming. The project idea,
+architecture, implementation decisions, and tests are authored or reviewed
+and verified by Aleksa Dimitrijević. Human review and verification remain
+part of development; AI assistance does not replace responsibility for the code.
+
 ## Purpose
 
 **Competition data belongs to the community that creates it.** A result produced

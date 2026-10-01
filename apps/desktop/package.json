@@ -11,6 +11,7 @@
     "tauri": "tauri"
   },
   "dependencies": {
+    "@fontsource-variable/libre-franklin": "^5.3.0",
     "@tabler/icons-svelte": "^3.48.0",
     "@tauri-apps/api": "^2.0.0",
     "svelte": "^5.0.0"

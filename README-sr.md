@@ -17,6 +17,13 @@ LibreTT logo. Tabler ikonice su deo lokalnog builda i rade offline. Njihova MIT
 licenca sačuvana je odvojeno od LibreTT AGPL licence;
 pogledaj [napomene o tuđim komponentama](THIRD_PARTY_NOTICES.md).
 
+## Razvoj uz pomoć AI alata
+
+LibreTT se razvija uz pomoć AI alata pri programiranju. Ideju projekta,
+arhitekturu, odluke o implementaciji i testove osmislio je ili pregledao
+i verifikovao Aleksa Dimitrijević. Ljudski pregled i provera sastavni su
+deo razvoja; pomoć AI alata ne zamenjuje odgovornost za kod.
+
 ## Svrha
 
 **Podaci takmičenja pripadaju zajednici koja ih stvara.** Rezultat koji napravi

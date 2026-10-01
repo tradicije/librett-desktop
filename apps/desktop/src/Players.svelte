@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Select from './Select.svelte';
   import { onMount } from 'svelte';
   import Icon from './Icon.svelte';
   import { createPlayer, desktopAvailable, listEntries, listPlayers, registerEntry, type Entry, type Player, type Tournament } from './api';
@@ -85,9 +86,9 @@
       {#each entries as entry (entry.id)}<article class="category"><div><h3>{entry.members.map(p => p.name).join(' / ')}</h3><p>{entry.members.map(p => p.club).filter(Boolean).join(' / ')}</p></div></article>{/each}
     </section>
     <section class="panel form-panel"><h3>{text.register}</h3><form onsubmit={register}>
-      <label>{text.chooseCategory}<select bind:value={categoryId} required disabled={busy}>{#each tournament.categories as item (item.id)}<option value={item.id}>{item.name} · {text[item.discipline]}</option>{/each}</select></label>
-      <label>{text.firstPlayer}<select bind:value={first} required disabled={busy || !entriesLoaded}><option value="" disabled>{text.choosePlayer}</option>{#each available as player (player.id)}<option value={player.id}>{player.name}{player.club ? ` · ${player.club}` : ''}</option>{/each}</select></label>
-      {#if category?.discipline === 'doubles'}<label>{text.secondPlayer}<select bind:value={second} required disabled={busy || !entriesLoaded}><option value="" disabled>{text.choosePlayer}</option>{#each available.filter(p => p.id !== first) as player (player.id)}<option value={player.id}>{player.name}{player.club ? ` · ${player.club}` : ''}</option>{/each}</select></label>{/if}
+      <label>{text.chooseCategory}<Select label={text.chooseCategory} bind:value={categoryId} options={tournament.categories.map(item => ({ value: item.id, label: `${item.name} · ${text[item.discipline]}` }))} disabled={busy} /></label>
+      <label>{text.firstPlayer}<Select label={text.firstPlayer} bind:value={first} options={available.map(player => ({ value: player.id, label: player.name + (player.club ? ` · ${player.club}` : '') }))} disabled={busy || !entriesLoaded} placeholder={text.choosePlayer} /></label>
+      {#if category?.discipline === 'doubles'}<label>{text.secondPlayer}<Select label={text.secondPlayer} bind:value={second} options={available.filter(p => p.id !== first).map(player => ({ value: player.id, label: player.name + (player.club ? ` · ${player.club}` : '') }))} disabled={busy || !entriesLoaded} placeholder={text.choosePlayer} /></label>{/if}
       <button class="primary" disabled={busy || !desktopAvailable || !category || !playersLoaded || !entriesLoaded || !first || (category.discipline === 'doubles' && (!second || first === second))}><Icon name="check-circle" size={18} />{busy ? text.saving : text.register}</button>
     </form></section>
   </div>
