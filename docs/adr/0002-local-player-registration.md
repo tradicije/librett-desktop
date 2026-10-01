@@ -22,5 +22,5 @@ external directories, and draws are future use cases. Registration implies
 neither attendance nor payment. SQLite accessibility does not replace the
 required independent archival format for results.
 
-Schema version 3 supersedes the migration target and backup naming described
-above; see [ADR 0003](0003-player-profiles-and-navigation.md).
+Schema version 4 supersedes the migration target and backup naming described
+above; see [ADR 0004](0004-registration-status-and-attendance.md).

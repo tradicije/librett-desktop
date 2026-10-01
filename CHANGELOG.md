@@ -14,6 +14,14 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Added
 
+- English and Serbian security policies covering vulnerability reporting,
+  supported development versions, local data, and current trust boundaries.
+- Tournament-wide per-player attendance, independent doubles check-in, and
+  registration withdrawal/restoration with status filtering and category totals.
+- SQLite schema version 4 with pre-migration backups and regression tests for
+  attendance ownership, cross-category consistency, and registration preservation.
+- Dark LibreTT logo at the top of both README files.
+
 - List-only Players tab with icon-labeled Add, Edit, and Delete actions and
   dedicated create/edit screens integrated with Back/Forward navigation.
 - Confirmed deletion of unused player profiles, with existing registrations

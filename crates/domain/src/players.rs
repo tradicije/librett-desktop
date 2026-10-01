@@ -68,6 +68,8 @@ pub struct EntryMember {
     pub id: Uuid,
     pub name: String,
     pub club: String,
+    #[serde(default)]
+    pub checked_in: bool,
 }
 
 impl Player {
@@ -85,10 +87,20 @@ impl Player {
     }
 }
 
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum EntryStatus {
+    #[default]
+    Registered,
+    Withdrawn,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Entry {
     pub id: Uuid,
     pub category_id: Uuid,
+    #[serde(default)]
+    pub status: EntryStatus,
     pub members: Vec<EntryMember>,
 }
 
@@ -165,12 +177,14 @@ impl Entry {
         Ok(Self {
             id: Uuid::new_v4(),
             category_id,
+            status: EntryStatus::Registered,
             members: members
                 .into_iter()
                 .map(|player| EntryMember {
                     id: player.id,
                     name: player.name,
                     club: player.club,
+                    checked_in: false,
                 })
                 .collect(),
         })

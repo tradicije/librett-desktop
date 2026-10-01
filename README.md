@@ -1,3 +1,5 @@
+![LibreTT](assets/img/logo-dark.png)
+
 # LibreTT
 
 [Srpski](README-sr.md)
@@ -26,6 +28,11 @@ retained to preserve competition history. Profiles have editable birth year,
 location, contact details, notes, and locally stored photos; tournaments register
 participants from that directory. The local operator manages profiles; user
 accounts and enforced administrator permissions are not implemented yet.
+
+Tournament entries support withdrawal/restoration and individual player check-in
+shared across categories in the same tournament. Payment accounting remains
+planned. Read the [security policy](SECURITY.md) before reporting vulnerabilities
+or sharing local databases.
 
 ## AI-assisted development
 

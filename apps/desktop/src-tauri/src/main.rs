@@ -3,7 +3,9 @@
 use librett_application::{
     self as application, ApplicationError, PlayerRepository, TournamentRepository,
 };
-use librett_domain::{CompetitionFormat, Discipline, Entry, Player, PlayerProfile, Tournament};
+use librett_domain::{
+    CompetitionFormat, Discipline, Entry, EntryStatus, Player, PlayerProfile, Tournament,
+};
 use librett_storage_sqlite::SqliteTournamentRepository;
 use std::sync::Mutex;
 use tauri::Manager;
@@ -74,6 +76,8 @@ fn main() {
             create_player,
             save_player_profile,
             list_entries,
+            set_entry_status,
+            set_player_attendance,
             register_entry
         ])
         .run(context)
@@ -167,5 +171,35 @@ fn delete_player(database: tauri::State<Database>, id: String) -> Result<(), App
     application::delete_player(
         &mut *database.0.lock().map_err(|_| ApplicationError::Storage)?,
         Uuid::parse_str(&id).map_err(|_| ApplicationError::NotFound)?,
+    )
+}
+
+#[tauri::command]
+fn set_entry_status(
+    database: tauri::State<Database>,
+    tournament_id: String,
+    entry_id: String,
+    status: EntryStatus,
+) -> Result<(), ApplicationError> {
+    application::set_entry_status(
+        &mut *database.0.lock().map_err(|_| ApplicationError::Storage)?,
+        Uuid::parse_str(&tournament_id).map_err(|_| ApplicationError::NotFound)?,
+        Uuid::parse_str(&entry_id).map_err(|_| ApplicationError::NotFound)?,
+        status,
+    )
+}
+
+#[tauri::command]
+fn set_player_attendance(
+    database: tauri::State<Database>,
+    tournament_id: String,
+    player_id: String,
+    checked_in: bool,
+) -> Result<(), ApplicationError> {
+    application::set_player_attendance(
+        &mut *database.0.lock().map_err(|_| ApplicationError::Storage)?,
+        Uuid::parse_str(&tournament_id).map_err(|_| ApplicationError::NotFound)?,
+        Uuid::parse_str(&player_id).map_err(|_| ApplicationError::NotFound)?,
+        checked_in,
     )
 }

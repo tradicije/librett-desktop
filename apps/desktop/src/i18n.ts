@@ -1,4 +1,10 @@
 const sr = {
+  activeRegistrations: 'Aktivne prijave', withdrawnRegistrations: 'Povučene prijave', arrivedPlayers: 'Prisutni u aktivnim prijavama',
+  arrived: 'Prisutan', notArrived: 'Dolazak nije potvrđen', markArrived: 'Potvrdi dolazak', markAbsent: 'Poništi dolazak',
+  withdrawEntry: 'Povuci prijavu', restoreEntry: 'Vrati prijavu', registrationUpdated: 'Status prijave je sačuvan.',
+  attendanceUpdated: 'Dolazak je sačuvan za ceo turnir.', entryFilter: 'Prikaži prijave', allRegistrations: 'Sve prijave',
+  noFilteredEntries: 'Nema prijava za izabrani status.',
+
   player_not_found: 'Igrač nije pronađen. Vrati se na listu igrača.',
   playerEditorIntro: 'Unesi detalje profila igrača.', deletePlayer: 'Obriši', cancelDelete: 'Otkaži',
   deletePlayerPrompt: 'Trajno obrisati igrača', playerDeleted: 'Igrač je obrisan.',
@@ -42,6 +48,12 @@ const sr = {
 };
 type Messages = typeof sr;
 const en: Messages = {
+  activeRegistrations: 'Active registrations', withdrawnRegistrations: 'Withdrawn registrations', arrivedPlayers: 'Checked-in active players',
+  arrived: 'Checked in', notArrived: 'Not checked in', markArrived: 'Check in', markAbsent: 'Undo check-in',
+  withdrawEntry: 'Withdraw entry', restoreEntry: 'Restore entry', registrationUpdated: 'Registration status saved.',
+  attendanceUpdated: 'Attendance saved for the whole tournament.', entryFilter: 'Show registrations', allRegistrations: 'All registrations',
+  noFilteredEntries: 'No registrations match this status.',
+
   player_not_found: 'Player not found. Return to the player list.',
   playerEditorIntro: 'Enter the player profile details.', deletePlayer: 'Delete', cancelDelete: 'Cancel',
   deletePlayerPrompt: 'Permanently delete player', playerDeleted: 'Player deleted.',

@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 mod players;
-pub use players::{Entry, EntryMember, Player, PlayerProfile};
+pub use players::{Entry, EntryMember, EntryStatus, Player, PlayerProfile};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]

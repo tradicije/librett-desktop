@@ -7,6 +7,9 @@ documentation, translations, bug reports, and implementation when development
 begins. The project is in early development; see
 [development setup](docs/en/DEVELOPMENT.md) for requirements and check commands.
 
+For vulnerabilities, follow the [security policy](SECURITY.md) rather than
+posting sensitive details in a public issue.
+
 ## Before making a change
 
 Read the [README](README.md) and the

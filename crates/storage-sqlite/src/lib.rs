@@ -5,6 +5,7 @@ use std::{path::Path, time::Duration};
 use uuid::Uuid;
 
 mod players;
+mod registration;
 
 pub struct SqliteTournamentRepository {
     connection: Connection,
@@ -15,9 +16,9 @@ impl SqliteTournamentRepository {
         let path = path.as_ref();
         let connection = Connection::open(path)?;
         let version: i64 = connection.query_row("PRAGMA user_version", [], |row| row.get(0))?;
-        if (1..3).contains(&version) {
+        if (1..4).contains(&version) {
             // VACUUM INTO creates a consistent SQLite snapshot before changing an existing schema.
-            let backup = path.with_extension(format!("pre-v3-{}.sqlite", Uuid::new_v4()));
+            let backup = path.with_extension(format!("pre-v4-{}.sqlite", Uuid::new_v4()));
             connection.execute("VACUUM INTO ?1", [backup.to_string_lossy().as_ref()])?;
         }
         Self::initialize(connection)
@@ -27,7 +28,7 @@ impl SqliteTournamentRepository {
         connection.busy_timeout(Duration::from_secs(5))?;
         connection.execute_batch("PRAGMA foreign_keys = ON;")?;
         let version: i64 = connection.query_row("PRAGMA user_version", [], |row| row.get(0))?;
-        if version > 3 {
+        if version > 4 {
             return Err(rusqlite::Error::InvalidQuery);
         }
         if version == 0 {
@@ -43,6 +44,11 @@ impl SqliteTournamentRepository {
         if version < 3 {
             let transaction = connection.transaction()?;
             transaction.execute_batch(include_str!("../migrations/003_player_profiles.sql"))?;
+            transaction.commit()?;
+        }
+        if version < 4 {
+            let transaction = connection.transaction()?;
+            transaction.execute_batch(include_str!("../migrations/004_registration_status.sql"))?;
             transaction.commit()?;
         }
         Ok(Self { connection })

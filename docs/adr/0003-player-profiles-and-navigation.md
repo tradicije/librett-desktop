@@ -41,3 +41,6 @@ Deleting an unused profile requires UI confirmation and removes it from SQLite.
 A conditional DELETE refuses players referenced by entry_members with a typed
 player_in_use error. Existing registrations and snapshots remain unchanged;
 this is not a withdrawal action. Missing IDs report not_found.
+
+Schema version 4 supersedes the migration target and backup name described
+above; see [ADR 0004](0004-registration-status-and-attendance.md).

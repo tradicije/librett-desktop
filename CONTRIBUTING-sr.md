@@ -7,6 +7,9 @@ dokumentacija, prevodi, prijave grešaka i implementacija kada razvoj počne.
 Projekat je u ranom razvoju; zahtevi i komande za provere nalaze se u
 [razvojnom uputstvu](docs/sr/DEVELOPMENT.md).
 
+Za ranjivosti prati [bezbednosnu politiku](SECURITY-sr.md), bez objavljivanja
+osetljivih detalja u javnom issue-u.
+
 ## Pre izmene
 
 Pročitaj [README](README-sr.md) i

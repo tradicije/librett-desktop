@@ -1,6 +1,6 @@
 use super::*;
 use librett_application::PlayerRepository;
-use librett_domain::{Entry, EntryMember, Player, PlayerProfile};
+use librett_domain::{Entry, EntryMember, EntryStatus, Player, PlayerProfile};
 
 fn read_player(row: &rusqlite::Row<'_>) -> rusqlite::Result<Player> {
     let id: String = row.get(0)?;
@@ -85,20 +85,22 @@ impl PlayerRepository for SqliteTournamentRepository {
         }
         let mut statement = self
             .connection
-            .prepare("SELECT id FROM entries WHERE category_id = ?1 ORDER BY rowid")
+            .prepare("SELECT id, status FROM entries WHERE category_id = ?1 ORDER BY rowid")
             .map_err(|_| ApplicationError::Storage)?;
         let ids = statement
-            .query_map([category_id.to_string()], |row| row.get::<_, String>(0))
+            .query_map([category_id.to_string()], |row| {
+                Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+            })
             .map_err(|_| ApplicationError::Storage)?;
         ids.map(|id| {
-            let id = id.map_err(|_| ApplicationError::Storage)?;
-            let mut members_statement = self.connection.prepare("SELECT player_id, name_snapshot, club_snapshot FROM entry_members WHERE entry_id = ?1 ORDER BY position").map_err(|_| ApplicationError::Storage)?;
-            let rows = members_statement.query_map([&id], |row| Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?, row.get::<_, String>(2)?))).map_err(|_| ApplicationError::Storage)?;
+            let (id, status) = id.map_err(|_| ApplicationError::Storage)?;
+            let mut members_statement = self.connection.prepare("SELECT em.player_id, em.name_snapshot, em.club_snapshot, COALESCE(pa.checked_in, 0) FROM entry_members em JOIN categories c ON c.id = em.category_id LEFT JOIN player_attendance pa ON pa.tournament_id = c.tournament_id AND pa.player_id = em.player_id WHERE em.entry_id = ?1 ORDER BY em.position").map_err(|_| ApplicationError::Storage)?;
+            let rows = members_statement.query_map([&id], |row| Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?, row.get::<_, String>(2)?, row.get::<_, bool>(3)?))).map_err(|_| ApplicationError::Storage)?;
             let members = rows.map(|row| {
-                let (id, name, club) = row.map_err(|_| ApplicationError::Storage)?;
-                Ok(EntryMember { id: Uuid::parse_str(&id).map_err(|_| ApplicationError::Storage)?, name, club })
+                let (id, name, club, checked_in) = row.map_err(|_| ApplicationError::Storage)?;
+                Ok(EntryMember { id: Uuid::parse_str(&id).map_err(|_| ApplicationError::Storage)?, name, club, checked_in })
             }).collect::<Result<Vec<_>, ApplicationError>>()?;
-            Ok(Entry { id: Uuid::parse_str(&id).map_err(|_| ApplicationError::Storage)?, category_id, members })
+            Ok(Entry { id: Uuid::parse_str(&id).map_err(|_| ApplicationError::Storage)?, category_id, status: match status.as_str() { "registered" => EntryStatus::Registered, "withdrawn" => EntryStatus::Withdrawn, _ => return Err(ApplicationError::Storage) }, members })
         }).collect()
     }
 

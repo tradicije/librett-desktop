@@ -518,3 +518,12 @@ textarea:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px;
 .confirm-dialog::backdrop { background: #0008; }
 .confirm-dialog p { line-height: 1.6; overflow-wrap: anywhere; }
 .dialog-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; }
+
+.entry-card { padding: 20px 0; border-top: 1px solid var(--border-subtle); margin-top: 16px; }
+.entry-heading, .attendance-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.entry-heading h3 { margin: 0; }
+.attendance-row { margin: 12px 0; font-size: 12px; }
+.attendance-row > span { overflow-wrap: anywhere; }
+.attendance-row button { flex-shrink: 0; }
+.entry-withdrawn .entry-heading { color: var(--text-muted); }
+@media(max-width:650px) { .entry-heading, .attendance-row { flex-wrap: wrap; } }

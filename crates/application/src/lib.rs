@@ -104,7 +104,13 @@ pub fn register_entry(
         return Err(ApplicationError::AlreadyRegistered);
     }
     repository.insert_entry(&entry)?;
-    Ok(entry)
+    // Read the registration projection so previously recorded tournament-wide
+    // attendance is reflected when entering an additional category.
+    repository
+        .list_entries(category_id)?
+        .into_iter()
+        .find(|saved| saved.id == entry.id)
+        .ok_or(ApplicationError::Storage)
 }
 
 pub trait TournamentRepository {
@@ -142,4 +148,37 @@ pub fn add_category(
         .ok_or(ApplicationError::Storage)?;
     repository.insert_category(tournament_id, category)?;
     Ok(tournament)
+}
+
+pub trait RegistrationRepository {
+    fn set_entry_status(
+        &mut self,
+        tournament_id: Uuid,
+        entry_id: Uuid,
+        status: librett_domain::EntryStatus,
+    ) -> Result<(), ApplicationError>;
+    fn set_player_attendance(
+        &mut self,
+        tournament_id: Uuid,
+        player_id: Uuid,
+        checked_in: bool,
+    ) -> Result<(), ApplicationError>;
+}
+
+pub fn set_entry_status(
+    repository: &mut impl RegistrationRepository,
+    tournament_id: Uuid,
+    entry_id: Uuid,
+    status: librett_domain::EntryStatus,
+) -> Result<(), ApplicationError> {
+    repository.set_entry_status(tournament_id, entry_id, status)
+}
+
+pub fn set_player_attendance(
+    repository: &mut impl RegistrationRepository,
+    tournament_id: Uuid,
+    player_id: Uuid,
+    checked_in: bool,
+) -> Result<(), ApplicationError> {
+    repository.set_player_attendance(tournament_id, player_id, checked_in)
 }

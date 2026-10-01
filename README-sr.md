@@ -1,3 +1,5 @@
+![LibreTT](assets/img/logo-dark.png)
+
 # LibreTT
 
 [English](README.md)
@@ -25,6 +27,11 @@ Brisanje traži potvrdu, a igrači sa prijavama se čuvaju radi istorije takmič
 Profili podržavaju izmenu godišta, lokacije, kontakta, beleški i
 lokalno sačuvanih fotografija; turniri prijavljuju učesnike iz te baze. Profilima
 upravlja lokalni operater; nalozi i kontrola administratorskih prava još nisu implementirani.
+
+Prijave podržavaju povlačenje i vraćanje, a dolazak se potvrđuje po igraču za ceo
+turnir, kroz sve kategorije. Evidencija uplata je sledeći planirani korak.
+Pogledaj [bezbednosnu politiku](SECURITY-sr.md) za prijave ranjivosti i deljenje
+lokalnih baza.
 
 ## Razvoj uz pomoć AI alata
 
