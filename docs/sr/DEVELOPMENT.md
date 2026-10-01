@@ -48,6 +48,24 @@ Izvor desktop ikonice je `assets/img/app-icon.png`. Tauri PNG, ICO i ICNS
 varijante su u `apps/desktop/src-tauri/icons/`: to su aplikacioni resursi,
 a ne razvojni keš. Za promenu ikonice prozora restartuj desktop aplikaciju.
 
+Na Linuxu/Wayland-u sistem pronalazi ikonicu preko `.desktop` zapisa koji odgovara
+identitetu `org.librett.desktop`, umesto preko slike ugrađene u prozor. Uključena je
+registracija GTK identiteta; GTK dozvoljava jednu instancu aplikacije po sesiji sa
+tim identitetom. Za razvojnu kopiju registruj ikonicu jednom (i ponovo kada je menjaš):
+
+```sh
+npm run desktop:install-icon
+```
+
+Komanda kopira PNG slike u `$XDG_DATA_HOME/icons/hicolor` i postavlja skriveni
+`org.librett.desktop.desktop` zapis u `$XDG_DATA_HOME/applications` (podrazumevano:
+`~/.local/share`). Osvežava KDE keš kada je dostupan. To su lokalni sistemski
+fajlovi van repozitorijuma. Zapis povezuje pokrenute prozore sa ikonicom; ne dodaje
+pokretač u meni. Zaustavi pa ponovo pokreni desktop razvojnu komandu. Postojeći
+zapisi koji nisu razvojni ostaju netaknuti. Budući instaleri moraju samostalno
+obezbediti isti identitet i ikonicu.
+Pogledaj [Tauri GTK identitet](https://v2.tauri.app/reference/config/#enablegtkappid).
+
 Koristimo zvanični `@tabler/icons-svelte` paket. Uvozimo samo potrebne komponente,
 koje nasleđuju boju preko `currentColor` i pakuju se za offline rad. Dekorativne
 ikonice prate tekstualne oznake. Spoljni folder sa bibliotekom nije potreban.

@@ -10,6 +10,7 @@
     "frontendDist": "../dist"
   },
   "app": {
+    "enableGTKAppId": true,
     "windows": [{ "title": "LibreTT", "width": 1200, "height": 800, "minWidth": 760, "minHeight": 560 }],
     "security": { "csp": "default-src 'self'; connect-src ipc: http://ipc.localhost; style-src 'self' 'unsafe-inline'; img-src 'self' data:" }
   },

@@ -48,6 +48,25 @@ The desktop icon source is `assets/img/app-icon.png`. Tauri-generated PNG, ICO,
 and ICNS files live in `apps/desktop/src-tauri/icons/` and are application assets,
 not development caches. The native window icon requires restarting the desktop.
 
+On Linux/Wayland the shell resolves the icon through a `.desktop` entry matching
+`org.librett.desktop`, rather than the embedded window image. GTK application ID
+registration is enabled; GTK permits one application instance per session under
+that ID. For a development checkout, register the icon once (and again after
+changing the icon):
+
+```sh
+npm run desktop:install-icon
+```
+
+This copies PNGs into `$XDG_DATA_HOME/icons/hicolor` and installs a hidden
+`org.librett.desktop.desktop` entry in `$XDG_DATA_HOME/applications` (default:
+`~/.local/share`). It refreshes KDE's desktop cache when available. These are
+local system integration files, outside the repository. The entry matches running
+windows; it does not add a launcher. Stop and restart the desktop dev command.
+Existing non-development desktop entries are left untouched. Release installers
+must provide the same desktop identity and icon independently of this dev helper.
+See [Tauri GTK application ID configuration](https://v2.tauri.app/reference/config/#enablegtkappid).
+
 Icons use the official `@tabler/icons-svelte` package. Only selected components
 are imported, rendered using `currentColor`, and bundled for offline use.
 Decorative icons accompany visible labels. There is no external icon-library

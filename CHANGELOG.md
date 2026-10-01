@@ -6,6 +6,9 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Added
 
+- Enabled GTK application identity and added Linux development icon registration
+  so Wayland desktops can match running windows to the LibreTT icon.
+
 - Locally bundled Libre Franklin variable font for offline typography.
 - Bilingual README disclosure of AI-assisted programming and human authorship,
   review, and verification.
