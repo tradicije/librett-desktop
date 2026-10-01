@@ -12,6 +12,11 @@ i prijave sa istorijskim snimkom imena/kluba. Ceo tok
 turnira i instaleri za izdanja još nisu dostupni. Pogledaj
 [razvojno uputstvo](docs/sr/DEVELOPMENT.md) za pokretanje i provere.
 
+Interfejs ima svetlu, tamnu i sistemsku temu, pamti izbor i prikazuje odgovarajući
+LibreTT logo. Tabler ikonice su deo lokalnog builda i rade offline. Njihova MIT
+licenca sačuvana je odvojeno od LibreTT AGPL licence;
+pogledaj [napomene o tuđim komponentama](THIRD_PARTY_NOTICES.md).
+
 ## Svrha
 
 **Podaci takmičenja pripadaju zajednici koja ih stvara.** Rezultat koji napravi

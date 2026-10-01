@@ -37,6 +37,24 @@ Singles/doubles and category formats are stored settings; draw and match engines
 are not implemented. There is no result entry, attendance tracking, cash desk,
 export/restore UI, or installer yet. Development version `0.1.0` is not a release.
 
+## Themes and icons
+
+The theme selector supports Light, Dark, and System; System follows live OS
+changes. Theme and language preferences are local to the UI. Tournament data
+remains in SQLite. The supplied `assets/img/logo-light.png` and `logo-dark.png`
+are bundled into the application, so logos work offline.
+
+The desktop icon source is `assets/img/app-icon.png`. Tauri-generated PNG, ICO,
+and ICNS files live in `apps/desktop/src-tauri/icons/` and are application assets,
+not development caches. The native window icon requires restarting the desktop.
+
+Icons use the official `@tabler/icons-svelte` package. Only selected components
+are imported, rendered using `currentColor`, and bundled for offline use.
+Decorative icons accompany visible labels. There is no external icon-library
+folder requirement. Preserve [Tabler's MIT notice](../../docs/licenses/tabler-icons-MIT.txt)
+when distributing the application. Restart the dev command after installing
+new dependencies if Vite does not pick them up.
+
 ## Checks
 
 ```sh

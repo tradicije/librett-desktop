@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import Icon from './Icon.svelte';
   import { createPlayer, desktopAvailable, listEntries, listPlayers, registerEntry, type Entry, type Player, type Tournament } from './api';
   import { errorKey, messages, type Language, type MessageKey } from './i18n';
 
@@ -64,21 +65,21 @@
 </script>
 
 <section class="players-section">
-  <h2>{text.players}</h2>
+  <h2 class="icon-label"><Icon name="users" />{text.players}</h2>
   {#if error}<p class="error" role="alert">{text[error]}<button disabled={loading || busy} onclick={() => { reload += 1; void loadPlayers(); }}>{text.retry}</button></p>{/if}
   <p class="notice" role="status">{notice ? text[notice] : ''}</p>
   <div class="columns">
     <section class="panel"><h3>{text.directory}</h3>
-      <label>{text.searchPlayers}<input bind:value={search} type="search" /></label>
+      <label><span class="icon-label"><Icon name="search" size={16} />{text.searchPlayers}</span><input bind:value={search} type="search" /></label>
       {#if loading}<p role="status">{text.loading}</p>{:else if playersLoaded && !filtered.length}<p class="muted">{text.noPlayers}</p>{/if}
       <div class="player-list">{#each filtered as player (player.id)}<article class="category"><div><h3>{player.name}</h3><p>{player.club}</p></div></article>{/each}</div>
     </section>
-    <section class="panel form-panel"><h3>{text.addPlayer}</h3><form onsubmit={savePlayer}>
+    <section class="panel form-panel"><h3 class="icon-label"><Icon name="user-plus" />{text.addPlayer}</h3><form onsubmit={savePlayer}>
       <label>{text.playerName}<input bind:value={name} required disabled={busy} /></label>
       <label>{text.club}<input bind:value={club} disabled={busy} /></label>
-      <button class="primary" disabled={busy || !desktopAvailable || !playersLoaded}>{busy ? text.saving : text.addPlayer}</button>
+      <button class="primary" disabled={busy || !desktopAvailable || !playersLoaded}><Icon name="plus" size={18} />{busy ? text.saving : text.addPlayer}</button>
     </form></section>
-    <section class="panel"><h3>{text.entries}</h3>
+    <section class="panel"><h3 class="icon-label"><Icon name="list" />{text.entries}</h3>
       {#if categoryId && !entriesLoaded && desktopAvailable}<p class="muted">{text.loading}</p>
       {:else if !entries.length}<p class="muted">{text.noEntries}</p>{/if}
       {#each entries as entry (entry.id)}<article class="category"><div><h3>{entry.members.map(p => p.name).join(' / ')}</h3><p>{entry.members.map(p => p.club).filter(Boolean).join(' / ')}</p></div></article>{/each}
@@ -87,7 +88,7 @@
       <label>{text.chooseCategory}<select bind:value={categoryId} required disabled={busy}>{#each tournament.categories as item (item.id)}<option value={item.id}>{item.name} · {text[item.discipline]}</option>{/each}</select></label>
       <label>{text.firstPlayer}<select bind:value={first} required disabled={busy || !entriesLoaded}><option value="" disabled>{text.choosePlayer}</option>{#each available as player (player.id)}<option value={player.id}>{player.name}{player.club ? ` · ${player.club}` : ''}</option>{/each}</select></label>
       {#if category?.discipline === 'doubles'}<label>{text.secondPlayer}<select bind:value={second} required disabled={busy || !entriesLoaded}><option value="" disabled>{text.choosePlayer}</option>{#each available.filter(p => p.id !== first) as player (player.id)}<option value={player.id}>{player.name}{player.club ? ` · ${player.club}` : ''}</option>{/each}</select></label>{/if}
-      <button class="primary" disabled={busy || !desktopAvailable || !category || !playersLoaded || !entriesLoaded || !first || (category.discipline === 'doubles' && (!second || first === second))}>{busy ? text.saving : text.register}</button>
+      <button class="primary" disabled={busy || !desktopAvailable || !category || !playersLoaded || !entriesLoaded || !first || (category.discipline === 'doubles' && (!second || first === second))}><Icon name="check-circle" size={18} />{busy ? text.saving : text.register}</button>
     </form></section>
   </div>
 </section>

@@ -12,6 +12,11 @@ provides local players and category registrations with historical snapshots. The
 full tournament workflow and release installers are not available yet. See
 [development setup](docs/en/DEVELOPMENT.md) for running and checking the project.
 
+The interface supports Light, Dark, and System themes, remembers the selection,
+and uses the corresponding LibreTT logo. Tabler Icons are bundled locally and
+work offline. Their MIT license is preserved separately from LibreTT's AGPL
+license; see [third-party notices](THIRD_PARTY_NOTICES.md).
+
 ## Purpose
 
 **Competition data belongs to the community that creates it.** A result produced

@@ -37,6 +37,23 @@ Singl/dubl i formati se čuvaju kao podešavanja; žreb i mečevi još nisu
 implementirani. Još nema evidencije dolazaka, blagajne, rezultata, interfejsa za izvoz/oporavak
 ili instalera. Razvojna verzija `0.1.0` nije objavljeno izdanje.
 
+## Teme i ikonice
+
+Izbor teme podržava Svetla, Tamna i Sistemska. Sistemska prati promene OS teme
+dok aplikacija radi. Tema i jezik su lokalne UI postavke; podaci turnira ostaju
+u SQLite bazi. `assets/img/logo-light.png` i `logo-dark.png` se pakuju u aplikaciju
+i rade offline.
+
+Izvor desktop ikonice je `assets/img/app-icon.png`. Tauri PNG, ICO i ICNS
+varijante su u `apps/desktop/src-tauri/icons/`: to su aplikacioni resursi,
+a ne razvojni keš. Za promenu ikonice prozora restartuj desktop aplikaciju.
+
+Koristimo zvanični `@tabler/icons-svelte` paket. Uvozimo samo potrebne komponente,
+koje nasleđuju boju preko `currentColor` i pakuju se za offline rad. Dekorativne
+ikonice prate tekstualne oznake. Spoljni folder sa bibliotekom nije potreban.
+Sačuvaj [Tabler MIT napomenu](../licenses/tabler-icons-MIT.txt) pri distribuciji.
+Posle novih zavisnosti restartuj razvojnu komandu ako ih Vite ne prepozna.
+
 ## Provere
 
 ```sh

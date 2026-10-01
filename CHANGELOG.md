@@ -6,6 +6,13 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Added
 
+- Shared light/dark design tokens using the LibreTT palette across the interface.
+- Persisted Light/Dark/System theme selection, live system-theme tracking, and
+  theme-specific LibreTT logo variants.
+- Native desktop icons generated from the supplied LibreTT app icon, replacing
+  the temporary development artwork.
+- Theme-aware Tabler Icons for navigation, categories, player actions, search,
+  preferences, and tournament controls, bundled locally under their MIT license.
 - Documented a per-run Linux WebKitGTK workaround for the reported Wayland
   protocol error; graphical startup confirmation remains pending.
 - Local player directory with optional club names and name/club search.
@@ -46,6 +53,10 @@ draws, attendance, payments, results, archival exports, or release installers.
 
 ### Validation
 
+- Browser verification passed for both palettes and logos, Tabler rendering,
+  theme persistence, live system-theme changes, explicit theme overrides,
+  localized preference labels, and absence of JavaScript errors.
+- Linux desktop compilation check passed with the supplied native app icon.
 - Frontend type/accessibility checks and production build passed.
 - Seven Rust domain/storage tests passed, including database reopening,
   rollback, historical snapshots, and migration backup verification.

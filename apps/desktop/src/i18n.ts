@@ -1,4 +1,5 @@
 const sr = {
+  theme: 'Tema', themeLight: 'Svetla', themeDark: 'Tamna', themeSystem: 'Sistemska',
   players: 'Igrači i prijave', directory: 'Lokalna baza igrača', playerName: 'Ime i prezime', club: 'Klub (opciono)',
   addPlayer: 'Dodaj igrača', searchPlayers: 'Pretraži ime ili klub', noPlayers: 'Nema igrača za prikaz.',
   register: 'Prijavi učesnika', chooseCategory: 'Kategorija', firstPlayer: 'Igrač', secondPlayer: 'Partner za dubl', choosePlayer: 'Izaberi igrača',
@@ -22,6 +23,7 @@ const sr = {
 };
 type Messages = typeof sr;
 const en: Messages = {
+  theme: 'Theme', themeLight: 'Light', themeDark: 'Dark', themeSystem: 'System',
   players: 'Players and registrations', directory: 'Local player directory', playerName: 'Full name', club: 'Club (optional)',
   addPlayer: 'Add player', searchPlayers: 'Search name or club', noPlayers: 'No players to show.',
   register: 'Register entry', chooseCategory: 'Category', firstPlayer: 'Player', secondPlayer: 'Doubles partner', choosePlayer: 'Choose a player',

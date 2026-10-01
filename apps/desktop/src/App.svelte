@@ -1,10 +1,16 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import Players from './Players.svelte';
+  import Icon from './Icon.svelte';
+  import darkLogo from '../../../assets/img/logo-dark.png';
+  import lightLogo from '../../../assets/img/logo-light.png';
+  import { applyTheme, savedTheme, saveTheme, watchSystemTheme, type ThemePreference, type ResolvedTheme } from './theme';
   import { addCategory, createTournament, desktopAvailable, listTournaments, type CompetitionFormat, type Discipline, type Tournament } from './api';
   import { messages, errorKey, savedLanguage, type Language, type MessageKey } from './i18n';
 
   let language = $state<Language>(savedLanguage());
+  let theme = $state<ThemePreference>(savedTheme());
+  let resolvedTheme = $state<ResolvedTheme>(document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light');
   let text = $derived(messages[language]);
   let tournaments = $state<Tournament[]>([]);
   let selectedId = $state<string | null>(null);
@@ -31,6 +37,10 @@
     catch (cause) { error = errorKey(cause); }
     finally { loading = false; }
   }
+  $effect(() => { resolvedTheme = saveTheme(theme); });
+  onMount(() => watchSystemTheme(() => {
+    if (theme === 'system') resolvedTheme = applyTheme(theme);
+  }));
   onMount(() => { if (desktopAvailable) void load(); });
 
   async function create(event: SubmitEvent) {
@@ -62,38 +72,41 @@
 
 <div class="shell">
   <aside>
-    <a class="brand" href="/" onclick={(event) => { event.preventDefault(); if (!busy) select(null); }}>Libre<span>TT</span><small>TABLE TENNIS</small></a>
+    <a class="brand" href="/" onclick={(event) => { event.preventDefault(); if (!busy) select(null); }}><img src={resolvedTheme === 'dark' ? darkLogo : lightLogo} alt="LibreTT" width="2048" height="552" /></a>
     <nav aria-label={text.tournaments}>
-      <button class="active" disabled={busy} onclick={() => select(null)}><span aria-hidden="true">◉</span> {text.tournaments}</button>
-      <div class="future"><span>{text.leagues}</span><small>{text.later}</small></div>
+      <button class="active" disabled={busy} onclick={() => select(null)}><Icon name="trophy" /> {text.tournaments}</button>
+      <div class="future"><span class="icon-label"><Icon name="list" />{text.leagues}</span><small>{text.later}</small></div>
     </nav>
-    <div class="sidebar-bottom"><span class="dot"></span>{text.local}<small>© 2026 Aleksa Dimitrijević</small></div>
+    <div class="sidebar-bottom"><span class="icon-label"><Icon name="desktop" size={16} />{text.local}</span><small>© 2026 Aleksa Dimitrijević</small></div>
   </aside>
   <main>
     <header>
       <span class="eyebrow">{text.tournaments} / LibreTT</span>
-      <label class="language">{text.language}<select bind:value={language}><option value="sr">Srpski</option><option value="en">English</option></select></label>
+      <div class="preferences">
+        <label><Icon name={theme === 'system' ? 'desktop' : theme === 'dark' ? 'moon' : 'sun'} size={18} />{text.theme}<select aria-label={text.theme} bind:value={theme}><option value="system">{text.themeSystem}</option><option value="light">{text.themeLight}</option><option value="dark">{text.themeDark}</option></select></label>
+        <label><Icon name="globe" size={18} />{text.language}<select aria-label={text.language} bind:value={language}><option value="sr">Srpski</option><option value="en">English</option></select></label>
+      </div>
     </header>
     {#if !desktopAvailable}<p class="banner">{text.preview}</p>{/if}
     {#if error}<div class="error" role="alert">{text[error]} {#if !loaded && desktopAvailable}<button disabled={loading} onclick={load}>{text.retry}</button>{/if}</div>{/if}
     <div class="notice" role="status" aria-live="polite">{notice ? text[notice] : ''}</div>
     {#if selected}
-      <button class="back" disabled={busy} onclick={() => select(null)}>← {text.back}</button>
+      <button class="back" disabled={busy} onclick={() => select(null)}><Icon name="arrow-left" size={18} /> {text.back}</button>
       <div class="heading"><div><p class="eyebrow">{text.selected}</p><h1>{selected.name}</h1></div><span class="pill">{selected.categories.length} · {text.categories}</span></div>
       <div class="columns">
         <section class="panel">
           <h2>{text.categories}</h2>
           {#if selected.categories.length === 0}<p class="muted">{text.noCategories}</p>{/if}
           {#each selected.categories as category (category.id)}
-            <article class="category"><span class="category-icon" aria-hidden="true">{category.discipline === 'singles' ? '1' : '2'}</span><div><h3>{category.name}</h3><p>{text[category.discipline]} · {text[category.format]}</p></div></article>
+            <article class="category"><span class="category-icon"><Icon name={category.discipline === 'singles' ? 'user' : 'users'} /></span><div><h3>{category.name}</h3><p>{text[category.discipline]} · {text[category.format]}</p></div></article>
           {/each}
         </section>
-        <section class="panel form-panel"><h2>{text.addCategory}</h2>
+        <section class="panel form-panel"><h2 class="icon-label"><Icon name="layer-group" />{text.addCategory}</h2>
           <form onsubmit={saveCategory}>
             <label>{text.categoryName}<input bind:value={categoryName} required disabled={busy} /></label>
             <label>{text.discipline}<select bind:value={discipline} disabled={busy}><option value="singles">{text.singles}</option><option value="doubles">{text.doubles}</option></select></label>
             <label>{text.format}<select bind:value={format} disabled={busy}><option value="groups_knockout">{text.groups_knockout}</option><option value="knockout">{text.knockout}</option></select></label>
-            <button class="primary" disabled={busy || !desktopAvailable}>{busy ? text.saving : text.save}</button>
+            <button class="primary" disabled={busy || !desktopAvailable}><Icon name="check-circle" size={18} />{busy ? text.saving : text.save}</button>
           </form>
         </section>
       </div>
@@ -104,12 +117,12 @@
         <section class="panel">
           <div class="section-heading"><h2>{text.tournaments}</h2><span class="pill">{tournaments.length}</span></div>
           {#if loading}<p class="muted" role="status">{text.loading}</p>
-          {:else if tournaments.length === 0 && (!desktopAvailable || loaded)}<div class="empty"><span class="empty-icon" aria-hidden="true">↗</span><h3>{text.empty}</h3><p>{text.emptyText}</p></div>
+          {:else if tournaments.length === 0 && (!desktopAvailable || loaded)}<div class="empty"><span class="empty-icon"><Icon name="trophy" size={28} /></span><h3>{text.empty}</h3><p>{text.emptyText}</p></div>
           {:else}
-            {#each tournaments as tournament (tournament.id)}<button class="tournament" disabled={busy} onclick={() => select(tournament.id)}><div><strong>{tournament.name}</strong><small>{tournament.categories.length} · {text.categories}</small></div><span aria-hidden="true">→</span></button>{/each}
+            {#each tournaments as tournament (tournament.id)}<button class="tournament" disabled={busy} onclick={() => select(tournament.id)}><div><strong>{tournament.name}</strong><small>{tournament.categories.length} · {text.categories}</small></div><Icon name="arrow-right" /></button>{/each}
           {/if}
         </section>
-        <section class="panel form-panel"><h2>{text.newTournament}</h2><form onsubmit={create}><label>{text.tournamentName}<input bind:value={tournamentName} required disabled={busy || loading} /></label><button class="primary" disabled={busy || loading || !desktopAvailable || !loaded}>{busy ? text.saving : text.create}</button></form></section>
+        <section class="panel form-panel"><h2 class="icon-label"><Icon name="trophy" />{text.newTournament}</h2><form onsubmit={create}><label>{text.tournamentName}<input bind:value={tournamentName} required disabled={busy || loading} /></label><button class="primary" disabled={busy || loading || !desktopAvailable || !loaded}><Icon name="plus" size={18} />{busy ? text.saving : text.create}</button></form></section>
       </div>
     {/if}
   </main>
