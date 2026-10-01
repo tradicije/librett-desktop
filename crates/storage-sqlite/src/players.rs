@@ -47,6 +47,20 @@ impl PlayerRepository for SqliteTournamentRepository {
         Ok(())
     }
 
+    fn delete_player(&mut self, id: Uuid) -> Result<(), ApplicationError> {
+        // The conditional DELETE is atomic, including against other DB connections.
+        // Registered profiles must remain referenced by historical entries.
+        let changed = self.connection.execute(
+            "DELETE FROM players WHERE id = ?1 AND NOT EXISTS (SELECT 1 FROM entry_members WHERE player_id = ?1)",
+            [id.to_string()],
+        ).map_err(|_| ApplicationError::Storage)?;
+        if changed == 0 {
+            self.find_player(id)?;
+            return Err(ApplicationError::PlayerInUse);
+        }
+        Ok(())
+    }
+
     fn update_player(&mut self, player: &Player) -> Result<(), ApplicationError> {
         let changed = self.connection.execute("UPDATE players SET name=?2, club=?3, birth_year=?4, city=?5, country=?6, email=?7, phone=?8, notes=?9, photo=?10 WHERE id=?1",
             params![player.id.to_string(), player.name, player.club, player.profile.birth_year, player.profile.city, player.profile.country, player.profile.email, player.profile.phone, player.profile.notes, player.profile.photo]).map_err(|_| ApplicationError::Storage)?;
@@ -114,6 +128,63 @@ impl PlayerRepository for SqliteTournamentRepository {
 mod tests {
     use super::*;
     use librett_application::{add_category, create_player, create_tournament, register_entry};
+
+    #[test]
+    fn deletion_removes_unused_profiles_but_preserves_registered_players() {
+        use librett_application::delete_player;
+        let path = std::env::temp_dir().join(format!("librett-delete-{}.sqlite", Uuid::new_v4()));
+        let registered_id;
+        let unused_id;
+        let category_id;
+        let entry;
+        {
+            let mut repository = SqliteTournamentRepository::open(&path).unwrap();
+            let unused = create_player(&mut repository, "Unused", "").unwrap();
+            let registered = create_player(&mut repository, "Registered", "Club").unwrap();
+            registered_id = registered.id;
+            unused_id = unused.id;
+            let tournament = create_tournament(&mut repository, "Cup").unwrap();
+            let tournament = add_category(
+                &mut repository,
+                tournament.id,
+                "Singles",
+                Discipline::Singles,
+                CompetitionFormat::Knockout,
+            )
+            .unwrap();
+            category_id = tournament.categories[0].id;
+            entry = register_entry(
+                &mut repository,
+                tournament.id,
+                category_id,
+                vec![registered_id],
+            )
+            .unwrap();
+            delete_player(&mut repository, unused_id).unwrap();
+            assert_eq!(
+                repository.find_player(unused_id),
+                Err(ApplicationError::NotFound)
+            );
+            assert_eq!(
+                delete_player(&mut repository, unused_id),
+                Err(ApplicationError::NotFound)
+            );
+            assert_eq!(
+                delete_player(&mut repository, registered_id),
+                Err(ApplicationError::PlayerInUse)
+            );
+            assert_eq!(repository.find_player(registered_id).unwrap(), registered);
+        }
+        let repository = SqliteTournamentRepository::open(&path).unwrap();
+        assert_eq!(
+            repository.find_player(unused_id),
+            Err(ApplicationError::NotFound)
+        );
+        assert_eq!(repository.list_players().unwrap().len(), 1);
+        assert_eq!(repository.list_entries(category_id).unwrap(), vec![entry]);
+        drop(repository);
+        std::fs::remove_file(path).unwrap();
+    }
 
     #[test]
     fn profiles_persist_and_edits_leave_registered_names_unchanged() {

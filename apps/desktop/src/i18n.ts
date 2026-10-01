@@ -1,4 +1,9 @@
 const sr = {
+  player_not_found: 'Igrač nije pronađen. Vrati se na listu igrača.',
+  playerEditorIntro: 'Unesi detalje profila igrača.', deletePlayer: 'Obriši', cancelDelete: 'Otkaži',
+  deletePlayerPrompt: 'Trajno obrisati igrača', playerDeleted: 'Igrač je obrisan.',
+  player_in_use: 'Igrač ima postojeće prijave i ne može biti obrisan. Njegove podatke možeš izmeniti.',
+
   goBack: 'Nazad', goForward: 'Napred', goHome: 'Home', playerTab: 'Igrači',
   playerDirectoryIntro: 'Upravljaj zajedničkom bazom igrača za sva takmičenja.',
   registrationDirectoryHint: 'Izaberi igrače iz baze. Nove profile dodaj u tabu Igrači.',
@@ -37,6 +42,11 @@ const sr = {
 };
 type Messages = typeof sr;
 const en: Messages = {
+  player_not_found: 'Player not found. Return to the player list.',
+  playerEditorIntro: 'Enter the player profile details.', deletePlayer: 'Delete', cancelDelete: 'Cancel',
+  deletePlayerPrompt: 'Permanently delete player', playerDeleted: 'Player deleted.',
+  player_in_use: 'This player has existing registrations and cannot be deleted. You can edit their profile.',
+
   goBack: 'Back', goForward: 'Forward', goHome: 'Home', playerTab: 'Players',
   playerDirectoryIntro: 'Manage the shared player directory for all competitions.',
   registrationDirectoryHint: 'Select players from the directory. Add new profiles in the Players tab.',
@@ -77,7 +87,7 @@ export type Language = 'sr' | 'en';
 export const messages = { sr, en };
 export type MessageKey = keyof Messages;
 export function errorKey(error: unknown): MessageKey {
-  return typeof error === 'string' && ['invalid_profile', 'name_required', 'name_too_long', 'duplicate_category', 'not_found', 'storage', 'invalid_members', 'already_registered'].includes(error)
+  return typeof error === 'string' && ['player_in_use', 'invalid_profile', 'name_required', 'name_too_long', 'duplicate_category', 'not_found', 'storage', 'invalid_members', 'already_registered'].includes(error)
     ? error as MessageKey : 'error';
 }
 export function savedLanguage(): Language {

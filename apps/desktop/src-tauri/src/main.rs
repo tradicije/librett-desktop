@@ -69,6 +69,8 @@ fn main() {
             create_tournament,
             add_category,
             list_players,
+            get_player,
+            delete_player,
             create_player,
             save_player_profile,
             list_entries,
@@ -148,5 +150,22 @@ fn save_player_profile(
         &name,
         &club,
         profile,
+    )
+}
+
+#[tauri::command]
+fn get_player(database: tauri::State<Database>, id: String) -> Result<Player, ApplicationError> {
+    database
+        .0
+        .lock()
+        .map_err(|_| ApplicationError::Storage)?
+        .find_player(Uuid::parse_str(&id).map_err(|_| ApplicationError::NotFound)?)
+}
+
+#[tauri::command]
+fn delete_player(database: tauri::State<Database>, id: String) -> Result<(), ApplicationError> {
+    application::delete_player(
+        &mut *database.0.lock().map_err(|_| ApplicationError::Storage)?,
+        Uuid::parse_str(&id).map_err(|_| ApplicationError::NotFound)?,
     )
 }

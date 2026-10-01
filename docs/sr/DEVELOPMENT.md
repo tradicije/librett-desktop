@@ -37,8 +37,9 @@ Singl/dubl i formati se čuvaju kao podešavanja; žreb i mečevi još nisu
 implementirani. Još nema evidencije dolazaka, blagajne, rezultata, interfejsa za izvoz/oporavak
 ili instalera. Razvojna verzija `0.1.0` nije objavljeno izdanje.
 
-Tab Igrači upravlja zajedničkom bazom, profilima i fotografijama. Prijave unutar
-turnira koriste tu bazu. Šema verzije 3 dodaje detalje profila i čuva postojeće
+Tab Igrači prikazuje zajedničku listu. Dodaj/Izmeni otvara zasebne ekrane za
+profile i fotografije, a čuvanje vraća na listu. Brisanje traži potvrdu i čuva
+igrače sa postojećim prijavama. Prijave unutar turnira koriste tu bazu. Šema verzije 3 dodaje detalje profila i čuva postojeće
 prijave; pre migracije starijih baza pravi se konzistentan
 `pre-v3-<uuid>.sqlite` backup.
 

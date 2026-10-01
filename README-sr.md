@@ -20,7 +20,9 @@ pogledaj [napomene o tuđim komponentama](THIRD_PARTY_NOTICES.md).
 Aplikacija počinje izborom načina takmičenja bez bočnog menija. Turniri otvara taj
 modul; Lige je onemogućena dok ne bude implementirana. Nazad/Napred prati istoriju
 ekrana. Home vraća na pregled modula, a sledeći klik na izbor modula. Tab Igrači
-upravlja zajedničkom bazom sa izmenama godišta, lokacije, kontakta, beleški i
+prikazuje zajedničku listu; Dodaj i Izmeni otvaraju zasebne ekrane za profile.
+Brisanje traži potvrdu, a igrači sa prijavama se čuvaju radi istorije takmičenja.
+Profili podržavaju izmenu godišta, lokacije, kontakta, beleški i
 lokalno sačuvanih fotografija; turniri prijavljuju učesnike iz te baze. Profilima
 upravlja lokalni operater; nalozi i kontrola administratorskih prava još nisu implementirani.
 

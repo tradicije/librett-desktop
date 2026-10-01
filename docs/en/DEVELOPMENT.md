@@ -37,8 +37,10 @@ Singles/doubles and category formats are stored settings; draw and match engines
 are not implemented. There is no result entry, attendance tracking, cash desk,
 export/restore UI, or installer yet. Development version `0.1.0` is not a release.
 
-The Players tab manages the shared directory, including editable profiles and
-photos. Tournament registration uses that directory. Schema version 3 adds
+The Players tab shows the shared directory. Add/Edit opens dedicated profile
+screens, including photos, and returns to the list after saving. Delete asks for
+confirmation and protects profiles with existing registrations. Tournament
+registration uses that directory. Schema version 3 adds
 profile fields and keeps existing entries unchanged; older on-disk databases
 receive a consistent `pre-v3-<uuid>.sqlite` backup before migration.
 

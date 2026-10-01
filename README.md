@@ -20,7 +20,9 @@ license; see [third-party notices](THIRD_PARTY_NOTICES.md).
 The app opens on a mode-selection dashboard without a sidebar. Tournaments opens
 its module; Leagues is disabled until implemented. Back/Forward follows screen
 history. Home returns to the module overview, then to mode selection on a second
-click. The Players tab manages a shared directory with editable birth year,
+click. The Players tab shows the shared directory, with Add/Edit opening dedicated
+profile screens. Delete asks for confirmation; players with registrations are
+retained to preserve competition history. Profiles have editable birth year,
 location, contact details, notes, and locally stored photos; tournaments register
 participants from that directory. The local operator manages profiles; user
 accounts and enforced administrator permissions are not implemented yet.

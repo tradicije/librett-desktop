@@ -22,3 +22,6 @@ export const registerEntry = (tournamentId: string, categoryId: string, playerId
 
 export const savePlayerProfile = (id: string | null, name: string, club: string, profile: PlayerProfile) =>
   invoke<Player>('save_player_profile', { id, name, club, profile });
+
+export const getPlayer = (id: string) => invoke<Player>('get_player', { id });
+export const deletePlayer = (id: string) => invoke<void>('delete_player', { id });

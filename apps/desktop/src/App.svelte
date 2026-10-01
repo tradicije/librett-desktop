@@ -3,6 +3,7 @@
   import { onMount } from 'svelte';
   import Players from './Players.svelte';
   import PlayerDirectory from './PlayerDirectory.svelte';
+  import PlayerEditor from './PlayerEditor.svelte';
   import Icon from './Icon.svelte';
   import darkLogo from '../../../assets/img/logo-dark.png';
   import lightLogo from '../../../assets/img/logo-light.png';
@@ -14,10 +15,11 @@
   let theme = $state<ThemePreference>(savedTheme());
   let resolvedTheme = $state<ResolvedTheme>(document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light');
   let text = $derived(messages[language]);
-  type Route = { view: 'dashboard' | 'tournaments' | 'players' | 'tournament'; id?: string };
+  type Route = { view: 'dashboard' | 'tournaments' | 'players' | 'player-create' | 'player-edit' | 'tournament'; id?: string };
   let history = $state<Route[]>([{ view: 'dashboard' }]);
   let historyIndex = $state(0);
   let route = $derived(history[historyIndex]);
+  let inPlayers = $derived(route.view === 'players' || route.view === 'player-create' || route.view === 'player-edit');
   let mode = $derived(route.view === 'dashboard' ? 'dashboard' : 'tournaments');
   let childBusy = $state(false);
   let tournaments = $state<Tournament[]>([]);
@@ -103,8 +105,8 @@
   {#if mode !== 'dashboard'}<aside>
     <a class="brand" href="/" onclick={(event) => { event.preventDefault(); if (!navigationLocked) home(); }}><img src={resolvedTheme === 'dark' ? darkLogo : lightLogo} alt="LibreTT" width="2048" height="552" /></a>
     <nav aria-label={text.navigation}>
-      <button class="nav-item" class:active={route.view !== 'players'} aria-current={route.view !== 'players' ? 'page' : undefined} disabled={navigationLocked} onclick={openTournaments}><Icon name="trophy" />{text.tournaments}</button>
-      <button class="nav-item" class:active={route.view === 'players'} aria-current={route.view === 'players' ? 'page' : undefined} disabled={navigationLocked} onclick={() => navigate({ view: 'players' })}><Icon name="users" />{text.playerTab}</button>
+      <button class="nav-item" class:active={!inPlayers} aria-current={!inPlayers ? 'page' : undefined} disabled={navigationLocked} onclick={openTournaments}><Icon name="trophy" />{text.tournaments}</button>
+      <button class="nav-item" class:active={inPlayers} aria-current={inPlayers ? 'page' : undefined} disabled={navigationLocked} onclick={() => navigate({ view: 'players' })}><Icon name="users" />{text.playerTab}</button>
     </nav>
     <div class="sidebar-bottom"><span class="icon-label"><Icon name="desktop" size={16} />{text.local}</span><small>© 2026 Aleksa Dimitrijević</small></div>
   </aside>{/if}
@@ -143,7 +145,12 @@
         </button>
       </div>
     {:else if route.view === 'players'}
-      <PlayerDirectory {language} bind:busy={childBusy} />
+      <PlayerDirectory {language} bind:busy={childBusy} onadd={() => navigate({ view: 'player-create' })} onedit={(id) => navigate({ view: 'player-edit', id })} ondeletebegin={() => { notice = null; }} />
+    {:else if route.view === 'player-create' || route.view === 'player-edit'}
+      {#key `${route.view}:${route.id ?? ''}`}
+        <PlayerEditor {language} playerId={route.id} bind:busy={childBusy}
+          onsaved={() => { navigate({ view: 'players' }); notice = 'playerSaved'; }} oncancel={() => navigate({ view: 'players' })} />
+      {/key}
     {:else if selected}
       <div class="heading"><div><p class="eyebrow">{text.selected}</p><h1>{selected.name}</h1></div><span class="pill">{selected.categories.length} · {text.categories}</span></div>
       <div class="columns">

@@ -25,3 +25,12 @@
 14. Mode selection has no sidebar. Back/Forward traverses screen history; Home
     returns first to the module overview, then to mode selection. A new navigation
     branch discards forward history. Navigation cannot interrupt pending writes.
+
+15. The Players tab shows the directory without an inline form. Add opens a blank
+    dedicated editor; Edit opens the selected profile on a dedicated screen.
+    Saving/cancelling returns to the list, and both editor routes support history.
+16. Delete cancellation makes no storage call. Confirmation deletes an unused
+    player; attempting to delete a registered player reports an error and retains
+    both the player and registrations. Missing IDs report not_found. Reopening
+    preserves these outcomes. Revisiting a deleted profile never opens a blank
+    form that could recreate it accidentally.

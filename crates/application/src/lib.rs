@@ -5,6 +5,7 @@ use uuid::Uuid;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ApplicationError {
+    PlayerInUse,
     InvalidProfile,
     InvalidMembers,
     AlreadyRegistered,
@@ -31,6 +32,7 @@ pub trait PlayerRepository {
     fn list_players(&self) -> Result<Vec<librett_domain::Player>, ApplicationError>;
     fn find_player(&self, id: Uuid) -> Result<librett_domain::Player, ApplicationError>;
     fn insert_player(&mut self, player: &librett_domain::Player) -> Result<(), ApplicationError>;
+    fn delete_player(&mut self, id: Uuid) -> Result<(), ApplicationError>;
     fn update_player(&mut self, player: &librett_domain::Player) -> Result<(), ApplicationError>;
     fn list_entries(
         &self,
@@ -66,6 +68,13 @@ pub fn save_player_profile(
         repository.insert_player(&player)?;
     }
     Ok(player)
+}
+
+pub fn delete_player(
+    repository: &mut impl PlayerRepository,
+    id: Uuid,
+) -> Result<(), ApplicationError> {
+    repository.delete_player(id)
 }
 
 pub fn register_entry(

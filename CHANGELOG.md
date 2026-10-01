@@ -12,6 +12,11 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Added
 
+- List-only Players tab with icon-labeled Add, Edit, and Delete actions and
+  dedicated create/edit screens integrated with Back/Forward navigation.
+- Confirmed deletion of unused player profiles, with existing registrations
+  protected and missing/deleted profiles handled when revisiting editor history.
+
 - Shared Players tab with editable birth year, location, contact details, notes,
   and offline profile photographs, independent of tournament registration.
 - SQLite schema version 3 with transactional profile migration and consistent

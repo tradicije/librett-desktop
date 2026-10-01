@@ -31,3 +31,13 @@ registration is pending. Forms may be reset on navigation; saved data persists.
 The local operator administers the directory. There is no authentication or
 role-enforcement boundary in the current desktop app. Future companion access
 must define separate authenticated permissions before exposing administration.
+
+The Players tab displays only the directory and row actions. Add/Edit opens
+separate create/edit routes, included in screen history. Editors load a player
+by stable ID and return to the list after saving or cancellation. Revisiting a
+deleted profile displays a missing-player message and no editable form.
+
+Deleting an unused profile requires UI confirmation and removes it from SQLite.
+A conditional DELETE refuses players referenced by entry_members with a typed
+player_in_use error. Existing registrations and snapshots remain unchanged;
+this is not a withdrawal action. Missing IDs report not_found.
