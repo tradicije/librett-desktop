@@ -63,6 +63,12 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible {
   min-height:100vh
 }
 aside {
+  position:sticky;
+  top:0;
+  align-self:flex-start;
+  height:100vh;
+  height:100dvh;
+  overflow-y:auto;
   width:224px;
   flex-shrink:0;
   background:var(--surface);
@@ -375,6 +381,10 @@ aside {
   display:block
 }
 aside {
+  position:static;
+  align-self:auto;
+  height:auto;
+  overflow-y:visible;
   width:100%;
   padding:20px;
   flex-direction:row;
