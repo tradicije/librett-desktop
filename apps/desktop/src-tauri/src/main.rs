@@ -50,6 +50,12 @@ fn add_category(
 }
 
 fn main() {
+    let context = tauri::generate_context!();
+    // GDK's Wayland app_id defaults to the GLib program name. Set it before
+    // GTK initializes so KWin matches the same desktop entry as the taskbar.
+    #[cfg(target_os = "linux")]
+    glib::set_prgname(Some(&context.config().identifier));
+
     tauri::Builder::default()
         .setup(|app| {
             let directory = app.path().app_data_dir()?;
@@ -67,7 +73,7 @@ fn main() {
             list_entries,
             register_entry
         ])
-        .run(tauri::generate_context!())
+        .run(context)
         .expect("Unable to start LibreTT");
 }
 

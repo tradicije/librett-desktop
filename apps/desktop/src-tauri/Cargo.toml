@@ -14,3 +14,6 @@ librett-domain = { path = "../../../crates/domain" }
 librett-application = { path = "../../../crates/application" }
 librett-storage-sqlite = { path = "../../../crates/storage-sqlite" }
 uuid.workspace = true
+
+[target.'cfg(target_os = "linux")'.dependencies]
+glib = "0.18"

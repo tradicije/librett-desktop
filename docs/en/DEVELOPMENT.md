@@ -50,7 +50,8 @@ not development caches. The native window icon requires restarting the desktop.
 
 On Linux/Wayland the shell resolves the icon through a `.desktop` entry matching
 `org.librett.desktop`, rather than the embedded window image. GTK application ID
-registration is enabled; GTK permits one application instance per session under
+registration is enabled, and the GLib program name is set before GTK startup
+so the Wayland window ID also matches. GTK permits one application instance per session under
 that ID. For a development checkout, register the icon once (and again after
 changing the icon):
 

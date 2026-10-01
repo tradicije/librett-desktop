@@ -76,7 +76,6 @@
     <a class="brand" href="/" onclick={(event) => { event.preventDefault(); if (!busy) select(null); }}><img src={resolvedTheme === 'dark' ? darkLogo : lightLogo} alt="LibreTT" width="2048" height="552" /></a>
     <nav aria-label={text.tournaments}>
       <button class="active" disabled={busy} onclick={() => select(null)}><Icon name="trophy" /> {text.tournaments}</button>
-      <div class="future"><span class="icon-label"><Icon name="list" />{text.leagues}</span><small>{text.later}</small></div>
     </nav>
     <div class="sidebar-bottom"><span class="icon-label"><Icon name="desktop" size={16} />{text.local}</span><small>© 2026 Aleksa Dimitrijević</small></div>
   </aside>

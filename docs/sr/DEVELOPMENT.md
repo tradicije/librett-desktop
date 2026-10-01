@@ -50,7 +50,8 @@ a ne razvojni keš. Za promenu ikonice prozora restartuj desktop aplikaciju.
 
 Na Linuxu/Wayland-u sistem pronalazi ikonicu preko `.desktop` zapisa koji odgovara
 identitetu `org.librett.desktop`, umesto preko slike ugrađene u prozor. Uključena je
-registracija GTK identiteta; GTK dozvoljava jednu instancu aplikacije po sesiji sa
+registracija GTK identiteta i GLib naziv pre inicijalizacije GTK-a, tako da
+i Wayland prozor ima isti identitet. GTK dozvoljava jednu instancu aplikacije po sesiji sa
 tim identitetom. Za razvojnu kopiju registruj ikonicu jednom (i ponovo kada je menjaš):
 
 ```sh

@@ -4,6 +4,12 @@ Notable changes to LibreTT are recorded here in English.
 
 ## Unreleased
 
+### Fixed
+
+- Set the Linux GLib program name before GTK startup so the Wayland window ID
+  matches `org.librett.desktop` and KWin can resolve the title-bar icon.
+- Removed the pending leagues tab from navigation during tournament development.
+
 ### Added
 
 - Enabled GTK application identity and added Linux development icon registration
