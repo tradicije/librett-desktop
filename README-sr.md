@@ -7,7 +7,8 @@ stonoteniskih turnira i liga, sa lokalnim radom kao osnovom. LibreTT je naziv
 aplikacije i krovni identitet projekta.
 
 **Status: rani razvoj.** Prvi korak implementira lokalno kreiranje i pregled
-turnira i dodavanje singl/dubl kategorija sa zasebnim izborom formata. Ceo tok
+turnira, singl/dubl kategorije sa zasebnim izborom formata, lokalnu bazu igrača
+i prijave sa istorijskim snimkom imena/kluba. Ceo tok
 turnira i instaleri za izdanja još nisu dostupni. Pogledaj
 [razvojno uputstvo](docs/sr/DEVELOPMENT.md) za pokretanje i provere.
 

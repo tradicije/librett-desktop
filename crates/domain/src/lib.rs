@@ -1,6 +1,9 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+mod players;
+pub use players::{Entry, Player};
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Discipline {
@@ -33,6 +36,7 @@ pub struct Tournament {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum DomainError {
+    InvalidMembers,
     NameRequired,
     NameTooLong,
     DuplicateCategory,
@@ -65,7 +69,11 @@ impl Tournament {
         format: CompetitionFormat,
     ) -> Result<(), DomainError> {
         let name = validated_name(name)?;
-        if self.categories.iter().any(|c| c.name.to_lowercase() == name.to_lowercase()) {
+        if self
+            .categories
+            .iter()
+            .any(|c| c.name.to_lowercase() == name.to_lowercase())
+        {
             return Err(DomainError::DuplicateCategory);
         }
         self.categories.push(Category {
@@ -85,18 +93,41 @@ mod tests {
     #[test]
     fn rejects_blank_and_overlong_names_but_preserves_serbian_text() {
         assert_eq!(Tournament::new(" \n "), Err(DomainError::NameRequired));
-        assert_eq!(Tournament::new(&"ž".repeat(121)), Err(DomainError::NameTooLong));
-        assert_eq!(Tournament::new("  Bubušinac — prolećni kup  ").unwrap().name, "Bubušinac — prolećni kup");
+        assert_eq!(
+            Tournament::new(&"ž".repeat(121)),
+            Err(DomainError::NameTooLong)
+        );
+        assert_eq!(
+            Tournament::new("  Bubušinac — prolećni kup  ")
+                .unwrap()
+                .name,
+            "Bubušinac — prolećni kup"
+        );
         assert!(Tournament::new(&"ž".repeat(120)).is_ok());
     }
 
     #[test]
     fn category_formats_are_independent_and_duplicate_names_are_rejected() {
         let mut tournament = Tournament::new("Kup").unwrap();
-        tournament.add_category("Apsolutna", Discipline::Singles, CompetitionFormat::GroupsKnockout).unwrap();
-        tournament.add_category("Dubl", Discipline::Doubles, CompetitionFormat::Knockout).unwrap();
+        tournament
+            .add_category(
+                "Apsolutna",
+                Discipline::Singles,
+                CompetitionFormat::GroupsKnockout,
+            )
+            .unwrap();
+        tournament
+            .add_category("Dubl", Discipline::Doubles, CompetitionFormat::Knockout)
+            .unwrap();
         assert_eq!(tournament.categories.len(), 2);
-        assert_eq!(tournament.add_category(" APSOLUTNA ", Discipline::Singles, CompetitionFormat::Knockout), Err(DomainError::DuplicateCategory));
+        assert_eq!(
+            tournament.add_category(
+                " APSOLUTNA ",
+                Discipline::Singles,
+                CompetitionFormat::Knockout
+            ),
+            Err(DomainError::DuplicateCategory)
+        );
         assert_eq!(tournament.categories.len(), 2);
     }
 }

@@ -31,9 +31,10 @@ persistent tournaments. The desktop stores `librett.sqlite` in the OS applicatio
 data directory resolved by Tauri for `org.librett.desktop`, outside the checkout.
 It needs no network connection after development dependencies are installed.
 
-The current slice supports tournament creation/listing and adding categories.
+The current slice supports tournaments, categories, local player profiles,
+name/club search, and singles/doubles category registration.
 Singles/doubles and category formats are stored settings; draw and match engines
-are not implemented. There is no result entry, player directory, cash desk,
+are not implemented. There is no result entry, attendance tracking, cash desk,
 export/restore UI, or installer yet. Development version `0.1.0` is not a release.
 
 ## Checks
@@ -56,6 +57,21 @@ singles category with groups then knockout and a doubles category with knockout,
 reject a duplicate category, restart, and verify persistence. Switch languages
 and verify labels/errors change while names remain intact. Disconnect networking
 and repeat. These are required checks, not a claim they have already passed.
+
+## Linux graphics troubleshooting
+
+If compilation succeeds but the window exits with `Error 71 (Protocol error)
+dispatching to Wayland display`, try a per-run WebKitGTK workaround:
+
+```sh
+WEBKIT_DISABLE_DMABUF_RENDERER=1 npm run desktop -- dev
+```
+
+This disables the faster DMABUF rendering path for that process. It is not a
+global application default. See [Tauri Linux graphics guidance](https://v2.tauri.app/develop/debug/linux-graphics/).
+If the failure persists, collect graphics-driver/session details before choosing
+another workaround. A Vite/esbuild `EPIPE` after shutdown may be a consequence
+of the stopped process, rather than an independent TypeScript problem.
 
 ## Repository hygiene
 

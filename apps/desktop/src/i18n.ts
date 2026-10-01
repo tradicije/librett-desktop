@@ -1,4 +1,9 @@
 const sr = {
+  players: 'Igrači i prijave', directory: 'Lokalna baza igrača', playerName: 'Ime i prezime', club: 'Klub (opciono)',
+  addPlayer: 'Dodaj igrača', searchPlayers: 'Pretraži ime ili klub', noPlayers: 'Nema igrača za prikaz.',
+  register: 'Prijavi učesnika', chooseCategory: 'Kategorija', firstPlayer: 'Igrač', secondPlayer: 'Partner za dubl', choosePlayer: 'Izaberi igrača',
+  entries: 'Prijavljeni učesnici', noEntries: 'U ovoj kategoriji još nema prijava.', playerSaved: 'Igrač je sačuvan.', entrySaved: 'Prijava je sačuvana.',
+  invalid_members: 'Singl zahteva jednog igrača, a dubl dva različita igrača.', already_registered: 'Jedan od izabranih igrača je već prijavljen u ovoj kategoriji.',
   tournaments: 'Turniri', leagues: 'Lige', later: 'U pripremi', subtitle: 'Takmičenje počinje ovde.',
   intro: 'Pripremi turnir, odredi kategorije i vodi sve sa svog računara.',
   newTournament: 'Novi turnir', tournamentName: 'Naziv turnira', create: 'Napravi turnir',
@@ -17,6 +22,11 @@ const sr = {
 };
 type Messages = typeof sr;
 const en: Messages = {
+  players: 'Players and registrations', directory: 'Local player directory', playerName: 'Full name', club: 'Club (optional)',
+  addPlayer: 'Add player', searchPlayers: 'Search name or club', noPlayers: 'No players to show.',
+  register: 'Register entry', chooseCategory: 'Category', firstPlayer: 'Player', secondPlayer: 'Doubles partner', choosePlayer: 'Choose a player',
+  entries: 'Registered entries', noEntries: 'This category has no registrations yet.', playerSaved: 'Player saved.', entrySaved: 'Registration saved.',
+  invalid_members: 'Singles requires one player; doubles requires two distinct players.', already_registered: 'One of these players is already registered in this category.',
   tournaments: 'Tournaments', leagues: 'Leagues', later: 'Coming later', subtitle: 'Competition starts here.',
   intro: 'Prepare a tournament, define its categories, and manage everything locally.',
   newTournament: 'New tournament', tournamentName: 'Tournament name', create: 'Create tournament',
@@ -37,7 +47,7 @@ export type Language = 'sr' | 'en';
 export const messages = { sr, en };
 export type MessageKey = keyof Messages;
 export function errorKey(error: unknown): MessageKey {
-  return typeof error === 'string' && ['name_required', 'name_too_long', 'duplicate_category', 'not_found', 'storage'].includes(error)
+  return typeof error === 'string' && ['name_required', 'name_too_long', 'duplicate_category', 'not_found', 'storage', 'invalid_members', 'already_registered'].includes(error)
     ? error as MessageKey : 'error';
 }
 export function savedLanguage(): Language {

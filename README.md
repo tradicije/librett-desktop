@@ -7,7 +7,8 @@ organizing table-tennis tournaments and leagues. LibreTT is both the application
 name and the umbrella project identity.
 
 **Status: early development.** The first slice creates and lists local tournaments
-and adds singles/doubles categories with independently selected formats. The
+and adds singles/doubles categories with independently selected formats. It also
+provides local players and category registrations with historical snapshots. The
 full tournament workflow and release installers are not available yet. See
 [development setup](docs/en/DEVELOPMENT.md) for running and checking the project.
 

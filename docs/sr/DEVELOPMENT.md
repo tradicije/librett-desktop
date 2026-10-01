@@ -31,9 +31,10 @@ Desktop čuva `librett.sqlite` u sistemskom direktorijumu aplikacionih podataka
 koji Tauri određuje za `org.librett.desktop`, van repozitorijuma.
 Posle instalacije razvojnih zavisnosti lokalne operacije ne zahtevaju internet.
 
-Prvi korak podržava kreiranje/pregled turnira i dodavanje kategorija.
+Trenutno podržavamo turnire, kategorije, lokalne igrače, pretragu po imenu/klubu
+i prijavljivanje singl/dubl učesnika.
 Singl/dubl i formati se čuvaju kao podešavanja; žreb i mečevi još nisu
-implementirani. Još nema igrača, blagajne, rezultata, interfejsa za izvoz/oporavak
+implementirani. Još nema evidencije dolazaka, blagajne, rezultata, interfejsa za izvoz/oporavak
 ili instalera. Razvojna verzija `0.1.0` nije objavljeno izdanje.
 
 ## Provere
@@ -56,6 +57,20 @@ grupama pa nokautom i dubl sa direktnim nokautom, proveri odbijanje duplikata,
 restartuj i proveri podatke. Promeni jezik: poruke se menjaju, uneti nazivi
 ostaju isti. Isključi mrežu i ponovi. Ovo su potrebne provere, ne tvrdnja da
 su već uspešno izvršene.
+
+## Linux grafika
+
+Ako kompajliranje prođe, ali prozor padne uz `Error 71 (Protocol error)
+dispatching to Wayland display`, probaj WebKitGTK podešavanje za jedno pokretanje:
+
+```sh
+WEBKIT_DISABLE_DMABUF_RENDERER=1 npm run desktop -- dev
+```
+
+Time se isključuje brži DMABUF put za taj proces; ovo nije globalno podešavanje
+aplikacije. Pogledaj [Tauri uputstvo](https://v2.tauri.app/develop/debug/linux-graphics/).
+Ako ne pomogne, proveravamo grafički drajver i sesiju pre drugog rešenja.
+Vite/esbuild `EPIPE` nakon gašenja može biti posledica zaustavljenog procesa.
 
 ## Čistoća repozitorijuma
 

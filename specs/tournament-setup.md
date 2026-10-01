@@ -12,7 +12,8 @@
 5. Adding a category to a missing tournament fails. Failed validation leaves
    existing tournament data unchanged.
 6. Closing and reopening the SQLite repository preserves tournaments, category
-   order, disciplines, and formats. Existing schema version 1 is not recreated.
+   order, disciplines, and formats. Older supported schemas migrate without
+   recreating existing records.
 7. UI labels and backend error messages are available in Serbian and English.
    A language change does not translate user-entered names or stored enums.
 8. Browser-only preview clearly indicates that desktop persistence is absent;

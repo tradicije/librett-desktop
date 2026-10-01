@@ -21,6 +21,7 @@ preference in localStorage. Future competition and export specifications must
 define snapshots, revisions, backups, and rule versions before those features
 are implemented. This first migration is for new development databases only;
 backup and upgrades of populated databases require their own implementation.
+ADR 0002 now defines the version 1 to 2 backup and migration path.
 
 Installers, printing, second-screen support, offline installation, Windows,
 macOS, and Linux runtime behavior still require platform qualification. This

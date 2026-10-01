@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import Players from './Players.svelte';
   import { addCategory, createTournament, desktopAvailable, listTournaments, type CompetitionFormat, type Discipline, type Tournament } from './api';
   import { messages, errorKey, savedLanguage, type Language, type MessageKey } from './i18n';
 
@@ -96,6 +97,7 @@
           </form>
         </section>
       </div>
+      {#key selected.id}<Players tournament={selected} {language} />{/key}
     {:else}
       <div class="heading"><div><p class="eyebrow">LibreTT</p><h1>{text.subtitle}</h1><p class="muted">{text.intro}</p></div></div>
       <div class="columns">
