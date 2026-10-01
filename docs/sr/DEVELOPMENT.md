@@ -37,6 +37,15 @@ Singl/dubl i formati se čuvaju kao podešavanja; žreb i mečevi još nisu
 implementirani. Još nema evidencije dolazaka, blagajne, rezultata, interfejsa za izvoz/oporavak
 ili instalera. Razvojna verzija `0.1.0` nije objavljeno izdanje.
 
+Tab Igrači upravlja zajedničkom bazom, profilima i fotografijama. Prijave unutar
+turnira koriste tu bazu. Šema verzije 3 dodaje detalje profila i čuva postojeće
+prijave; pre migracije starijih baza pravi se konzistentan
+`pre-v3-<uuid>.sqlite` backup.
+
+Nazad/Napred prati istoriju ekrana. Home vraća na pregled izabranog modula, zatim
+na izbor modula koji nema bočni meni. Čuvanje zaključava navigaciju do završetka.
+Lokalna administracija za sada nema prijavu nalogom niti kontrolu korisničkih uloga.
+
 ## Teme i ikonice
 
 Izbor teme podržava Svetla, Tamna i Sistemska. Sistemska prati promene OS teme

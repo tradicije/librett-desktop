@@ -1,4 +1,18 @@
 const sr = {
+  goBack: 'Nazad', goForward: 'Napred', goHome: 'Home', playerTab: 'Igrači',
+  playerDirectoryIntro: 'Upravljaj zajedničkom bazom igrača za sva takmičenja.',
+  registrationDirectoryHint: 'Izaberi igrače iz baze. Nove profile dodaj u tabu Igrači.',
+  birthYear: 'Godište (opciono)', city: 'Grad (opciono)', country: 'Država (opciono)',
+  email: 'E-pošta (opciono)', phone: 'Telefon (opciono)', notes: 'Beleške (opciono)',
+  photo: 'Fotografija (opciono)', photoHint: 'JPEG, PNG ili WebP, do 10 MB. Fotografija se čuva lokalno u profilu.',
+  removePhoto: 'Ukloni fotografiju', editPlayer: 'Izmeni profil', savePlayer: 'Sačuvaj igrača', cancelEdit: 'Otkaži izmenu',
+  invalid_profile: 'Proveri godište i detalje profila. Fotografija mora biti ispravna slika u podržanom formatu.',
+
+  dashboard: 'Početna', navigation: 'Navigacija', chooseMode: 'Izaberi način takmičenja',
+  dashboardIntro: 'Turniri i lige na jednom mestu. Izaberi šta želiš da organizuješ.',
+  tournamentModeDescription: 'Organizuj turnire, kategorije, igrače i prijave.',
+  leagueModeDescription: 'Organizuj ligaška takmičenja i prati rezultate kroz sezonu.',
+  openTournaments: 'Otvori turnire',
   theme: 'Tema', themeLight: 'Svetla', themeDark: 'Tamna', themeSystem: 'Sistemska',
   players: 'Igrači i prijave', directory: 'Lokalna baza igrača', playerName: 'Ime i prezime', club: 'Klub (opciono)',
   addPlayer: 'Dodaj igrača', searchPlayers: 'Pretraži ime ili klub', noPlayers: 'Nema igrača za prikaz.',
@@ -23,6 +37,20 @@ const sr = {
 };
 type Messages = typeof sr;
 const en: Messages = {
+  goBack: 'Back', goForward: 'Forward', goHome: 'Home', playerTab: 'Players',
+  playerDirectoryIntro: 'Manage the shared player directory for all competitions.',
+  registrationDirectoryHint: 'Select players from the directory. Add new profiles in the Players tab.',
+  birthYear: 'Birth year (optional)', city: 'City (optional)', country: 'Country (optional)',
+  email: 'Email (optional)', phone: 'Phone (optional)', notes: 'Notes (optional)',
+  photo: 'Photo (optional)', photoHint: 'JPEG, PNG or WebP, up to 10 MB. Photos are stored locally in the profile.',
+  removePhoto: 'Remove photo', editPlayer: 'Edit profile', savePlayer: 'Save player', cancelEdit: 'Cancel editing',
+  invalid_profile: 'Check the birth year and profile details. The photo must be a valid image in a supported format.',
+
+  dashboard: 'Dashboard', navigation: 'Navigation', chooseMode: 'Choose a competition mode',
+  dashboardIntro: 'Tournaments and leagues in one place. Choose what you want to organize.',
+  tournamentModeDescription: 'Organize tournaments, categories, players, and registrations.',
+  leagueModeDescription: 'Organize league competitions and follow results throughout the season.',
+  openTournaments: 'Open tournaments',
   theme: 'Theme', themeLight: 'Light', themeDark: 'Dark', themeSystem: 'System',
   players: 'Players and registrations', directory: 'Local player directory', playerName: 'Full name', club: 'Club (optional)',
   addPlayer: 'Add player', searchPlayers: 'Search name or club', noPlayers: 'No players to show.',
@@ -49,7 +77,7 @@ export type Language = 'sr' | 'en';
 export const messages = { sr, en };
 export type MessageKey = keyof Messages;
 export function errorKey(error: unknown): MessageKey {
-  return typeof error === 'string' && ['name_required', 'name_too_long', 'duplicate_category', 'not_found', 'storage', 'invalid_members', 'already_registered'].includes(error)
+  return typeof error === 'string' && ['invalid_profile', 'name_required', 'name_too_long', 'duplicate_category', 'not_found', 'storage', 'invalid_members', 'already_registered'].includes(error)
     ? error as MessageKey : 'error';
 }
 export function savedLanguage(): Language {

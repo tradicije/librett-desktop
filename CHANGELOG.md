@@ -12,15 +12,22 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Added
 
+- Shared Players tab with editable birth year, location, contact details, notes,
+  and offline profile photographs, independent of tournament registration.
+- SQLite schema version 3 with transactional profile migration and consistent
+  pre-v3 backups for existing databases, preserving registration snapshots.
+- Back/Forward screen history and contextual Home navigation; the mode-selection
+  screen now has no sidebar and module navigation has no dashboard item.
+
+- Initial bilingual mode-selection dashboard with tournament access and a disabled
+  leagues card, plus navigation back to the dashboard from the tournament module.
 - Enabled GTK application identity and added Linux development icon registration
   so Wayland desktops can match running windows to the LibreTT icon.
-
 - Locally bundled Libre Franklin variable font for offline typography.
 - Bilingual README disclosure of AI-assisted programming and human authorship,
   review, and verification.
 - Theme-colored selection menus with keyboard navigation and typeahead, replacing
   system-rendered dropdown popups; consistent icon/text alignment.
-
 - Shared light/dark design tokens using the LibreTT palette across the interface.
 - Persisted Light/Dark/System theme selection, live system-theme tracking, and
   theme-specific LibreTT logo variants.

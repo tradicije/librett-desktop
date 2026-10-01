@@ -17,6 +17,14 @@ and uses the corresponding LibreTT logo. Tabler Icons are bundled locally and
 work offline. Their MIT license is preserved separately from LibreTT's AGPL
 license; see [third-party notices](THIRD_PARTY_NOTICES.md).
 
+The app opens on a mode-selection dashboard without a sidebar. Tournaments opens
+its module; Leagues is disabled until implemented. Back/Forward follows screen
+history. Home returns to the module overview, then to mode selection on a second
+click. The Players tab manages a shared directory with editable birth year,
+location, contact details, notes, and locally stored photos; tournaments register
+participants from that directory. The local operator manages profiles; user
+accounts and enforced administrator permissions are not implemented yet.
+
 ## AI-assisted development
 
 LibreTT is developed with AI assistance for programming. The project idea,

@@ -1,9 +1,70 @@
 use crate::{validated_name, Discipline, DomainError};
+use base64::{engine::general_purpose::STANDARD, Engine};
+use chrono::Datelike;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Player {
+    pub id: Uuid,
+    pub name: String,
+    pub club: String,
+    #[serde(flatten)]
+    pub profile: PlayerProfile,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct PlayerProfile {
+    pub birth_year: Option<u16>,
+    pub city: String,
+    pub country: String,
+    pub email: String,
+    pub phone: String,
+    pub notes: String,
+    pub photo: Option<String>,
+}
+
+impl PlayerProfile {
+    pub fn validated(mut self) -> Result<Self, DomainError> {
+        if self
+            .birth_year
+            .is_some_and(|year| !(1900..=chrono::Utc::now().year() as u16).contains(&year))
+        {
+            return Err(DomainError::InvalidProfile);
+        }
+        for field in [
+            &mut self.city,
+            &mut self.country,
+            &mut self.email,
+            &mut self.phone,
+            &mut self.notes,
+        ] {
+            *field = field.trim().to_owned();
+            if field.chars().count() > 2000 {
+                return Err(DomainError::InvalidProfile);
+            }
+        }
+        if let Some(photo) = &self.photo {
+            if photo.len() > 350_000 {
+                return Err(DomainError::InvalidProfile);
+            }
+            let encoded = photo
+                .strip_prefix("data:image/jpeg;base64,")
+                .ok_or(DomainError::InvalidProfile)?;
+            let bytes = STANDARD
+                .decode(encoded)
+                .map_err(|_| DomainError::InvalidProfile)?;
+            if !bytes.starts_with(&[0xff, 0xd8, 0xff]) || !bytes.ends_with(&[0xff, 0xd9]) {
+                return Err(DomainError::InvalidProfile);
+            }
+        }
+        Ok(self)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct EntryMember {
     pub id: Uuid,
     pub name: String,
     pub club: String,
@@ -13,6 +74,7 @@ impl Player {
     pub fn new(name: &str, club: &str) -> Result<Self, DomainError> {
         Ok(Self {
             id: Uuid::new_v4(),
+            profile: PlayerProfile::default(),
             name: validated_name(name)?,
             club: if club.trim().is_empty() {
                 String::new()
@@ -27,12 +89,36 @@ impl Player {
 pub struct Entry {
     pub id: Uuid,
     pub category_id: Uuid,
-    pub members: Vec<Player>,
+    pub members: Vec<EntryMember>,
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn profiles_reject_future_years_external_photos_and_overlong_details() {
+        let profile = PlayerProfile {
+            birth_year: Some(chrono::Utc::now().year() as u16 + 1),
+            ..Default::default()
+        };
+        assert_eq!(profile.validated(), Err(DomainError::InvalidProfile));
+        let profile = PlayerProfile {
+            photo: Some("https://example.test/photo.jpg".into()),
+            ..Default::default()
+        };
+        assert_eq!(profile.validated(), Err(DomainError::InvalidProfile));
+        let profile = PlayerProfile {
+            photo: Some("data:image/jpeg;base64,aGVsbG8=".into()),
+            ..Default::default()
+        };
+        assert_eq!(profile.validated(), Err(DomainError::InvalidProfile));
+        let profile = PlayerProfile {
+            notes: "ž".repeat(2001),
+            ..Default::default()
+        };
+        assert_eq!(profile.validated(), Err(DomainError::InvalidProfile));
+    }
 
     #[test]
     fn doubles_require_two_distinct_players_and_singles_require_one() {
@@ -79,7 +165,14 @@ impl Entry {
         Ok(Self {
             id: Uuid::new_v4(),
             category_id,
-            members,
+            members: members
+                .into_iter()
+                .map(|player| EntryMember {
+                    id: player.id,
+                    name: player.name,
+                    club: player.club,
+                })
+                .collect(),
         })
     }
 }

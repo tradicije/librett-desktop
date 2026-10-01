@@ -2,6 +2,7 @@
   import Select from './Select.svelte';
   import { onMount } from 'svelte';
   import Players from './Players.svelte';
+  import PlayerDirectory from './PlayerDirectory.svelte';
   import Icon from './Icon.svelte';
   import darkLogo from '../../../assets/img/logo-dark.png';
   import lightLogo from '../../../assets/img/logo-light.png';
@@ -13,14 +14,21 @@
   let theme = $state<ThemePreference>(savedTheme());
   let resolvedTheme = $state<ResolvedTheme>(document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light');
   let text = $derived(messages[language]);
+  type Route = { view: 'dashboard' | 'tournaments' | 'players' | 'tournament'; id?: string };
+  let history = $state<Route[]>([{ view: 'dashboard' }]);
+  let historyIndex = $state(0);
+  let route = $derived(history[historyIndex]);
+  let mode = $derived(route.view === 'dashboard' ? 'dashboard' : 'tournaments');
+  let childBusy = $state(false);
   let tournaments = $state<Tournament[]>([]);
-  let selectedId = $state<string | null>(null);
+  let selectedId = $derived(route.view === 'tournament' ? route.id : null);
   let selected = $derived(tournaments.find(t => t.id === selectedId));
   let tournamentName = $state('');
   let categoryName = $state('');
   let discipline = $state<Discipline>('singles');
   let format = $state<CompetitionFormat>('groups_knockout');
   let busy = $state(false);
+  let navigationLocked = $derived(busy || childBusy);
   let loading = $state(false);
   let loaded = $state(false);
   let error = $state<MessageKey | null>(null);
@@ -42,7 +50,7 @@
   onMount(() => watchSystemTheme(() => {
     if (theme === 'system') resolvedTheme = applyTheme(theme);
   }));
-  onMount(() => { if (desktopAvailable) void load(); });
+
 
   async function create(event: SubmitEvent) {
     event.preventDefault();
@@ -50,7 +58,7 @@
     try {
       const tournament = await createTournament(tournamentName);
       tournaments = [tournament, ...tournaments];
-      selectedId = tournament.id; tournamentName = ''; notice = 'created';
+      navigate({ view: 'tournament', id: tournament.id }); tournamentName = ''; notice = 'created';
     } catch (cause) { error = errorKey(cause); }
     finally { busy = false; }
   }
@@ -65,33 +73,78 @@
     } catch (cause) { error = errorKey(cause); }
     finally { busy = false; }
   }
-  function select(id: string | null) {
-    selectedId = id; categoryName = ''; error = null; notice = null;
+  function resetView() {
+    categoryName = ''; error = null; notice = null;
     discipline = 'singles'; format = 'groups_knockout';
   }
+  function navigate(next: Route) {
+    const current = history[historyIndex];
+    if (current.view === next.view && current.id === next.id) return;
+    history = [...history.slice(0, historyIndex + 1), next];
+    historyIndex = history.length - 1;
+    resetView();
+    if (next.view !== 'dashboard' && desktopAvailable && !loaded && !loading) void load();
+  }
+  function travel(delta: number) {
+    if (navigationLocked || historyIndex + delta < 0 || historyIndex + delta >= history.length) return;
+    historyIndex += delta;
+    resetView();
+  }
+  function home() {
+    navigate({ view: route.view === 'tournaments' ? 'dashboard' : 'tournaments' });
+  }
+  function openTournaments() { navigate({ view: 'tournaments' }); }
+  function openDashboard() { navigate({ view: 'dashboard' }); }
+  function select(id: string | null) { navigate(id ? { view: 'tournament', id } : { view: 'tournaments' }); }
+
 </script>
 
-<div class="shell">
-  <aside>
-    <a class="brand" href="/" onclick={(event) => { event.preventDefault(); if (!busy) select(null); }}><img src={resolvedTheme === 'dark' ? darkLogo : lightLogo} alt="LibreTT" width="2048" height="552" /></a>
-    <nav aria-label={text.tournaments}>
-      <button class="active" disabled={busy} onclick={() => select(null)}><Icon name="trophy" /> {text.tournaments}</button>
+<div class="shell" class:dashboard-shell={mode === 'dashboard'}>
+  {#if mode !== 'dashboard'}<aside>
+    <a class="brand" href="/" onclick={(event) => { event.preventDefault(); if (!navigationLocked) home(); }}><img src={resolvedTheme === 'dark' ? darkLogo : lightLogo} alt="LibreTT" width="2048" height="552" /></a>
+    <nav aria-label={text.navigation}>
+      <button class="nav-item" class:active={route.view !== 'players'} aria-current={route.view !== 'players' ? 'page' : undefined} disabled={navigationLocked} onclick={openTournaments}><Icon name="trophy" />{text.tournaments}</button>
+      <button class="nav-item" class:active={route.view === 'players'} aria-current={route.view === 'players' ? 'page' : undefined} disabled={navigationLocked} onclick={() => navigate({ view: 'players' })}><Icon name="users" />{text.playerTab}</button>
     </nav>
     <div class="sidebar-bottom"><span class="icon-label"><Icon name="desktop" size={16} />{text.local}</span><small>© 2026 Aleksa Dimitrijević</small></div>
-  </aside>
+  </aside>{/if}
   <main>
     <header>
-      <span class="eyebrow">{text.tournaments} / LibreTT</span>
+      <div class="header-navigation">
+        {#if mode === 'dashboard'}<img class="dashboard-logo" src={resolvedTheme === 'dark' ? darkLogo : lightLogo} alt="LibreTT" width="2048" height="552" />{/if}
+        <div class="navigation-controls" aria-label={text.navigation}>
+          <button class="icon-button" aria-label={text.goBack} title={text.goBack} disabled={navigationLocked || historyIndex === 0} onclick={() => travel(-1)}><Icon name="arrow-left" /></button>
+          <button class="icon-button" aria-label={text.goForward} title={text.goForward} disabled={navigationLocked || historyIndex === history.length - 1} onclick={() => travel(1)}><Icon name="arrow-right" /></button>
+          <button class="icon-button" aria-label={text.goHome} title={text.goHome} disabled={navigationLocked || mode === 'dashboard'} onclick={home}><Icon name="home" /></button>
+        </div>
+      </div>
       <div class="preferences">
         <label><Icon name={theme === 'system' ? 'desktop' : theme === 'dark' ? 'moon' : 'sun'} size={18} />{text.theme}<Select label={text.theme} bind:value={theme} options={[{ value: 'system', label: text.themeSystem }, { value: 'light', label: text.themeLight }, { value: 'dark', label: text.themeDark }]} /></label>
         <label><Icon name="globe" size={18} />{text.language}<Select label={text.language} bind:value={language} options={[{ value: 'sr', label: 'Srpski' }, { value: 'en', label: 'English' }]} /></label>
       </div>
     </header>
     {#if !desktopAvailable}<p class="banner">{text.preview}</p>{/if}
-    {#if error}<div class="error" role="alert">{text[error]} {#if !loaded && desktopAvailable}<button disabled={loading} onclick={load}>{text.retry}</button>{/if}</div>{/if}
+    {#if mode === 'tournaments' && error}<div class="error" role="alert">{text[error]} {#if !loaded && desktopAvailable}<button disabled={loading} onclick={load}>{text.retry}</button>{/if}</div>{/if}
     <div class="notice" role="status" aria-live="polite">{notice ? text[notice] : ''}</div>
-    {#if selected}
-      <button class="back" disabled={busy} onclick={() => select(null)}><Icon name="arrow-left" size={18} /> {text.back}</button>
+    {#if mode === 'dashboard'}
+      <div class="heading"><div><p class="eyebrow">LibreTT</p><h1>{text.chooseMode}</h1><p class="muted">{text.dashboardIntro}</p></div></div>
+      <div class="mode-grid">
+        <button class="mode-card" onclick={openTournaments}>
+          <span class="mode-icon"><Icon name="trophy" size={32} /></span>
+          <span class="mode-title">{text.tournaments}</span>
+          <span class="mode-description">{text.tournamentModeDescription}</span>
+          <span class="mode-action">{text.openTournaments}<Icon name="arrow-right" size={18} /></span>
+        </button>
+        <button class="mode-card mode-unavailable" disabled aria-describedby="league-status">
+          <span class="mode-icon"><Icon name="list" size={32} /></span>
+          <span class="mode-title">{text.leagues}</span>
+          <span class="mode-description">{text.leagueModeDescription}</span>
+          <span class="pill" id="league-status">{text.later}</span>
+        </button>
+      </div>
+    {:else if route.view === 'players'}
+      <PlayerDirectory {language} bind:busy={childBusy} />
+    {:else if selected}
       <div class="heading"><div><p class="eyebrow">{text.selected}</p><h1>{selected.name}</h1></div><span class="pill">{selected.categories.length} · {text.categories}</span></div>
       <div class="columns">
         <section class="panel">
@@ -110,7 +163,7 @@
           </form>
         </section>
       </div>
-      {#key selected.id}<Players tournament={selected} {language} />{/key}
+      {#key selected.id}<Players tournament={selected} {language} bind:busy={childBusy} />{/key}
     {:else}
       <div class="heading"><div><p class="eyebrow">LibreTT</p><h1>{text.subtitle}</h1><p class="muted">{text.intro}</p></div></div>
       <div class="columns">

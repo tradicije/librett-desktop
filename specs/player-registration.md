@@ -12,3 +12,16 @@
 8. Reopening preserves profiles and registrations. Migration retains existing
    tournaments and creates a readable pre-migration backup.
 9. Registration does not infer attendance or payment.
+
+10. Manage profiles in the Players tab: birth year, location, contact details,
+    notes, and photos are optional and persist across restarts; edits keep the ID.
+11. A tournament registers existing directory players, with search and independent
+    name/club snapshots. Editing profiles does not rewrite past registration names.
+12. Version 2 migration preserves players and registrations, creates one readable
+    pre-v3 backup, and gives old profiles empty optional details.
+13. Reject invalid birth years, oversized profile fields, unsupported or broken
+    photo uploads and external photo URLs. Photos remain available after moving
+    or deleting the source image file.
+14. Mode selection has no sidebar. Back/Forward traverses screen history; Home
+    returns first to the module overview, then to mode selection. A new navigation
+    branch discards forward history. Navigation cannot interrupt pending writes.

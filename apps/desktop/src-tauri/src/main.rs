@@ -3,7 +3,7 @@
 use librett_application::{
     self as application, ApplicationError, PlayerRepository, TournamentRepository,
 };
-use librett_domain::{CompetitionFormat, Discipline, Entry, Player, Tournament};
+use librett_domain::{CompetitionFormat, Discipline, Entry, Player, PlayerProfile, Tournament};
 use librett_storage_sqlite::SqliteTournamentRepository;
 use std::sync::Mutex;
 use tauri::Manager;
@@ -70,6 +70,7 @@ fn main() {
             add_category,
             list_players,
             create_player,
+            save_player_profile,
             list_entries,
             register_entry
         ])
@@ -127,5 +128,25 @@ fn register_entry(
         Uuid::parse_str(&tournament_id).map_err(|_| ApplicationError::NotFound)?,
         Uuid::parse_str(&category_id).map_err(|_| ApplicationError::NotFound)?,
         player_ids,
+    )
+}
+
+#[tauri::command]
+fn save_player_profile(
+    database: tauri::State<Database>,
+    id: Option<String>,
+    name: String,
+    club: String,
+    profile: PlayerProfile,
+) -> Result<Player, ApplicationError> {
+    let id = id
+        .map(|id| Uuid::parse_str(&id).map_err(|_| ApplicationError::NotFound))
+        .transpose()?;
+    application::save_player_profile(
+        &mut *database.0.lock().map_err(|_| ApplicationError::Storage)?,
+        id,
+        &name,
+        &club,
+        profile,
     )
 }
