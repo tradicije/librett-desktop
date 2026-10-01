@@ -6,10 +6,22 @@ LibreTT je planirana slobodna aplikacija otvorenog koda za organizaciju
 stonoteniskih turnira i liga, sa lokalnim radom kao osnovom. LibreTT je naziv
 aplikacije i krovni identitet projekta.
 
-**Status: planiranje.** Repozitorijum trenutno sadrži dokumentaciju, a ne
-funkcionalnu aplikaciju. Instaleri i uputstva za pokretanje još ne postoje.
+**Status: rani razvoj.** Prvi korak implementira lokalno kreiranje i pregled
+turnira i dodavanje singl/dubl kategorija sa zasebnim izborom formata. Ceo tok
+turnira i instaleri za izdanja još nisu dostupni. Pogledaj
+[razvojno uputstvo](docs/sr/DEVELOPMENT.md) za pokretanje i provere.
 
 ## Svrha
+
+**Podaci takmičenja pripadaju zajednici koja ih stvara.** Rezultat koji napravi
+igrač ili klub mora da ostane dostupan i kada LibreTT prestane da se održava
+ili radi. Aplikacija služi očuvanju te istorije, a pristup istoriji ne sme
+zavisiti od opstanka aplikacije.
+
+Lokalno vlasništvo, dokumentovan otvoreni izvoz i nezavisno čitljive arhive
+su arhitektonski zahtevi. Rezervna kopija sama nije dovoljna: zajednica mora
+moći da čita, prenese i obnovi zapise bez pokrenutog LibreTT-a i centralnog
+servisa. Arhivski izvoz i vraćanje kopije su planirani, još nisu implementirani.
 
 Klubovima i organizatorima dati alat koji radi lokalno, bez obaveznog naloga,
 interneta, aktivacije licence i plaćenih paketa funkcija. Podaci takmičenja

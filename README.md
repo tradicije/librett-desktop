@@ -6,10 +6,22 @@ LibreTT is a planned free and open-source, offline-first application for
 organizing table-tennis tournaments and leagues. LibreTT is both the application
 name and the umbrella project identity.
 
-**Status: planning.** This repository currently contains documentation, not a
-working application. There are no installers or build instructions yet.
+**Status: early development.** The first slice creates and lists local tournaments
+and adds singles/doubles categories with independently selected formats. The
+full tournament workflow and release installers are not available yet. See
+[development setup](docs/en/DEVELOPMENT.md) for running and checking the project.
 
 ## Purpose
+
+**Competition data belongs to the community that creates it.** A result produced
+by a player or club must remain available even if LibreTT is no longer maintained
+or stops working. The application preserves that history; access to it must not
+depend on the application's survival.
+
+Local ownership, documented open exports, and independently readable archives
+are architectural requirements. Backups alone are not enough: the community
+must be able to read, transfer, and recover records without running LibreTT or
+a central service. Archival export and restoration are planned, not yet implemented.
 
 Give clubs and organizers tools they can operate locally, without mandatory
 accounts, internet access, license activation, or paid feature tiers. Keep

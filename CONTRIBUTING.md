@@ -4,7 +4,8 @@
 
 Contributions are welcome: real tournament examples, rules, workflow feedback,
 documentation, translations, bug reports, and implementation when development
-begins. The project is currently in planning; no build or test commands exist yet.
+begins. The project is in early development; see
+[development setup](docs/en/DEVELOPMENT.md) for requirements and check commands.
 
 ## Before making a change
 
@@ -27,6 +28,7 @@ record under `docs/adr/` before implementing them.
 - Treat registration, attendance, and payment as separate concerns.
 - Support manual and automatic draws through the same structural validation.
 - Keep data portable and document migrations, backups, and recovery behavior.
+- Preserve community access to records independently of LibreTT's survival.
 
 ## Documentation and languages
 

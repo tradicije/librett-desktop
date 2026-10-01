@@ -1,0 +1,15 @@
+{
+  "name": "librett",
+  "version": "0.1.0",
+  "private": true,
+  "license": "AGPL-3.0-or-later",
+  "author": "Aleksa Dimitrijević",
+  "workspaces": ["apps/desktop"],
+  "scripts": {
+    "dev": "npm run dev --workspace @librett/desktop",
+    "check": "npm run check --workspace @librett/desktop",
+    "build": "npm run build --workspace @librett/desktop",
+    "desktop": "npm run tauri --workspace @librett/desktop --",
+    "test:core": "cargo test --workspace --exclude librett-desktop"
+  }
+}

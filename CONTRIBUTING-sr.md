@@ -4,7 +4,8 @@
 
 Dobrodošli su primeri stvarnih turnira, pravilnici, predlozi toka rada,
 dokumentacija, prevodi, prijave grešaka i implementacija kada razvoj počne.
-Projekat je trenutno u fazi planiranja; komande za build i testove još ne postoje.
+Projekat je u ranom razvoju; zahtevi i komande za provere nalaze se u
+[razvojnom uputstvu](docs/sr/DEVELOPMENT.md).
 
 ## Pre izmene
 
@@ -26,6 +27,7 @@ Arhitektonske promene zabeleži odlukom u `docs/adr/` pre implementacije.
 - Prijava, dolazak i plaćanje imaju odvojenu evidenciju.
 - Ručni i automatski žreb koriste iste provere strukture.
 - Podaci su prenosivi; migracije, rezervne kopije i oporavak su dokumentovani.
+- Pristup podacima zajednice ne sme zavisiti od opstanka LibreTT-a.
 
 ## Dokumentacija i jezici
 

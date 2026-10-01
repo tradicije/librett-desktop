@@ -1,0 +1,16 @@
+[package]
+name = "librett-desktop"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+librett-domain = { path = "../../../crates/domain" }
+librett-application = { path = "../../../crates/application" }
+librett-storage-sqlite = { path = "../../../crates/storage-sqlite" }
+uuid.workspace = true

@@ -11,6 +11,14 @@ služe kao companion za sudije i gledaoce. Organizator može da pripremi i zavr�
 takmičenje bez interneta, naloga, aktivacije ili obaveznog centralnog servisa.
 Kod, dokumentovani formati i osnovne funkcije ostaju dostupni zajednici.
 
+Glavna filozofija: podaci ostaju u rukama zajednice koja ih pravi. Rezultat
+igrača ili kluba ne sme nestati ako aplikacija prestane da se održava ili radi.
+Pre isporuke rezultata definišemo otvoreni verzionisani izvoz izvornih zapisa,
+nezavisno čitljivu arhivu i postupak obnove bez aplikacije ili centralnog
+servisa. Izvoz nosi pravilnike, stabilne ID-jeve i istoriju potrebnu za
+tumačenje rezultata. Provera uključuje čitanje arhive bez LibreTT-a; privatni
+podaci su odvojeni od javne sportske istorije.
+
 Aplikacija ima dve funkcionalne grane: Turniri i Lige. To su moduli jednog
 proizvoda, ne Git grane ili odvojene aplikacije. Sada specifikujemo i razvijamo
 Turnire; Lige kasnije koriste zajedničke igrače, klubove i pravila meča.

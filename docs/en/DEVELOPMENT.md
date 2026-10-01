@@ -1,0 +1,75 @@
+# Development
+
+[Srpski](../sr/DEVELOPMENT.md)
+
+## Requirements
+
+- Node.js 22 LTS and npm.
+- Stable Rust with Cargo, rustfmt, and Clippy.
+- The operating-system development dependencies listed in
+  [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/).
+
+The core crates can be tested without Linux WebKit/GTK development libraries.
+The actual desktop application requires them. Windows and macOS need their
+respective native toolchains. Cross-platform qualification is still pending.
+
+## Install and run
+
+From the repository root:
+
+```sh
+npm ci
+npm run check
+npm run build
+npm run test:core
+npm run desktop -- dev
+```
+
+`npm run dev` provides a browser-only UI preview on `http://127.0.0.1:1420`.
+Database operations are disabled there; use the Tauri desktop command for
+persistent tournaments. The desktop stores `librett.sqlite` in the OS application
+data directory resolved by Tauri for `org.librett.desktop`, outside the checkout.
+It needs no network connection after development dependencies are installed.
+
+The current slice supports tournament creation/listing and adding categories.
+Singles/doubles and category formats are stored settings; draw and match engines
+are not implemented. There is no result entry, player directory, cash desk,
+export/restore UI, or installer yet. Development version `0.1.0` is not a release.
+
+## Checks
+
+```sh
+cargo fmt --all -- --check
+cargo test --workspace --exclude librett-desktop
+cargo clippy --workspace --exclude librett-desktop -- -D warnings
+```
+
+After native requirements are installed, also check the desktop adapter:
+
+```sh
+npm run build
+cargo check -p librett-desktop
+```
+
+Manual desktop smoke check: create a tournament with Serbian letters, add a
+singles category with groups then knockout and a doubles category with knockout,
+reject a duplicate category, restart, and verify persistence. Switch languages
+and verify labels/errors change while names remain intact. Disconnect networking
+and repeat. These are required checks, not a claim they have already passed.
+
+## Repository hygiene
+
+Commit source, migrations, specifications, documentation, and dependency lock
+files. Do not commit dependencies, generated output, local databases, caches,
+credentials, or editor/agent settings. `.gitignore` excludes these artifacts.
+Use external temporary directories for research and one-off tooling. Dependency
+installation creates an ignored `node_modules/`; builds create ignored output.
+Keep transient cache/build paths outside the checkout where convenient:
+
+```sh
+npm ci --cache /tmp/librett-npm-cache
+CARGO_TARGET_DIR=/tmp/librett-target cargo test --workspace --exclude librett-desktop
+```
+
+See [ADR 0001](../adr/0001-desktop-foundation.md) and
+[setup scenarios](../../specs/tournament-setup.md).
