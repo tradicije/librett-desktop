@@ -1764,6 +1764,7 @@ dependencies = [
  "librett-application",
  "librett-domain",
  "librett-storage-sqlite",
+ "objc2-web-kit",
  "tauri",
  "tauri-build",
  "uuid",
@@ -1786,6 +1787,7 @@ dependencies = [
  "librett-application",
  "librett-domain",
  "rusqlite",
+ "serde_json",
  "uuid",
 ]
 

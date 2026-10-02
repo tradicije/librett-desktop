@@ -1,6 +1,7 @@
 # Category draws and group ranking
 
-Status: agreed product rules; implementation pending.
+Status: editable and persistent group/knockout drafts implemented. Match generation,
+confirmation, advancement and group ranking remain pending.
 
 ## Draw modes
 
@@ -36,3 +37,16 @@ Status: agreed product rules; implementation pending.
 
 - Whether and how club separation affects automatic draws.
 - How to handle an exact tie after every configured ranking criterion.
+
+## Implemented draft boundaries
+
+- Drafts use active registrations and preserve entry name/club snapshots.
+- Manual drafts can be incomplete; an empty knockout slot is a bye only after all
+  participants are assigned and its opponent is present. No match records are created.
+- Groups have balanced fixed capacities with at least two entries each. Qualifiers
+  must fit the smallest group and total at least two. Draw size is 2–4096 entries.
+- Saving appends an immutable revision; an unexpected current revision or changed
+  registration membership rejects the write. Uncertain saves retry the same UUID.
+- Generation version and random seed are stored with the layout. Unseeded entries
+  are shuffled; automatic knockout seeds follow standard separated bracket positions.
+- The organizer must save changes before leaving the category draw screen.

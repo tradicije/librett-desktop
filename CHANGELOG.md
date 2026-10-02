@@ -7,16 +7,8 @@ Notable changes to LibreTT are recorded here in English.
 ### Changed
 
 - Added persistent tournament-level tabs for Overview, Categories, Registrations
-  and Cash desk. Draw, Matches and Results are category-level tabs; their workflows
-  are clearly marked as in development.
-
-### Planned
-
-- Agreed category draw options for both automatic and manual setup, bye placement
-  for the strongest manually ranked seeds, organizer-selected group count/qualifiers,
-  seed separation and near-equal group sizes, and ranking by head-to-head mini-table,
-  set ratio, then point ratio. Partial ties re-run the mini-table; remaining byes
-  are assigned randomly for organizer review. Implementation is pending.
+  and Cash desk. Draw, Matches and Results are category-level tabs; Matches and
+  Results are clearly marked as in development.
 
 - Replaced the tournament cash desk's account/form/history blocks with a searchable
   player table, separate category columns, initially empty selection checkboxes and Collect/Refund buttons. Only selected categories
@@ -45,6 +37,10 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Fixed
 
+- Connect screen navigation to webview history, including mouse back/forward
+  buttons. Enable native macOS trackpad navigation gestures and restore the
+  current screen when native navigation occurs during a pending write.
+
 - Keep the desktop sidebar anchored to the viewport while main content scrolls.
 
 - Set the Linux GLib program name before GTK startup so the Wayland window ID
@@ -53,13 +49,19 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Added
 
+- Editable category draw drafts for singles and doubles: ordered manual seeds,
+  automatic/manual group allocation, organizer-selected group counts and
+  qualifiers, and knockout slots with byes awarded to the strongest seeds.
+- SQLite schema 10 with pre-v10 backups, immutable draw revisions, stale-registration
+  validation, optimistic revision checks and idempotent save retries.
+
 - Atomic, idempotent player settlements across selected categories, with per-player
   doubles allocations and confirmed refunds when clearing Paid.
 - SQLite schema 9 with pre-v9 backups and immutable financial allocations/requests;
   historical partial payments, discounts and ledger records remain preserved.
 
-- Dedicated category workspaces with Registrations, Draw, Groups (for group formats)
-  and Bracket sections; competition-engine tabs clearly show their planned status.
+- Dedicated category workspaces with Registrations, Draw, Matches and Results
+  sections; unfinished competition-engine tabs clearly show their planned status.
 - Checkbox batch singles registration and explicit doubles-pair queues, saved
   atomically with member snapshots and automatic category charges.
 - Confirmed category removal: delete empty categories and archive used categories
@@ -167,3 +169,9 @@ draws, attendance, payments, results, archival exports, or release installers.
 - Core Clippy and Linux native desktop compilation checks passed. Graphical
   desktop interaction remains a manual check.
 - Windows, macOS, and Linux desktop qualification remains pending.
+
+### Planned
+
+- Match generation and results, category-specific group ranking by head-to-head
+  mini-table, set ratio and point ratio, including re-evaluation of partial ties.
+  Draw confirmation and advancement to the knockout stage are still pending.

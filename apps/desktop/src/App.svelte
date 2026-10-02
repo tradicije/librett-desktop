@@ -22,6 +22,9 @@
   type Route = { view: 'dashboard' | 'tournaments' | 'players' | 'player-create' | 'player-edit' | 'tournament' | 'category'; id?: string; categoryId?: string; tournamentTab?: TournamentTab; categoryTab?: CategoryTab };
   let history = $state<Route[]>([{ view: 'dashboard' }]);
   let historyIndex = $state(0);
+  const historySession = crypto.randomUUID();
+  let historyPending = $state(false);
+  const browserState = (index: number) => ({ librettSession: historySession, librettIndex: index });
   let route = $derived(history[historyIndex]);
   let inPlayers = $derived(route.view === 'players' || route.view === 'player-create' || route.view === 'player-edit');
   let pageLabel = $derived(route.view === 'dashboard' ? text.dashboard : inPlayers ? text.playerTab : text.tournaments);
@@ -49,7 +52,7 @@
   let discipline = $state<Discipline>('singles');
   let format = $state<CompetitionFormat>('groups_knockout');
   let busy = $state(false);
-  let navigationLocked = $derived(busy || childBusy);
+  let navigationLocked = $derived(busy || childBusy || historyPending);
   let loading = $state(false);
   let loaded = $state(false);
   let error = $state<MessageKey | null>(null);
@@ -68,9 +71,50 @@
     finally { loading = false; }
   }
   $effect(() => { resolvedTheme = saveTheme(theme); });
-  onMount(() => watchSystemTheme(() => {
-    if (theme === 'system') resolvedTheme = applyTheme(theme);
-  }));
+  onMount(() => {
+    const stopTheme = watchSystemTheme(() => {
+      if (theme === 'system') resolvedTheme = applyTheme(theme);
+    });
+    window.history.replaceState(browserState(historyIndex), '');
+    function onHistory(event: PopStateEvent) {
+      const state = event.state;
+      if (state?.librettSession !== historySession || !Number.isInteger(state.librettIndex)) {
+        // A previous application session is not part of this screen history.
+        window.history.replaceState(browserState(historyIndex), '');
+        historyPending = false;
+        return;
+      }
+      const index = state.librettIndex as number;
+      if (index < 0 || index >= history.length) return;
+      if (busy || childBusy) {
+        historyPending = index !== historyIndex;
+        if (historyPending) window.history.go(historyIndex - index);
+        return;
+      }
+      historyPending = false;
+      if (index === historyIndex) return;
+      historyIndex = index;
+      resetView();
+      if (route.view !== 'dashboard' && desktopAvailable && !loaded && !loading) void load();
+    }
+    function onMouseNavigation(event: MouseEvent) {
+      if (event.button !== 3 && event.button !== 4) return;
+      event.preventDefault();
+      if (event.type === 'mouseup') travel(event.button === 3 ? -1 : 1);
+    }
+    window.addEventListener('popstate', onHistory);
+    // Cancel the browser default to avoid a second navigation after our fallback.
+    window.addEventListener('mousedown', onMouseNavigation);
+    window.addEventListener('mouseup', onMouseNavigation);
+    window.addEventListener('auxclick', onMouseNavigation);
+    return () => {
+      stopTheme();
+      window.removeEventListener('popstate', onHistory);
+      window.removeEventListener('mousedown', onMouseNavigation);
+      window.removeEventListener('mouseup', onMouseNavigation);
+      window.removeEventListener('auxclick', onMouseNavigation);
+    };
+  });
 
 
   async function create(event: SubmitEvent) {
@@ -101,18 +145,20 @@
     discipline = 'singles'; format = 'groups_knockout';
   }
   function navigate(next: Route) {
+    if (historyPending) return;
     const current = history[historyIndex];
     if (current.view === next.view && current.id === next.id && current.categoryId === next.categoryId &&
       current.tournamentTab === next.tournamentTab && current.categoryTab === next.categoryTab) return;
     history = [...history.slice(0, historyIndex + 1), next];
     historyIndex = history.length - 1;
+    window.history.pushState(browserState(historyIndex), '');
     resetView();
     if (next.view !== 'dashboard' && desktopAvailable && !loaded && !loading) void load();
   }
   function travel(delta: number) {
     if (navigationLocked || historyIndex + delta < 0 || historyIndex + delta >= history.length) return;
-    historyIndex += delta;
-    resetView();
+    historyPending = true;
+    window.history.go(delta);
   }
   function home() {
     navigate({ view: route.view === 'tournaments' ? 'dashboard' : 'tournaments' });

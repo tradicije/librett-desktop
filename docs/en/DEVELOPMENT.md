@@ -33,7 +33,7 @@ It needs no network connection after development dependencies are installed.
 
 The current slice supports tournaments, categories, local player profiles,
 name/club search, and singles/doubles category registration.
-Singles/doubles and category formats are stored settings; draw and match engines
+Singles/doubles and category formats are stored settings; match engines
 are not implemented. There is no result entry,
 export/restore UI, or installer yet. Development version `0.1.0` is not a release.
 
@@ -41,8 +41,8 @@ The Players tab shows the shared directory. Add/Edit opens dedicated profile
 screens, including photos, and returns to the list after saving. Delete asks for
 confirmation and protects profiles with existing registrations. Tournament
 registration uses that directory. Entries can be withdrawn/restored, and player
-attendance is shared across categories in a tournament. Schema version 9 adds member payment allocations and idempotent settlements; older on-disk databases receive a consistent
-`pre-v9-<uuid>.sqlite` backup before migration.
+attendance is shared across categories in a tournament. Schema version 10 adds immutable category draw drafts; older on-disk databases receive a consistent
+`pre-v10-<uuid>.sqlite` backup before migration.
 
 Back/Forward follows screen history. Home returns to the selected module overview,
 then mode selection. The mode chooser has no sidebar. Saves lock navigation until
@@ -171,8 +171,8 @@ atomically; zero means free participation.
 Click a category row to open its Registrations tab. Check several singles players
 and register them together, or select two doubles players and add each pair to the
 queue before submitting. Already registered players remain marked and unavailable.
-Batch registration is atomic, including automatic charges. Draw, Groups and Bracket
-are navigation placeholders until competition engines are built; knockout omits Groups.
+Batch registration is atomic, including automatic charges. Draw offers editable
+group/knockout drafts; Matches and Results remain placeholders.
 
 Delete asks for confirmation. Empty categories are removed; categories with any
 entry are archived and retain accounts in Cash desk. History routes to removed
@@ -185,6 +185,33 @@ Opening a tournament shows persistent Overview, Categories, Registrations and Ca
 desk tabs. Categories contains the active category list and the new-category form.
 Registrations opens a selected category's workspace for managing entries, attendance
 and registration status. Each category has its own Registrations, Draw, Matches and
-Results tabs; the latter three are marked as in development. Cash desk shows the
+Results tabs; Matches and Results are marked as in development. Cash desk shows the
 existing player payment matrix. Overview is the tournament's starting screen.
 Moving between tabs participates in Back/Forward history, as does opening a category.
+
+
+## Category draw drafts
+
+Open a category’s Draw tab, choose Automatic or Manual, and add seeds in order
+of strength. For group formats, choose the group count and qualifiers per group.
+Create arrangement produces balanced groups or first-round knockout slots;
+automatic byes go to the strongest seeds, then randomly to unseeded entries.
+The slot selectors allow manual edits and swap entries that are already placed.
+Changing generation settings applies to the next arrangement; changing seeds
+also updates the displayed draft. Save draft persists a new revision. Manual
+drafts may be incomplete. Save before navigating away; unsaved edits are local
+to the open draw screen. Reload discards local edits and fetches current entries.
+
+A changed registration list requires regeneration. Concurrent revisions reject
+a stale save. An uncertain write keeps its request UUID and blocks navigation
+until a retry confirms the outcome. Existing databases receive a pre-v10 backup.
+Confirmation, match creation, scoring, standings and knockout advancement remain
+pending; saving a draft does not start the competition.
+
+## Native navigation
+
+Toolbar arrows, mouse side buttons and native webview back/forward share screen
+history, including tabs. macOS enables WKWebView horizontal trackpad navigation
+(the system’s swipe-between-pages preference must permit it). Normal horizontal
+scrolling remains native. Pending writes prevent screen changes even when
+navigation is triggered outside the toolbar. History is reset on application reload.

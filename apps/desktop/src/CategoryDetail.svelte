@@ -1,6 +1,7 @@
 <script lang="ts">
   import Icon from './Icon.svelte';
   import Players from './Players.svelte';
+  import Draw from './Draw.svelte';
   import { formatMoney } from './money';
   import type { Tournament, Category } from './api';
   import { messages, type Language } from './i18n';
@@ -18,6 +19,8 @@
 </nav>
 {#if tab === 'registrations'}
   {#key category.id}<Players {tournament} {category} {language} bind:busy />{/key}
+{:else if tab === 'draw'}
+  {#key category.id}<Draw {tournament} {category} {language} bind:busy />{/key}
 {:else}
   <section class="panel stage-placeholder"><Icon name={tab === 'matches' ? 'list' : tab === 'results' ? 'trophy' : 'layer-group'} size={26} /><h2>{text[tab]}</h2><p class="muted">{text.stageNotReady}</p><button class="secondary" onclick={() => ontab('registrations')}>{text.registrations}</button></section>
 {/if}

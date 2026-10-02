@@ -26,3 +26,10 @@ Blagajna. Kartice Žreb, Mečevi i Rezultati nalaze se unutar kategorije.
 Delovi koji još nisu implementirani jasno prikazuju da su u pripremi. Brojači
 prikazuju stvarne podatke, a probni podaci za proveru interfejsa ostaju van
 repozitorijuma.
+
+
+## Sistemska istorija
+
+Istorija ekrana i kartica koristi History API webview-a. Strelice i bočna dugmad
+miša dele istoriju; na macOS-u je uključena i navigacija trackpadom. Tokom upisa
+sistemska navigacija vraća trenutnu poziciju istorije pre promene ekrana.

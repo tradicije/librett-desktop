@@ -5,6 +5,8 @@ use uuid::Uuid;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ApplicationError {
+    InvalidDraw,
+    DrawConflict,
     InvalidCash,
     PlayerInUse,
     InvalidProfile,
@@ -20,6 +22,7 @@ pub enum ApplicationError {
 impl From<DomainError> for ApplicationError {
     fn from(error: DomainError) -> Self {
         match error {
+            DomainError::InvalidDraw => Self::InvalidDraw,
             DomainError::InvalidCash => Self::InvalidCash,
             DomainError::InvalidProfile => Self::InvalidProfile,
             DomainError::InvalidMembers => Self::InvalidMembers,
@@ -28,6 +31,89 @@ impl From<DomainError> for ApplicationError {
             DomainError::DuplicateCategory => Self::DuplicateCategory,
         }
     }
+}
+
+pub trait DrawRepository {
+    fn find_draw(
+        &self,
+        category_id: Uuid,
+    ) -> Result<Option<librett_domain::CategoryDraw>, ApplicationError>;
+    fn save_draw(
+        &mut self,
+        draw: librett_domain::CategoryDraw,
+        expected_revision: u32,
+    ) -> Result<librett_domain::CategoryDraw, ApplicationError>;
+}
+
+fn draw_category(
+    repository: &impl TournamentRepository,
+    tournament_id: Uuid,
+    category_id: Uuid,
+) -> Result<librett_domain::Category, ApplicationError> {
+    repository
+        .find(tournament_id)?
+        .categories
+        .into_iter()
+        .find(|c| c.id == category_id && !c.archived)
+        .ok_or(ApplicationError::NotFound)
+}
+
+pub fn get_category_draw(
+    repository: &(impl TournamentRepository + DrawRepository),
+    tournament_id: Uuid,
+    category_id: Uuid,
+) -> Result<Option<librett_domain::CategoryDraw>, ApplicationError> {
+    draw_category(repository, tournament_id, category_id)?;
+    repository.find_draw(category_id)
+}
+
+fn draw_entries(
+    repository: &impl PlayerRepository,
+    category_id: Uuid,
+) -> Result<Vec<librett_domain::Entry>, ApplicationError> {
+    let mut entries = repository.list_entries(category_id)?;
+    for entry in &mut entries {
+        for member in &mut entry.members {
+            member.checked_in = false;
+        }
+    }
+    Ok(entries)
+}
+
+pub fn preview_category_draw(
+    repository: &(impl TournamentRepository + PlayerRepository),
+    tournament_id: Uuid,
+    category_id: Uuid,
+    mode: librett_domain::DrawMode,
+    settings: librett_domain::DrawSettings,
+    seeds: Vec<Uuid>,
+) -> Result<librett_domain::CategoryDraw, ApplicationError> {
+    let category = draw_category(repository, tournament_id, category_id)?;
+    Ok(librett_domain::create_draw(
+        &category,
+        &draw_entries(repository, category_id)?,
+        mode,
+        settings,
+        seeds,
+        Uuid::new_v4(),
+    )?)
+}
+
+pub fn save_category_draw(
+    repository: &mut (impl TournamentRepository + PlayerRepository + DrawRepository),
+    tournament_id: Uuid,
+    mut draw: librett_domain::CategoryDraw,
+    expected_revision: u32,
+) -> Result<librett_domain::CategoryDraw, ApplicationError> {
+    let category = draw_category(repository, tournament_id, draw.category_id)?;
+    let entries = draw_entries(repository, draw.category_id)?;
+    librett_domain::validate_draw(&draw, &category, &entries)?;
+    // Names and clubs come from persisted entry snapshots, never from client text.
+    draw.participants = entries
+        .into_iter()
+        .filter(|e| e.status == librett_domain::EntryStatus::Registered)
+        .collect();
+    repository.save_draw(draw, expected_revision)
 }
 
 pub trait PlayerRepository {

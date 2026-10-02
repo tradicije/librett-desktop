@@ -8,8 +8,8 @@ It is intended for clubs, organizers, players, and the community that builds
 the sport. LibreTT is both the application name and the umbrella project identity.
 
 **Status: early development.** We are currently building the tournament desktop
-application. Draws, matches, results, and release installers are not available
-yet. See the [development documentation](docs/en/DEVELOPMENT.md) to run it.
+application. Category draw drafts are available; matches, results, and release
+installers are not available yet. See the [development documentation](docs/en/DEVELOPMENT.md) to run it.
 
 ## Project philosophy
 

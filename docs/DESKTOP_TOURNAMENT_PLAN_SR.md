@@ -350,3 +350,12 @@ da aplikacija već postoji ili može da se instalira.
 
 Kalendar i procene dajemo nakon faze 0 i provere platformi. Najvažniji kriterijum
 prve verzije je pouzdano završen turnir u sali, uključujući greške i oporavak.
+
+
+## Trenutni napredak žreba
+
+Implementirani su nacrti po kategoriji: automatski/ručni režim, ručno poređani
+nosioci, približno jednake grupe, broj grupa i prolaznika, nokaut pozicije i bye
+najjačim nosiocima. Nacrti se ručno uređuju i čuvaju kao neizmenjive verzije u
+SQLite šemi 10. Slede potvrđivanje rasporeda, pravljenje mečeva, unos rezultata,
+rangiranje po dogovorenoj mini-tabeli i prolazak u nokaut.

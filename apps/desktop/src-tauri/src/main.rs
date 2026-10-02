@@ -5,7 +5,8 @@ use librett_application::{
     PlayerCashRepository, PlayerRepository, TournamentRepository,
 };
 use librett_domain::{
-    CompetitionFormat, Discipline, Entry, EntryStatus, Player, PlayerProfile, Tournament,
+    CategoryDraw, CompetitionFormat, Discipline, DrawMode, DrawSettings, Entry, EntryStatus,
+    Player, PlayerProfile, Tournament,
 };
 use librett_storage_sqlite::SqliteTournamentRepository;
 use std::sync::Mutex;
@@ -63,6 +64,17 @@ fn main() {
 
     tauri::Builder::default()
         .setup(|app| {
+            #[cfg(target_os = "macos")]
+            if let Some(window) = app.get_webview_window("main") {
+                window.with_webview(|webview| {
+                    // SAFETY: Tauri supplies a live WKWebView and executes this
+                    // callback on the main thread. The pointer is not retained.
+                    unsafe {
+                        let native = &*webview.inner().cast::<objc2_web_kit::WKWebView>();
+                        native.setAllowsBackForwardNavigationGestures(true);
+                    }
+                })?;
+            }
             let directory = app.path().app_data_dir()?;
             std::fs::create_dir_all(&directory)?;
             let repository = SqliteTournamentRepository::open(directory.join("librett.sqlite"))?;
@@ -70,6 +82,9 @@ fn main() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            get_category_draw,
+            preview_category_draw,
+            save_category_draw,
             delete_category,
             register_entries,
             cash_ledger,
@@ -287,4 +302,49 @@ fn settle_player_cash(
         .lock()
         .map_err(|_| ApplicationError::Storage)?
         .settle_player_cash(request_id, tournament_id, player_id, entry_ids, paid)
+}
+
+#[tauri::command]
+fn get_category_draw(
+    database: tauri::State<Database>,
+    tournament_id: Uuid,
+    category_id: Uuid,
+) -> Result<Option<CategoryDraw>, ApplicationError> {
+    application::get_category_draw(
+        &*database.0.lock().map_err(|_| ApplicationError::Storage)?,
+        tournament_id,
+        category_id,
+    )
+}
+#[tauri::command]
+fn preview_category_draw(
+    database: tauri::State<Database>,
+    tournament_id: Uuid,
+    category_id: Uuid,
+    mode: DrawMode,
+    settings: DrawSettings,
+    seeds: Vec<Uuid>,
+) -> Result<CategoryDraw, ApplicationError> {
+    application::preview_category_draw(
+        &*database.0.lock().map_err(|_| ApplicationError::Storage)?,
+        tournament_id,
+        category_id,
+        mode,
+        settings,
+        seeds,
+    )
+}
+#[tauri::command]
+fn save_category_draw(
+    database: tauri::State<Database>,
+    tournament_id: Uuid,
+    draw: CategoryDraw,
+    expected_revision: u32,
+) -> Result<CategoryDraw, ApplicationError> {
+    application::save_category_draw(
+        &mut *database.0.lock().map_err(|_| ApplicationError::Storage)?,
+        tournament_id,
+        draw,
+        expected_revision,
+    )
 }

@@ -33,7 +33,7 @@ Posle instalacije razvojnih zavisnosti lokalne operacije ne zahtevaju internet.
 
 Trenutno podržavamo turnire, kategorije, lokalne igrače, pretragu po imenu/klubu
 i prijavljivanje singl/dubl učesnika.
-Singl/dubl i formati se čuvaju kao podešavanja; žreb i mečevi još nisu
+Singl/dubl i formati se čuvaju kao podešavanja. Nacrti žreba su dostupni; mečevi još nisu
 implementirani. Još nema rezultata, interfejsa za izvoz/oporavak
 ili instalera. Razvojna verzija `0.1.0` nije objavljeno izdanje.
 
@@ -41,8 +41,8 @@ Tab Igrači prikazuje zajedničku listu. Dodaj/Izmeni otvara zasebne ekrane za
 profile i fotografije, a čuvanje vraća na listu. Brisanje traži potvrdu i čuva
 igrače sa postojećim prijavama. Prijave unutar turnira koriste tu bazu i mogu
 da se povuku i vrate;
-dolazak igrača važi kroz sve kategorije istog turnira. Šema verzije 9 dodaje uplate po igraču i zaštitu od ponavljanja naplate; pre migracije starijih baza pravi se konzistentan
-`pre-v9-<uuid>.sqlite` backup.
+dolazak igrača važi kroz sve kategorije istog turnira. Šema verzije 10 dodaje neizmenjive verzije nacrta žreba; pre migracije starijih baza pravi se konzistentan
+`pre-v10-<uuid>.sqlite` backup.
 
 Nazad/Napred prati istoriju ekrana. Home vraća na pregled izabranog modula, zatim
 na izbor modula koji nema bočni meni. Čuvanje zaključava navigaciju do završetka.
@@ -165,8 +165,8 @@ kotizaciju kategorije; 0 znači besplatno učešće.
 Klik na kategoriju otvara tab Prijave. Za singl čekiraj više igrača i prijavi ih
 zajedno. Za dubl označi dva igrača, dodaj par i ponovi za sledeći par pre zajedničke
 prijave. Već prijavljeni ostaju označeni i nisu dostupni za ponovnu prijavu.
-Upis svih prijava i zaduženja je jedna transakcija. Žreb, Grupe i Kostur trenutno
-prikazuju da su u pripremi; čisti nokaut nema tab Grupe.
+Upis svih prijava i zaduženja je jedna transakcija. Žreb omogućava nacrte grupa
+ili nokaut kostura; Mečevi i Rezultati su u pripremi.
 
 Brisanje traži potvrdu: prazna kategorija briše se trajno, a kategorija sa prijavama
 arhivira se i ostaje vidljiva u blagajni. Istorija navigacije objašnjava ako kategorija
@@ -179,6 +179,34 @@ Otvaranje turnira prikazuje stalne kartice Pregled, Kategorije, Prijave, Blagajn
 Kategorije sadrže aktivne kategorije i obrazac za novu kategoriju. Prijave vode do
 radnog prostora izabrane kategorije, gde se uređuju učesnici, dolasci i status
 prijave. Svaka kategorija ima svoje kartice Prijave, Žreb, Mečevi i Rezultati;
-poslednje tri su za sada označene kao delovi u pripremi. Blagajna prikazuje
+Mečevi i Rezultati su za sada označeni kao delovi u pripremi. Blagajna prikazuje
 postojeći pregled uplata po igraču. Pregled je početni ekran turnira. Prelazak
 između kartica ulazi u istoriju Nazad/Napred, kao i otvaranje kategorije.
+
+
+## Nacrt žreba
+
+Otvori kategoriju → Žreb. Izaberi automatski ili ručni režim i dodaj nosioce od
+najjačeg ka slabijima. Za grupe izaberi broj grupa i prolaznika iz svake.
+Napravi raspored pravi približno jednake grupe ili pozicije prvog nokaut kola.
+Automatika daje bye najjačim nosiocima; preostali bye se dodeljuju nasumično.
+Izbor prijave na poziciji omogućava ručnu izmenu; već raspoređena prijava menja
+mesto sa prethodnom na toj poziciji. Podešavanja grupa/režima važe za sledeće
+pravljenje rasporeda, a uređivanje nosilaca menja i prikazani nacrt.
+
+Sačuvaj nacrt upisuje novu verziju. Ručni nacrt može biti nepotpun. Sačuvaj pre
+napuštanja ekrana: nesačuvane izmene postoje samo dok je ekran žreba otvoren.
+Učitaj trenutno stanje odbacuje lokalne izmene. Promena prijava zahteva novi
+nacrt. Sukob verzija odbija zastareli upis; neizvestan upis zadržava isti UUID i
+zaključava navigaciju do potvrde ponavljanjem. Pre migracije postoji pre-v10 backup.
+Potvrđivanje žreba, mečevi, rezultati, rangiranje i prolazak u nokaut još nisu
+implementirani. Čuvanje nacrta ne pokreće takmičenje.
+
+## Navigacija mišem i trackpadom
+
+Strelice u aplikaciji, bočna dugmad miša i istorija webview-a koriste istu
+istoriju ekrana i kartica. Na macOS-u je uključena podrška WKWebView-a za
+horizontalno prevlačenje na trackpadu, uz dozvoljeno sistemsko podešavanje
+prevlačenja između stranica. Horizontalni skrol ostaje sistemski. Tokom upisa
+ni sistemska navigacija ne može promeniti ekran. Ponovno učitavanje aplikacije
+počinje novu istoriju.

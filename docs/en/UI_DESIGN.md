@@ -46,3 +46,10 @@ sections state their development status.
 The backend model and existing application workflows are unchanged by this redesign.
 Browser checks use temporary synthetic data outside the repository; production
 screens contain no seeded demonstration records.
+
+
+## Native history
+
+Screen and tab history uses the webview History API. Toolbar arrows and mouse
+back/forward buttons share it; macOS also enables native trackpad navigation.
+Pending writes restore the current history position before changing the screen.

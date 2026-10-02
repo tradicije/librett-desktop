@@ -44,3 +44,15 @@ export interface CashAllocation { record_id: string; player_id: string; amount_m
 export interface CashLedger { records: CashRecord[]; allocations: CashAllocation[] }
 export const cashLedger = (tournamentId: string) => invoke<CashLedger>('cash_ledger', { tournamentId });
 export const settlePlayerCash = (requestId: string, tournamentId: string, playerId: string, entryIds: string[], paid: boolean) => invoke<void>('settle_player_cash', { requestId, tournamentId, playerId, entryIds, paid });
+
+export type DrawMode = 'automatic' | 'manual';
+export interface DrawSettings { group_count: number; qualifiers_per_group: number }
+export interface CategoryDraw {
+  id: string; revision: number; category_id: string; format: CompetitionFormat;
+  mode: DrawMode; algorithm_version: number; random_seed: string;
+  settings: DrawSettings; participants: Entry[]; seeds: string[];
+  sections: (string | null)[][];
+}
+export const getCategoryDraw = (tournamentId: string, categoryId: string) => invoke<CategoryDraw | null>('get_category_draw', { tournamentId, categoryId });
+export const previewCategoryDraw = (tournamentId: string, categoryId: string, mode: DrawMode, settings: DrawSettings, seeds: string[]) => invoke<CategoryDraw>('preview_category_draw', { tournamentId, categoryId, mode, settings, seeds });
+export const saveCategoryDraw = (tournamentId: string, draw: CategoryDraw, expectedRevision: number) => invoke<CategoryDraw>('save_category_draw', { tournamentId, draw, expectedRevision });

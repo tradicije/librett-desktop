@@ -7,6 +7,8 @@ pub use cash::{
 };
 mod players;
 pub use players::{Entry, EntryMember, EntryStatus, Player, PlayerProfile};
+mod draw;
+pub use draw::{create_draw, validate_draw, CategoryDraw, DrawMode, DrawSettings};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -44,6 +46,7 @@ pub struct Tournament {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum DomainError {
+    InvalidDraw,
     InvalidCash,
     InvalidProfile,
     InvalidMembers,

@@ -8,7 +8,7 @@ klubovima, organizatorima, igračima i zajednici koja gradi ovaj sport.
 LibreTT je naziv aplikacije i krovni identitet projekta.
 
 **Status: rani razvoj.** Trenutno razvijamo desktop aplikaciju za turnire.
-Žreb, mečevi, rezultati i instaleri za izdanja još nisu dostupni. Uputstvo za
+Nacrti žreba su dostupni. Mečevi, rezultati i instaleri za izdanja još nisu dostupni. Uputstvo za
 pokretanje nalazi se u [razvojnoj dokumentaciji](docs/sr/DEVELOPMENT.md).
 
 ## Filozofija projekta
