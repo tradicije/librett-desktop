@@ -21,5 +21,8 @@ za miran raspored, čitljive liste i jasne akcije. LibreTT koristi svoj vizuelni
 identitet i raspored za turnirski rad. Reference i detalji su u
 [engleskim smernicama](../en/UI_DESIGN.md).
 
-Smernice pokrivaju postojeće ekrane. Brojači prikazuju stvarne podatke, a
-probni podaci za proveru interfejsa ostaju van repozitorijuma.
+Radni prostor turnira koristi stalne kartice Pregled, Kategorije, Prijave i
+Blagajna. Kartice Žreb, Mečevi i Rezultati nalaze se unutar kategorije.
+Delovi koji još nisu implementirani jasno prikazuju da su u pripremi. Brojači
+prikazuju stvarne podatke, a probni podaci za proveru interfejsa ostaju van
+repozitorijuma.

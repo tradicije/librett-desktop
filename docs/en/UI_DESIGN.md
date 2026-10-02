@@ -38,8 +38,11 @@ counts and financial figures always come from current data.
 
 ## Current coverage
 
-Mode selection, tournaments, categories, registrations, the player directory,
-player create/edit screens, cash accounts and financial history share this system.
+Mode selection, tournament-level tabs, category tabs, the player directory,
+player create/edit screens and the cash desk share this system. Tournament tabs
+keep Overview, Categories, Registrations and Cash desk available in the tournament
+context. Draw, Matches and Results live inside each category; unfinished competition
+sections state their development status.
 The backend model and existing application workflows are unchanged by this redesign.
 Browser checks use temporary synthetic data outside the repository; production
 screens contain no seeded demonstration records.

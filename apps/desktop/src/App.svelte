@@ -17,18 +17,29 @@
   let theme = $state<ThemePreference>(savedTheme());
   let resolvedTheme = $state<ResolvedTheme>(document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light');
   let text = $derived(messages[language]);
-  type Route = { view: 'dashboard' | 'tournaments' | 'players' | 'player-create' | 'player-edit' | 'tournament' | 'cash' | 'category'; id?: string; categoryId?: string; tab?: CategoryTab };
+  type TournamentTab = 'overview' | 'categories' | 'registrations' | 'cash';
+  const tournamentTabs: TournamentTab[] = ['overview', 'categories', 'registrations', 'cash'];
+  type Route = { view: 'dashboard' | 'tournaments' | 'players' | 'player-create' | 'player-edit' | 'tournament' | 'category'; id?: string; categoryId?: string; tournamentTab?: TournamentTab; categoryTab?: CategoryTab };
   let history = $state<Route[]>([{ view: 'dashboard' }]);
   let historyIndex = $state(0);
   let route = $derived(history[historyIndex]);
   let inPlayers = $derived(route.view === 'players' || route.view === 'player-create' || route.view === 'player-edit');
-  let pageLabel = $derived(route.view === 'dashboard' ? text.dashboard : route.view === 'cash' ? text.cashDesk : inPlayers ? text.playerTab : text.tournaments);
+  let pageLabel = $derived(route.view === 'dashboard' ? text.dashboard : inPlayers ? text.playerTab : text.tournaments);
   let mode = $derived(route.view === 'dashboard' ? 'dashboard' : 'tournaments');
   let childBusy = $state(false);
   let tournaments = $state<Tournament[]>([]);
-  let selectedId = $derived((route.view === 'tournament' || route.view === 'cash' || route.view === 'category') ? route.id : null);
+  let selectedId = $derived((route.view === 'tournament' || route.view === 'category') ? route.id : null);
   let selected = $derived(tournaments.find(t => t.id === selectedId));
   let activeCategories = $derived(selected?.categories.filter(c => !c.archived) ?? []);
+  let tournamentTab = $derived(route.view === 'tournament' ? route.tournamentTab ?? 'overview' : 'overview');
+  function tournamentTabLabel(tab: TournamentTab): string {
+    switch (tab) {
+      case 'overview': return text.tournamentTab_overview;
+      case 'categories': return text.tournamentTab_categories;
+      case 'registrations': return text.tournamentTab_registrations;
+      case 'cash': return text.tournamentTab_cash;
+    }
+  }
   let selectedCategory = $derived(activeCategories.find(c => c.id === route.categoryId));
   let pendingCategory = $state<Category | null>(null);
   let categoryDialog: HTMLDialogElement;
@@ -91,7 +102,8 @@
   }
   function navigate(next: Route) {
     const current = history[historyIndex];
-    if (current.view === next.view && current.id === next.id && current.categoryId === next.categoryId && current.tab === next.tab) return;
+    if (current.view === next.view && current.id === next.id && current.categoryId === next.categoryId &&
+      current.tournamentTab === next.tournamentTab && current.categoryTab === next.categoryTab) return;
     history = [...history.slice(0, historyIndex + 1), next];
     historyIndex = history.length - 1;
     resetView();
@@ -108,6 +120,9 @@
   function openTournaments() { navigate({ view: 'tournaments' }); }
   function openDashboard() { navigate({ view: 'dashboard' }); }
   function select(id: string | null) { navigate(id ? { view: 'tournament', id } : { view: 'tournaments' }); }
+  function openTournamentTab(tab: TournamentTab) {
+    if (selected) navigate({ view: 'tournament', id: selected.id, tournamentTab: tab });
+  }
 
   async function confirmCategory(category: Category) {
     pendingCategory = category; await tick(); categoryDialog.showModal();
@@ -143,7 +158,7 @@
           <button class="icon-button" aria-label={text.goForward} title={text.goForward} disabled={navigationLocked || historyIndex === history.length - 1} onclick={() => travel(1)}><Icon name="arrow-right" /></button>
           <button class="icon-button" aria-label={text.goHome} title={text.goHome} disabled={navigationLocked || mode === 'dashboard'} onclick={home}><Icon name="home" /></button>
         </div>
-        {#if mode !== 'dashboard'}<div class="breadcrumb"><span>{text.tournaments}</span><span class="breadcrumb-divider">/</span><strong>{selected?.name ?? pageLabel}</strong>{#if route.view === 'category' && selectedCategory}<span class="breadcrumb-divider">/</span><span>{selectedCategory.name}</span>{/if}{#if route.view === 'cash'}<span class="breadcrumb-divider">/</span><span>{text.cashDesk}</span>{/if}</div>{/if}
+        {#if mode !== 'dashboard'}<div class="breadcrumb"><span>{text.tournaments}</span><span class="breadcrumb-divider">/</span><strong>{selected?.name ?? pageLabel}</strong>{#if route.view === 'category' && selectedCategory}<span class="breadcrumb-divider">/</span><span>{selectedCategory.name}</span>{/if}</div>{/if}
       </div>
       <div class="preferences">
         <label><Icon name={theme === 'system' ? 'desktop' : theme === 'dark' ? 'moon' : 'sun'} size={18} /><span class="preference-label">{text.theme}</span><Select label={text.theme} bind:value={theme} options={[{ value: 'system', label: text.themeSystem }, { value: 'light', label: text.themeLight }, { value: 'dark', label: text.themeDark }]} /></label>
@@ -177,19 +192,28 @@
         <PlayerEditor {language} playerId={route.id} bind:busy={childBusy}
           onsaved={() => { navigate({ view: 'players' }); notice = 'playerSaved'; }} oncancel={() => navigate({ view: 'players' })} />
       {/key}
-    {:else if selected && route.view === 'cash'}
-      {#key selected.id}<CashDesk tournament={selected} {language} bind:busy={childBusy} />{/key}
     {:else if selected && route.view === 'category'}
-      {#if selectedCategory}<CategoryDetail tournament={selected} category={selectedCategory} {language} tab={route.tab ?? 'registrations'} ontab={(tab) => navigate({ view: 'category', id: selected.id, categoryId: selectedCategory.id, tab })} bind:busy={childBusy} />
+      {#if selectedCategory}<CategoryDetail tournament={selected} category={selectedCategory} {language} tab={route.categoryTab ?? 'registrations'} ontab={(tab) => navigate({ view: 'category', id: selected.id, categoryId: selectedCategory.id, categoryTab: tab })} bind:busy={childBusy} />
       {:else}<p class="banner">{text.categoryUnavailable}</p><button class="secondary" onclick={() => select(selected.id)}>{text.backToTournament}</button>{/if}
     {:else if selected}
-      <div class="heading"><div><p class="eyebrow">{text.selected}</p><h1>{selected.name}</h1></div><button class="secondary icon-label" disabled={navigationLocked} onclick={() => navigate({ view: 'cash', id: selected.id })}><Icon name="cash" size={18} />{text.cashDesk}<Icon name="arrow-right" size={16} /></button></div>
+      <div class="heading"><div><p class="eyebrow">{text.selected}</p><h1>{selected.name}</h1></div></div>
+      <nav class="category-tabs" aria-label={text.tournamentSections}>
+        {#each tournamentTabs as tab}
+          <button class:active={tournamentTab === tab} aria-current={tournamentTab === tab ? 'page' : undefined} disabled={navigationLocked} onclick={() => openTournamentTab(tab)}>{tournamentTabLabel(tab)}</button>
+        {/each}
+      </nav>
+      {#if tournamentTab === 'overview'}
+        <div class="columns">
+          <section class="panel"><div class="section-heading"><h2>{text.tournamentOverview}</h2></div><p class="muted">{text.tournamentOverviewIntro}</p></section>
+          <section class="panel"><div class="section-heading"><h2>{text.categories}</h2><span class="pill">{activeCategories.length}</span></div><p class="muted">{activeCategories.length ? activeCategories.map(category => `${category.name} · ${text[category.discipline]}`).join(' / ') : text.noCategories}</p><button class="secondary" disabled={navigationLocked} onclick={() => openTournamentTab('categories')}>{text.openCategories}<Icon name="arrow-right" size={16} /></button></section>
+        </div>
+      {:else if tournamentTab === 'categories'}
       <div class="columns">
         <section class="panel">
           <div class="section-heading"><h2>{text.categories}</h2><span class="pill">{activeCategories.length}</span></div>
           {#if activeCategories.length === 0}<p class="muted">{text.noCategories}</p>{/if}
           {#each activeCategories as category (category.id)}
-            <div class="category-list-row"><button class="tournament category-open" disabled={navigationLocked} onclick={() => navigate({ view: 'category', id: selected.id, categoryId: category.id, tab: 'registrations' })}><span class="category-icon"><Icon name={category.discipline === 'singles' ? 'user' : 'users'} /></span><div class="row-content"><strong>{category.name}</strong><small>{text[category.discipline]} · {text[category.format]} · {formatMoney(category.fee_minor, language)} {text.feePerEntry}</small></div><Icon name="arrow-right" size={16} /></button><button class="icon-button" disabled={navigationLocked} aria-label={`${text.deleteCategory}: ${category.name} · ${text[category.discipline]}`} onclick={() => confirmCategory(category)}><Icon name="trash" size={16} /></button></div>
+            <div class="category-list-row"><button class="tournament category-open" disabled={navigationLocked} onclick={() => navigate({ view: 'category', id: selected.id, categoryId: category.id, categoryTab: 'registrations' })}><span class="category-icon"><Icon name={category.discipline === 'singles' ? 'user' : 'users'} /></span><div class="row-content"><strong>{category.name}</strong><small>{text[category.discipline]} · {text[category.format]} · {formatMoney(category.fee_minor, language)} {text.feePerEntry}</small></div><Icon name="arrow-right" size={16} /></button><button class="icon-button" disabled={navigationLocked} aria-label={`${text.deleteCategory}: ${category.name} · ${text[category.discipline]}`} onclick={() => confirmCategory(category)}><Icon name="trash" size={16} /></button></div>
           {/each}
         </section>
         <section class="panel form-panel"><h2 class="icon-label"><Icon name="layer-group" />{text.addCategory}</h2>
@@ -202,6 +226,16 @@
           </form>
         </section>
       </div>
+      {:else if tournamentTab === 'registrations'}
+        <section class="panel"><div class="section-heading"><h2>{text.registrations}</h2></div><p class="muted">{text.tournamentRegistrationsIntro}</p>
+          {#if activeCategories.length === 0}<p class="muted">{text.noCategories}</p>{/if}
+          {#each activeCategories as category (category.id)}
+            <button class="tournament" disabled={navigationLocked} onclick={() => navigate({ view: 'category', id: selected.id, categoryId: category.id, categoryTab: 'registrations' })}><span class="category-icon"><Icon name={category.discipline === 'singles' ? 'user' : 'users'} /></span><div class="row-content"><strong>{category.name}</strong><small>{text[category.discipline]} · {text[category.format]}</small></div><Icon name="arrow-right" size={16} /></button>
+          {/each}
+        </section>
+      {:else if tournamentTab === 'cash'}
+        {#key selected.id}<CashDesk tournament={selected} {language} bind:busy={childBusy} />{/key}
+      {/if}
     {:else}
       <div class="heading"><div><p class="eyebrow">LibreTT</p><h1>{text.tournaments}</h1><p class="muted">{text.intro}</p></div></div>
       <div class="columns">

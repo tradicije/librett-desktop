@@ -6,6 +6,10 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Changed
 
+- Added persistent tournament-level tabs for Overview, Categories, Registrations
+  and Cash desk. Draw, Matches and Results are category-level tabs; their workflows
+  are clearly marked as in development.
+
 - Replaced the tournament cash desk's account/form/history blocks with a searchable
   player table, separate category columns, initially empty selection checkboxes and Collect/Refund buttons. Only selected categories
   are settled; each paid category shows its own status. Confirmed refunds return only selected player/category payments

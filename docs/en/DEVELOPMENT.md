@@ -178,3 +178,13 @@ Delete asks for confirmation. Empty categories are removed; categories with any
 entry are archived and retain accounts in Cash desk. History routes to removed
 categories explain their unavailable state. Category names are unique within a
 discipline, so Singles and Doubles may share the same name.
+
+## Tournament workspace
+
+Opening a tournament shows persistent Overview, Categories, Registrations and Cash
+desk tabs. Categories contains the active category list and the new-category form.
+Registrations opens a selected category's workspace for managing entries, attendance
+and registration status. Each category has its own Registrations, Draw, Matches and
+Results tabs; the latter three are marked as in development. Cash desk shows the
+existing player payment matrix. Overview is the tournament's starting screen.
+Moving between tabs participates in Back/Forward history, as does opening a category.

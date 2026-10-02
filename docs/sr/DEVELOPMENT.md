@@ -172,3 +172,13 @@ Brisanje traži potvrdu: prazna kategorija briše se trajno, a kategorija sa pri
 arhivira se i ostaje vidljiva u blagajni. Istorija navigacije objašnjava ako kategorija
 više nije aktivna. Singl i dubl smeju da imaju isti naziv; duplikati iste discipline
 nisu dozvoljeni.
+
+## Radni prostor turnira
+
+Otvaranje turnira prikazuje stalne kartice Pregled, Kategorije, Prijave, Blagajna,
+Kategorije sadrže aktivne kategorije i obrazac za novu kategoriju. Prijave vode do
+radnog prostora izabrane kategorije, gde se uređuju učesnici, dolasci i status
+prijave. Svaka kategorija ima svoje kartice Prijave, Žreb, Mečevi i Rezultati;
+poslednje tri su za sada označene kao delovi u pripremi. Blagajna prikazuje
+postojeći pregled uplata po igraču. Pregled je početni ekran turnira. Prelazak
+između kartica ulazi u istoriju Nazad/Napred, kao i otvaranje kategorije.
