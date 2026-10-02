@@ -1,9 +1,9 @@
 const sr = {
-  playerCashIntro: 'Izaberi kategorije koje igrač plaća i klikni Plati. Dubl kotizacija deli se na dva igrača.',
+  playerCashIntro: 'Izaberi kategorije koje igrač plaća i klikni Naplati. Za vraćanje novca izaberi kategorije i klikni Povraćaj. Dubl kotizacija deli se na dva igrača.',
   notRegisteredCategory: 'Nije prijavljen u ovu kategoriju',
-  cashActions: 'Naplata', pay: 'Plati', registeredPlayers: 'Prijavljeno', paid: 'Plaćeno', partner: 'Partner', searchCashPlayers: 'Pretraži igrača, klub ili kategoriju',
-  selectCashCategory: 'Izaberi kategoriju za naplatu', selectedCashAmount: 'Izabrano za naplatu',
-  confirmCashRefund: 'Potvrdi povraćaj', cashRefundHint: 'Poništavanje oznake Plaćeno evidentira povraćaj primljenih uplata za izabrane kategorije ovog igrača. Finansijska istorija ostaje sačuvana.',
+  cashActions: 'Naplata', pay: 'Naplati', registeredPlayers: 'Prijavljeno', paid: 'Plaćeno', partner: 'Partner', searchCashPlayers: 'Pretraži igrača, klub ili kategoriju',
+  selectCashCategory: 'Izaberi kategoriju za naplatu ili povraćaj', selectedCashAmount: 'Izabrano za naplatu',
+  confirmCashRefund: 'Potvrdi povraćaj', cashRefundHint: 'Vraća se primljeni iznos za izabrane kategorije ovog igrača. Finansijska istorija ostaje sačuvana. Povraćaj ne povlači prijavu sa turnira.',
 
   registrations: 'Prijave', draw: 'Žreb', groups: 'Grupe', bracket: 'Kostur', categorySections: 'Delovi kategorije',
   stageNotReady: 'Ovaj deo takmičenja je u pripremi. Za sada možeš da urediš prijave; generisanje žreba i mečeva dolazi sledeće.',
@@ -75,11 +75,11 @@ const sr = {
 };
 type Messages = typeof sr;
 const en: Messages = {
-  playerCashIntro: 'Select the categories the player is paying for and click Pay. Doubles fees are split between both players.',
+  playerCashIntro: 'Select the categories the player is paying for and click Collect. To return money, select categories and click Refund. Doubles fees are split between both players.',
   notRegisteredCategory: 'Not registered in this category',
-  cashActions: 'Payment', pay: 'Pay', registeredPlayers: 'Registered', paid: 'Paid', partner: 'Partner', searchCashPlayers: 'Search player, club or category',
-  selectCashCategory: 'Select category for payment', selectedCashAmount: 'Selected for payment',
-  confirmCashRefund: 'Confirm refund', cashRefundHint: 'Unchecking Paid records a refund of received payments for this player’s selected categories. Financial history is preserved.',
+  cashActions: 'Payment', pay: 'Collect', registeredPlayers: 'Registered', paid: 'Paid', partner: 'Partner', searchCashPlayers: 'Search player, club or category',
+  selectCashCategory: 'Select category for payment or refund', selectedCashAmount: 'Selected for payment',
+  confirmCashRefund: 'Confirm refund', cashRefundHint: 'The received amount for this player’s selected categories will be refunded. Financial history is preserved. Refunding does not withdraw the tournament registration.',
 
   registrations: 'Registrations', draw: 'Draw', groups: 'Groups', bracket: 'Bracket', categorySections: 'Category sections',
   stageNotReady: 'This competition stage is in development. Manage registrations here for now; draw and match generation comes next.',

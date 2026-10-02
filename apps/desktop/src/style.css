@@ -351,3 +351,8 @@ input:focus-visible, textarea:focus-visible { border-color: var(--primary); }
 input[type="file"]::file-selector-button { cursor: pointer; }
 input[type="file"]:hover:enabled::file-selector-button { background: var(--surface-hover); border-color: var(--text-muted); }
 @media (prefers-reduced-motion: reduce) { button, .category-list-row, .cash-category-choice, .paid-choice { transition: none; } }
+
+.cash-row-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.cash-refund-items { padding: 0; list-style: none; }
+.cash-refund-items li { display: flex; justify-content: space-between; gap: 16px; padding: 10px 0; border-bottom: 1px solid var(--border-subtle); }
+.cash-refund-items strong { white-space: nowrap; font-variant-numeric: tabular-nums; }

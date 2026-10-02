@@ -62,7 +62,7 @@ biti deo funkcionalnosti za rezultate, a ne naknadni dodatak.
   vraćanje prijave, kao i potvrda dolaska igrača za ceo turnir.
 - Kotizacija kategorije u RSD i automatsko zaduženje pri novoj prijavi;
   kod dubla iznos važi po paru, a 0 znači besplatno učešće.
-- Blagajna sa pretragom, redom po igraču, kolonama kategorija, izborom stavki i dugmetom Plati.
+- Blagajna sa pretragom, redom po igraču, kolonama kategorija, izborom stavki i dugmadima Naplati i Povraćaj.
   Dubl kotizacija deli se ravnopravno; dugovanje, neto primljeno i broj prijavljenih
   uzimaju u obzir postojeće uplate i popuste. Finansijska istorija ostaje sačuvana.
 - Brisanje praznih kategorija i arhiviranje kategorija sa prijavama, uz

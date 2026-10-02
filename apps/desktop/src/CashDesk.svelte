@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import Icon from './Icon.svelte';
   import { formatMoney } from './money';
   import { cashLedger, listEntries, settlePlayerCash, desktopAvailable, type Tournament, type Entry, type CashLedger } from './api';
@@ -17,6 +17,8 @@
   let notice = $state(false);
   type Request = { id: string; playerId: string; entryIds: string[]; paid: boolean };
   let pending = $state<Request | null>(null);
+  let refund = $state<{ playerId: string; name: string; accounts: { entryId: string; label: string; amount: number }[] } | null>(null);
+  let dialog: HTMLDialogElement;
   function money(amount: number) { return formatMoney(amount, language); }
   function share(amount: number, position: number, count: number) { return Math.trunc(amount / count) + (position < Math.abs(amount % count) ? Math.sign(amount) : 0); }
   function entryBalance(entry: Entry, playerId?: string) {
@@ -46,7 +48,7 @@
     return [...players.values()].map(player => {
       const accounts = player.entries.map(entry => ({ entry, ...entryBalance(entry,player.id) }));
       const chosen = accounts.filter(a => selected[player.id]?.includes(a.entry.id));
-      return { ...player, accounts, remaining: accounts.reduce((sum,a) => sum+a.remaining,0), selectedRemaining: chosen.reduce((sum,a) => sum+a.remaining,0) };
+      return { ...player, accounts, remaining: accounts.reduce((sum,a) => sum+a.remaining,0), selectedRemaining: chosen.reduce((sum,a) => sum+a.remaining,0), selectedNet: chosen.reduce((sum,a) => sum+Math.max(0,a.net),0) };
     }).sort((a,b) => a.name.localeCompare(b.name,language));
   });
   let filtered = $derived(rows.filter(row => `${row.name} ${row.club} ${row.entries.map(categoryLabel).join(' ')}`.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase())));
@@ -75,6 +77,16 @@
     const entryIds = row.accounts.filter(account => account.remaining > 0 && selected[row.id]?.includes(account.entry.id)).map(account => account.entry.id);
     pending = { id: crypto.randomUUID(), playerId: row.id, entryIds, paid: true };
     await save();
+  }
+  async function refundSelected(row: typeof rows[number]) {
+    if (busy || row.selectedNet <= 0) return;
+    refund = { playerId: row.id, name: row.name, accounts: row.accounts.filter(account => account.net > 0 && selected[row.id]?.includes(account.entry.id)).map(account => ({ entryId: account.entry.id, label: categoryLabel(account.entry), amount: account.net })) };
+    await tick(); dialog.showModal();
+  }
+  async function confirmRefund() {
+    if (!refund || busy) return;
+    pending = { id: crypto.randomUUID(), playerId: refund.playerId, entryIds: refund.accounts.map(account => account.entryId), paid: false };
+    dialog.close(); await save();
   }
   async function save() {
     if (!pending || saving) return;
@@ -113,14 +125,14 @@
                 {@const account = row.accounts.find(a => a.entry.category_id === category.id)}
                 <td>
                   {#if account}
-                    <label class="cash-category-choice"><input type="checkbox" checked={selected[row.id]?.includes(account.entry.id)} onchange={() => toggleCategory(row.id,account.entry.id)} disabled={busy || account.remaining === 0} aria-label={`${text.selectCashCategory}: ${row.name} · ${categoryLabel(account.entry)}`} /><span class="cash-category-amount">{account.remaining === 0 ? text.paid : money(account.remaining)}</span></label>
+                    <label class="cash-category-choice"><input type="checkbox" checked={selected[row.id]?.includes(account.entry.id)} onchange={() => toggleCategory(row.id,account.entry.id)} disabled={busy || (account.remaining === 0 && account.net <= 0)} aria-label={`${text.selectCashCategory}: ${row.name} · ${categoryLabel(account.entry)}`} /><span class="cash-category-amount">{account.remaining === 0 ? text.paid : money(account.remaining)}</span></label>
                     {#if account.entry.members.length === 2}<small class="cash-cell-detail">{account.entry.members.find(m => m.id !== row.id)?.name}</small>{/if}
                     {#if account.entry.status === 'withdrawn'}<small class="cash-cell-detail">{text.withdrawnRegistrations}</small>{/if}
                   {:else}<span class="cash-cell-empty" aria-label={text.notRegisteredCategory}>—</span>{/if}
                 </td>
               {/each}
               <td class="cash-player-total"><strong>{money(row.remaining)}</strong>{#if row.selectedRemaining !== row.remaining}<small>{text.selectedCashAmount}: {money(row.selectedRemaining)}</small>{/if}</td>
-              <td><button class="primary cash-pay-button" onclick={() => paySelected(row)} disabled={busy || row.selectedRemaining <= 0} aria-label={`${text.pay}: ${row.name}`}>{text.pay}</button></td>
+              <td><div class="cash-row-actions"><button class="primary cash-pay-button" onclick={() => paySelected(row)} disabled={busy || row.selectedRemaining <= 0} aria-label={`${text.pay}: ${row.name}`}>{text.pay}</button><button class="secondary" onclick={() => refundSelected(row)} disabled={busy || row.selectedNet <= 0} aria-label={`${text.refund}: ${row.name}`}>{text.refund}</button></div></td>
             </tr>
           {/each}
         </tbody>
@@ -129,3 +141,9 @@
     {#if !filtered.length}<p class="muted">{rows.length ? text.noPlayers : text.cashNoEntries}</p>{/if}
   </section>
 {/if}
+<dialog class="confirm-dialog" bind:this={dialog} aria-labelledby="cash-refund-title" onclose={() => { refund = null; }}>
+  <h2 id="cash-refund-title">{text.confirmCashRefund}</h2><p>{refund?.name}</p>
+  <ul class="cash-refund-items">{#each refund?.accounts ?? [] as account (account.entryId)}<li><span>{account.label}</span><strong>{money(account.amount)}</strong></li>{/each}</ul>
+  <p><strong>{text.refund}: {money(refund?.accounts.reduce((sum,account) => sum+account.amount,0) ?? 0)}</strong></p>
+  <p>{text.cashRefundHint}</p><div class="dialog-actions"><button class="secondary" onclick={() => dialog.close()}>{text.cancelDelete}</button><button class="primary" onclick={confirmRefund}>{text.refund}</button></div>
+</dialog>

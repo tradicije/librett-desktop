@@ -65,7 +65,7 @@ history must be part of the results workflow, rather than an afterthought.
   restoration, and tournament-wide player check-in.
 - Category fees in RSD with automatic charges for new registrations; doubles
   fees are per pair, and zero means free entry.
-- A searchable cash desk with a row per player, category columns, empty selection checkboxes and a Pay button.
+- A searchable cash desk with a row per player, category columns, empty selection checkboxes, and Collect/Refund buttons.
   Doubles fees split equally; remaining balance, net received and registered player
   totals account for existing payments and discounts. Financial history is preserved.
 - Confirmed deletion of empty categories and archiving of used categories,
