@@ -1,4 +1,10 @@
 const sr = {
+  playerCashIntro: 'Čekiraj kategorije koje naplaćuješ i označi Plaćeno. Dubl kotizacija deli se na dva igrača.',
+  notRegisteredCategory: 'Nije prijavljen u ovu kategoriju',
+  registeredPlayers: 'Prijavljeno', paid: 'Plaćeno', partner: 'Partner', searchCashPlayers: 'Pretraži igrača, klub ili kategoriju',
+  selectCashCategory: 'Izaberi kategoriju za naplatu', selectedCashAmount: 'Izabrano za naplatu',
+  confirmCashRefund: 'Potvrdi povraćaj', cashRefundHint: 'Poništavanje oznake Plaćeno evidentira povraćaj primljenih uplata za izabrane kategorije ovog igrača. Finansijska istorija ostaje sačuvana.',
+
   registrations: 'Prijave', draw: 'Žreb', groups: 'Grupe', bracket: 'Kostur', categorySections: 'Delovi kategorije',
   stageNotReady: 'Ovaj deo takmičenja je u pripremi. Za sada možeš da urediš prijave; generisanje žreba i mečeva dolazi sledeće.',
   deleteCategory: 'Obriši kategoriju', deleteCategoryHint: 'Prazna kategorija briše se trajno. Kategorija sa prijavama arhivira se: nestaje iz aktivnog turnira, a prijave i finansijska istorija ostaju sačuvane u blagajni.',
@@ -69,6 +75,12 @@ const sr = {
 };
 type Messages = typeof sr;
 const en: Messages = {
+  playerCashIntro: 'Check the categories to collect and mark Paid. Doubles fees are split between both players.',
+  notRegisteredCategory: 'Not registered in this category',
+  registeredPlayers: 'Registered', paid: 'Paid', partner: 'Partner', searchCashPlayers: 'Search player, club or category',
+  selectCashCategory: 'Select category for payment', selectedCashAmount: 'Selected for payment',
+  confirmCashRefund: 'Confirm refund', cashRefundHint: 'Unchecking Paid records a refund of received payments for this player’s selected categories. Financial history is preserved.',
+
   registrations: 'Registrations', draw: 'Draw', groups: 'Groups', bracket: 'Bracket', categorySections: 'Category sections',
   stageNotReady: 'This competition stage is in development. Manage registrations here for now; draw and match generation comes next.',
   deleteCategory: 'Delete category', deleteCategoryHint: 'Empty categories are permanently deleted. Categories with entries are archived: removed from the active tournament while registrations and financial history remain in the cash desk.',

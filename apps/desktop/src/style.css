@@ -279,3 +279,75 @@ form > .primary { justify-self: start; }
 .picker-row .pill { font-size: 9px; }
 .pair-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 11px; padding-bottom: 8px; border-bottom: 1px solid var(--border-subtle); }
 @media (max-width: 650px) { .category-tabs { gap: 15px; } .picker-row .pill { white-space: normal; max-width: 75px; } }
+
+.player-cash-list { padding: 20px 0 0; overflow: hidden; }
+.player-cash-list .directory-toolbar { padding: 0 20px 20px; }
+.cash-table-scroll { overflow-x: auto; }
+.cash-table-scroll:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+.cash-player-table { width: 100%; border-collapse: collapse; text-align: left; }
+.cash-player-table thead { background: var(--background); }
+.cash-player-table th, .cash-player-table td { padding: 18px 20px; border-top: 1px solid var(--border-subtle); vertical-align: middle; }
+.cash-player-table thead th { padding-top: 12px; padding-bottom: 12px; font-size: 11px; font-weight: 550; color: var(--text-secondary); }
+.cash-player-table thead small { display: block; margin-top: 4px; color: var(--text-muted); font-size: 10px; font-weight: 400; }
+.cash-player-table th:first-child { min-width: 205px; }
+.cash-player-table td { min-width: 155px; }
+.cash-player-table td:last-child { min-width: 105px; }
+.cash-player-identity { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.cash-player-identity h3 { font-size: 12px; font-weight: 550; margin: 0; }
+.cash-player-identity p { font-size: 10px; font-weight: 400; color: var(--text-secondary); margin: 4px 0 0; overflow-wrap: anywhere; }
+.cash-category-choice { display: flex; align-items: center; gap: 9px; cursor: pointer; }
+.cash-category-choice input, .paid-choice input { width: 15px; height: 15px; min-height: 15px; flex-shrink: 0; accent-color: var(--primary); }
+.cash-category-amount { font-size: 11px; color: var(--text-secondary); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cash-cell-detail { display: block; font-size: 9px; color: var(--text-muted); margin-top: 6px; padding-left: 24px; }
+.cash-cell-empty { color: var(--text-muted); }
+.cash-player-total { font-variant-numeric: tabular-nums; }
+.cash-player-total strong { font-size: 12px; font-weight: 550; white-space: nowrap; }
+.cash-player-total small { display: block; margin-top: 5px; font-size: 9px; color: var(--text-muted); }
+.paid-choice { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 11px; cursor: pointer; }
+.is-paid .cash-player-total strong { color: var(--text-muted); }
+.player-cash-list > .muted { margin: 20px; }
+@media(max-width: 650px) { .player-cash-list .directory-toolbar { padding: 0 16px 16px; } }
+
+/* Interactive states share the same palette and never change element geometry. */
+button { transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease; }
+button:hover:enabled { border-color: var(--text-muted); background: var(--surface-hover); }
+button:active:enabled { border-color: var(--primary); background: var(--primary-subtle); }
+.primary:hover:enabled { background: var(--primary-hover); border-color: transparent; color: var(--on-primary); }
+.primary:active:enabled { background: var(--primary); border-color: transparent; }
+.secondary:hover:enabled { color: var(--text-primary); border-color: var(--border); }
+.icon-button:hover:enabled { color: var(--primary); border-color: var(--border); background: var(--surface-hover); }
+.nav-item:hover:enabled { color: var(--text-primary); border-color: transparent; background: var(--surface-hover); }
+.nav-item.active:hover:enabled { background: var(--primary-subtle); border-color: var(--border); }
+.nav-item:hover:enabled .icon { color: var(--primary); }
+.preferences .select-trigger:hover:enabled { background: var(--surface-hover); border-color: var(--border); }
+.select-trigger[aria-expanded="true"] { border-color: var(--primary); }
+.select-trigger:hover:enabled { border-color: var(--text-muted); }
+.select-menu button:hover { background: var(--surface-hover); border-color: transparent; }
+.select-menu button[aria-selected="true"]:hover { background: var(--primary-subtle); color: var(--primary); }
+.mode-card:hover:enabled { background: var(--surface); border-color: var(--primary); }
+.mode-card:hover:enabled .mode-action { color: var(--primary-hover); }
+.tournament:hover:enabled { background: var(--surface-hover); border-top-color: var(--border-subtle); color: var(--text-primary); }
+.tournament:hover:enabled > .icon, .tournament:hover:enabled .row-icon { color: var(--primary); }
+.category-list-row { transition: background-color 120ms ease; }
+.category-list-row:has(.category-open:hover:enabled), .category-list-row:has(.category-open:focus-visible) { background: var(--surface-hover); }
+.category-open:hover:enabled { background: transparent; }
+.player-actions button:hover:enabled { background: var(--surface-hover); border-color: var(--border); color: var(--text-primary); }
+.category-tabs button:hover:enabled { background: transparent; color: var(--primary); border-bottom-color: var(--border); }
+.category-tabs button.active:hover:enabled { border-bottom-color: var(--primary); color: var(--text-primary); }
+.picker-row:hover { background: transparent; }
+.picker-row:has(input:enabled):hover, .picker-row:has(input:focus-visible) { background: var(--surface-hover); }
+.picker-row:has(input:checked:enabled):hover { background: var(--primary-subtle); }
+input[type="checkbox"] { cursor: pointer; }
+input[type="checkbox"]:disabled { cursor: default; }
+input[type="checkbox"]:hover:enabled { outline: 1px solid var(--primary); outline-offset: 2px; }
+.cash-player-row:has(input:enabled):hover { background: color-mix(in srgb, var(--surface-hover) 35%, var(--surface)); }
+.cash-category-choice, .paid-choice { padding: 5px; margin: -5px; border-radius: 4px; transition: background-color 120ms ease, color 120ms ease; }
+.cash-category-choice:has(input:enabled):hover, .cash-category-choice:has(input:focus-visible), .paid-choice:has(input:enabled):hover, .paid-choice:has(input:focus-visible) { background: var(--primary-subtle); color: var(--text-primary); }
+.cash-category-choice:has(input:disabled), .paid-choice:has(input:disabled) { cursor: default; }
+input:hover:enabled, textarea:hover:enabled { border-color: var(--text-muted); }
+input:focus-visible, textarea:focus-visible { border-color: var(--primary); }
+.brand:hover { opacity: .85; }
+.brand:active { opacity: 1; }
+input[type="file"]::file-selector-button { cursor: pointer; }
+input[type="file"]:hover:enabled::file-selector-button { background: var(--surface-hover); border-color: var(--text-muted); }
+@media (prefers-reduced-motion: reduce) { button, .category-list-row, .cash-category-choice, .paid-choice { transition: none; } }

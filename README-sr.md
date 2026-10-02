@@ -62,16 +62,16 @@ biti deo funkcionalnosti za rezultate, a ne naknadni dodatak.
   vraćanje prijave, kao i potvrda dolaska igrača za ceo turnir.
 - Kotizacija kategorije u RSD i automatsko zaduženje pri novoj prijavi;
   kod dubla iznos važi po paru, a 0 znači besplatno učešće.
-- Blagajna sa popustima, delimičnim uplatama, povraćajima, dugovanjem,
-  preplatama i neizmenjivom istorijom zapisa. Iznos uplate se popunjava iz
-  preostalog duga, a napomena je opciona.
+- Blagajna sa pretragom, redom po igraču, kolonama kategorija i oznakom Plaćeno.
+  Dubl kotizacija deli se ravnopravno; dugovanje, neto primljeno i broj prijavljenih
+  uzimaju u obzir postojeće uplate i popuste. Finansijska istorija ostaje sačuvana.
 - Brisanje praznih kategorija i arhiviranje kategorija sa prijavama, uz
   očuvanje prijava i finansijske istorije.
 - Srpski i engleski interfejs, svetla/tamna/sistemska tema, lokalno dostupni
   Libre Franklin font i Tabler ikonice.
 
-Lige i telefonske aplikacije dolaze kasnije. Tarife po osobi u dublu i raspodela
-jedne uplate na više kategorija još nisu implementirane. Lokalna administracija
+Lige i telefonske aplikacije dolaze kasnije. Posebno podešavanje tarifa po osobi
+u dublu i obrasci za ručne finansijske korekcije ostaju za kasnije. Lokalna administracija
 trenutno nema naloge ni kontrolu korisničkih uloga. Za prijavu ranjivosti i
 deljenje lokalnih baza pogledaj [bezbednosnu politiku](SECURITY-sr.md).
 

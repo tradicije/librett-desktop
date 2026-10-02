@@ -1,8 +1,8 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use librett_application::{
-    self as application, ApplicationError, CashRepository, CategoryRepository, PlayerRepository,
-    TournamentRepository,
+    self as application, ApplicationError, CashRepository, CategoryRepository,
+    PlayerCashRepository, PlayerRepository, TournamentRepository,
 };
 use librett_domain::{
     CompetitionFormat, Discipline, Entry, EntryStatus, Player, PlayerProfile, Tournament,
@@ -72,6 +72,8 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             delete_category,
             register_entries,
+            cash_ledger,
+            settle_player_cash,
             list_cash,
             record_cash,
             list_tournaments,
@@ -258,4 +260,31 @@ fn register_entries(
         category_id,
         player_groups,
     )
+}
+
+#[tauri::command]
+fn cash_ledger(
+    database: tauri::State<Database>,
+    tournament_id: Uuid,
+) -> Result<librett_domain::CashLedger, ApplicationError> {
+    database
+        .0
+        .lock()
+        .map_err(|_| ApplicationError::Storage)?
+        .cash_ledger(tournament_id)
+}
+#[tauri::command]
+fn settle_player_cash(
+    database: tauri::State<Database>,
+    request_id: Uuid,
+    tournament_id: Uuid,
+    player_id: Uuid,
+    entry_ids: Vec<Uuid>,
+    paid: bool,
+) -> Result<(), ApplicationError> {
+    database
+        .0
+        .lock()
+        .map_err(|_| ApplicationError::Storage)?
+        .settle_player_cash(request_id, tournament_id, player_id, entry_ids, paid)
 }

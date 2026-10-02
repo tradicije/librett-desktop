@@ -65,16 +65,16 @@ history must be part of the results workflow, rather than an afterthought.
   restoration, and tournament-wide player check-in.
 - Category fees in RSD with automatic charges for new registrations; doubles
   fees are per pair, and zero means free entry.
-- A cash desk with discounts, partial payments, refunds, outstanding balances,
-  credit, and immutable record history. Payment amounts default to the remaining
-  balance and notes are optional.
+- A searchable cash desk with a row per player, category columns and Paid controls.
+  Doubles fees split equally; remaining balance, net received and registered player
+  totals account for existing payments and discounts. Financial history is preserved.
 - Confirmed deletion of empty categories and archiving of used categories,
   preserving registrations and cash history.
 - Serbian and English interfaces, Light/Dark/System themes, and locally bundled
   Libre Franklin fonts and Tabler icons.
 
-Leagues and phone applications come later. Per-person doubles tariffs and
-payments split across categories are not implemented yet. Local administration
+Leagues and phone applications come later. Separate per-person doubles tariff
+configuration and manual financial adjustment forms remain planned. Local administration
 currently has no accounts or enforced user roles. Read the
 [security policy](SECURITY.md) before reporting vulnerabilities or sharing databases.
 

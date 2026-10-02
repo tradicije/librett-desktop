@@ -290,3 +290,18 @@ pub fn register_entries(
         .filter(|e| ids.contains(&e.id))
         .collect())
 }
+
+pub trait PlayerCashRepository {
+    fn cash_ledger(
+        &self,
+        tournament_id: Uuid,
+    ) -> Result<librett_domain::CashLedger, ApplicationError>;
+    fn settle_player_cash(
+        &mut self,
+        request_id: Uuid,
+        tournament_id: Uuid,
+        player_id: Uuid,
+        entry_ids: Vec<Uuid>,
+        paid: bool,
+    ) -> Result<(), ApplicationError>;
+}

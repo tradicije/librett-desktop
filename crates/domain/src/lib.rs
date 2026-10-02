@@ -2,7 +2,9 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 mod cash;
-pub use cash::{CashBalance, CashKind, CashRecord, MAX_CASH_MINOR};
+pub use cash::{
+    cash_share, CashAllocation, CashBalance, CashKind, CashLedger, CashRecord, MAX_CASH_MINOR,
+};
 mod players;
 pub use players::{Entry, EntryMember, EntryStatus, Player, PlayerProfile};
 

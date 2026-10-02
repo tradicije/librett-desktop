@@ -1,5 +1,8 @@
 # Entry cash desk
 
+The current cash-screen workflow is specified in [player cash desk](player-cash-desk.md); manual forms and account selection described below are superseded.
+
+
 1. Charge 1,000.01 RSD, discount 100 RSD, receive 250.50 RSD: due is
    900.01 RSD, net received is 250.50 RSD, outstanding is 649.51 RSD.
 2. Payments may exceed the fee. Display credit independently from other entries'
@@ -12,7 +15,7 @@
 6. Withdrawn registrations retain their records; check-in does not modify money.
 7. Events survive restart with stable IDs, optional note and timestamp. SQL updates and
    deletions are rejected by triggers. Corrections use additional events.
-8. A v4 database receives one readable pre-v8 backup before migration. Existing
+8. A v4 database receives one readable pre-v9 backup before migration. Existing
    registrations and player data survive, and an unchanged reopen makes no backup.
 9. The UI supports Serbian/English and all themes. Busy writes lock navigation;
    uncertain failures retain the request and lock form inputs until retry confirms.

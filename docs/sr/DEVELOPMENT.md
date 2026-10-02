@@ -41,8 +41,8 @@ Tab Igrači prikazuje zajedničku listu. Dodaj/Izmeni otvara zasebne ekrane za
 profile i fotografije, a čuvanje vraća na listu. Brisanje traži potvrdu i čuva
 igrače sa postojećim prijavama. Prijave unutar turnira koriste tu bazu i mogu
 da se povuku i vrate;
-dolazak igrača važi kroz sve kategorije istog turnira. Šema verzije 8 podržava arhivirane kategorije i nazive vezane za disciplinu; pre migracije starijih baza pravi se konzistentan
-`pre-v8-<uuid>.sqlite` backup.
+dolazak igrača važi kroz sve kategorije istog turnira. Šema verzije 9 dodaje uplate po igraču i zaštitu od ponavljanja naplate; pre migracije starijih baza pravi se konzistentan
+`pre-v9-<uuid>.sqlite` backup.
 
 Nazad/Napred prati istoriju ekrana. Home vraća na pregled izabranog modula, zatim
 na izbor modula koji nema bočni meni. Čuvanje zaključava navigaciju do završetka.
@@ -137,21 +137,23 @@ Pogledaj [ADR 0001](../adr/0001-desktop-foundation.md) i
 
 ## Blagajna
 
-Otvori turnir i izaberi Blagajna. Prvo prijavi učesnike. Unesi zaduženje, popust,
-uplatu ili povraćaj u RSD, uz opcionu napomenu. Podržane su delimične uplate i preplate.
-Pregled razlikuje kotizaciju posle popusta, neto primljeno, dugovanje i preplatu.
-Povučene prijave zadržavaju račun. Iznos prihvata tačku ili zarez i najviše dve
-decimale. Zapisi se ne menjaju i ne brišu; ispravke su novi kompenzujući zapisi.
-Ako potvrda upisa ne uspe, ponovi isti zahtev. Navigacija ostaje zaključana dok
-se ishod ne potvrdi, da se već upisana uplata ne bi slučajno ponovila.
+Otvori turnir i izaberi Blagajna. Na vrhu su preostalo dugovanje, neto primljeno
+i broj različitih aktivno prijavljenih igrača. Tabela ima pretragu, red po igraču,
+posebnu kolonu za svaku kategoriju, ukupno dugovanje i checkbox Plaćeno.
+Ako igrač nije prijavljen u kategoriju, prikazuje se crtica. Arhivirane kategorije
+i povučene prijave zadržavaju finansije i oznake, ali ne povećavaju aktivni broj.
 
-Trenutni obim: ručni račun po prijavi (zajednički račun dubl para), samo RSD.
-Raspodela uplate na više prijava, dubl tarife po osobi, finansijski izvoz su planirani. Granice su opisane u ADR 0005.
+Checkbox-evi kategorija biraju šta naplaćuješ. Klik na Plaćeno upisuje preostale
+iznose zajedno, bez unosa iznosa ili napomene. Dubl od 500 RSD po paru deli se
+na 250 RSD po igraču. Uplata jednog člana ne označava partnera kao plaćenog.
+Poništavanje oznake otvara potvrdu povraćaja; odustajanje ne menja zapise.
 
-Kotizacija kategorije zadaje se pri kreiranju u RSD. Prijava automatski dobija
-jedno zaduženje u istoj transakciji; dubl plaća po paru, a 0 znači besplatno.
-Postojeće kategorije dobijaju kotizaciju 0, dok stare prijave i uplate ostaju iste.
-Automatsko zaduženje ne znači da je prijava plaćena. Blagajna podrazumeva unos uplate.
+Ranije delimične uplate, popusti i povraćaji ulaze u računanje. Ovaj pojednostavljeni
+ekran nema ručni unos zaduženja/popusta/delimičnih uplata ni prikaz istorije;
+svi finansijski zapisi ostaju sačuvani u bazi. Neizvestan upis zadržava isti UUID
+i zaključava kontrole do potvrde ponavljanjem zahteva. U manjim prozorima kolone
+kategorija skroluju se horizontalno. Nove prijave i dalje automatski dobijaju
+kotizaciju kategorije; 0 znači besplatno učešće.
 
 ## Detalji kategorije
 
@@ -165,8 +167,3 @@ Brisanje traži potvrdu: prazna kategorija briše se trajno, a kategorija sa pri
 arhivira se i ostaje vidljiva u blagajni. Istorija navigacije objašnjava ako kategorija
 više nije aktivna. Singl i dubl smeju da imaju isti naziv; duplikati iste discipline
 nisu dozvoljeni.
-
-Klik na račun u blagajni bira uplatu i automatski unosi preostali dug. Iznos možeš
-da izmeniš za delimičnu uplatu. Plaćene i besplatne prijave nemaju predložen iznos.
-Napomena je opciona; promena računa briše staru napomenu i ponovo računa iznos.
-Oznake računa sadrže disciplinu i stanje arhiviranja.

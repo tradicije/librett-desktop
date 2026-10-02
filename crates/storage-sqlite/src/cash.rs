@@ -219,7 +219,7 @@ mod tests {
                 r.connection
                     .query_row("PRAGMA user_version", [], |r| r.get::<_, i64>(0))
                     .unwrap(),
-                8
+                9
             );
         }
         let files = std::fs::read_dir(&dir)
@@ -228,7 +228,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(files.len(), 2);
         let backup = files.iter().find(|p| **p != path).unwrap();
-        assert!(backup.to_string_lossy().contains("pre-v8"));
+        assert!(backup.to_string_lossy().contains("pre-v9"));
         let c = Connection::open(backup).unwrap();
         assert_eq!(
             c.query_row("PRAGMA user_version", [], |r| r.get::<_, i64>(0))
@@ -387,7 +387,7 @@ mod category_fee_tests {
             .collect::<Vec<_>>();
         assert_eq!(files.len(), 2);
         let backup = files.iter().find(|p| **p != path).unwrap();
-        assert!(backup.to_string_lossy().contains("pre-v8"));
+        assert!(backup.to_string_lossy().contains("pre-v9"));
         let c = Connection::open(backup).unwrap();
         assert_eq!(
             c.query_row("PRAGMA user_version", [], |r| r.get::<_, i64>(0))
@@ -399,5 +399,148 @@ mod category_fee_tests {
             std::fs::remove_file(f).unwrap();
         }
         std::fs::remove_dir(dir).unwrap();
+    }
+}
+
+fn allocations(
+    connection: &Connection,
+    tournament_id: Uuid,
+) -> Result<Vec<librett_domain::CashAllocation>, ApplicationError> {
+    let mut statement = connection.prepare("SELECT a.record_id,a.player_id,a.amount_minor FROM cash_allocations a JOIN cash_records r ON r.id=a.record_id JOIN entries e ON e.id=r.entry_id JOIN categories c ON c.id=e.category_id WHERE c.tournament_id=?1 ORDER BY r.rowid,a.player_id").map_err(|_|ApplicationError::Storage)?;
+    let rows = statement
+        .query_map([tournament_id.to_string()], |r| {
+            Ok((
+                r.get::<_, String>(0)?,
+                r.get::<_, String>(1)?,
+                r.get::<_, i64>(2)?,
+            ))
+        })
+        .map_err(|_| ApplicationError::Storage)?;
+    rows.map(|r| {
+        let (id, player, amount_minor) = r.map_err(|_| ApplicationError::Storage)?;
+        Ok(librett_domain::CashAllocation {
+            record_id: Uuid::parse_str(&id).map_err(|_| ApplicationError::Storage)?,
+            player_id: Uuid::parse_str(&player).map_err(|_| ApplicationError::Storage)?,
+            amount_minor,
+        })
+    })
+    .collect()
+}
+
+impl librett_application::PlayerCashRepository for SqliteTournamentRepository {
+    fn cash_ledger(
+        &self,
+        tournament_id: Uuid,
+    ) -> Result<librett_domain::CashLedger, ApplicationError> {
+        self.find(tournament_id)?;
+        Ok(librett_domain::CashLedger {
+            records: records(&self.connection, tournament_id)?,
+            allocations: allocations(&self.connection, tournament_id)?,
+        })
+    }
+    fn settle_player_cash(
+        &mut self,
+        request_id: Uuid,
+        tournament_id: Uuid,
+        player_id: Uuid,
+        mut entry_ids: Vec<Uuid>,
+        paid: bool,
+    ) -> Result<(), ApplicationError> {
+        if entry_ids.is_empty() || entry_ids.len() > 1000 {
+            return Err(ApplicationError::InvalidCash);
+        }
+        entry_ids.sort();
+        if entry_ids.windows(2).any(|ids| ids[0] == ids[1]) {
+            return Err(ApplicationError::InvalidCash);
+        }
+        let keys = entry_ids
+            .iter()
+            .map(Uuid::to_string)
+            .collect::<Vec<_>>()
+            .join(",");
+        let tx = self
+            .connection
+            .transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)
+            .map_err(|_| ApplicationError::Storage)?;
+        let old: Option<(String, String, String, bool)> = tx
+            .query_row(
+                "SELECT tournament_id,player_id,entry_keys,paid FROM cash_settlements WHERE id=?1",
+                [request_id.to_string()],
+                |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?)),
+            )
+            .optional()
+            .map_err(|_| ApplicationError::Storage)?;
+        if let Some((t, p, k, state)) = old {
+            return if t == tournament_id.to_string()
+                && p == player_id.to_string()
+                && k == keys
+                && state == paid
+            {
+                Ok(())
+            } else {
+                Err(ApplicationError::InvalidCash)
+            };
+        }
+        let current = records(&tx, tournament_id)?;
+        let allocated = allocations(&tx, tournament_id)?;
+        for entry_id in &entry_ids {
+            let exists:bool=tx.query_row("SELECT EXISTS(SELECT 1 FROM entries e JOIN categories c ON c.id=e.category_id JOIN entry_members m ON m.entry_id=e.id WHERE e.id=?1 AND c.tournament_id=?2 AND m.player_id=?3)",params![entry_id.to_string(),tournament_id.to_string(),player_id.to_string()],|r|r.get(0)).map_err(|_|ApplicationError::Storage)?;
+            if !exists {
+                return Err(ApplicationError::NotFound);
+            }
+            let (position,count):(i64,i64)=tx.query_row("SELECT m.position,(SELECT count(*) FROM entry_members WHERE entry_id=?1) FROM entry_members m WHERE m.entry_id=?1 AND m.player_id=?2",params![entry_id.to_string(),player_id.to_string()],|r|Ok((r.get(0)?,r.get(1)?))).map_err(|_|ApplicationError::Storage)?;
+            let mut whole = CashBalance::default();
+            let mut unallocated_net = 0;
+            let mut allocated_net = 0;
+            for record in current.iter().filter(|r| r.entry_id == *entry_id) {
+                whole
+                    .apply(record.kind, record.amount_minor)
+                    .map_err(|_| ApplicationError::Storage)?;
+                let sign = match record.kind {
+                    CashKind::Payment => 1,
+                    CashKind::Refund => -1,
+                    _ => 0,
+                };
+                if allocated.iter().any(|a| a.record_id == record.id) {
+                    allocated_net += sign
+                        * allocated
+                            .iter()
+                            .filter(|a| a.record_id == record.id && a.player_id == player_id)
+                            .map(|a| a.amount_minor)
+                            .sum::<i64>();
+                } else {
+                    unallocated_net += sign * record.amount_minor;
+                }
+            }
+            let due = librett_domain::cash_share(
+                whole.charges - whole.discounts,
+                (position - 1) as usize,
+                count as usize,
+            );
+            let net = librett_domain::cash_share(
+                unallocated_net,
+                (position - 1) as usize,
+                count as usize,
+            ) + allocated_net;
+            let amount = if paid { (due - net).max(0) } else { net.max(0) };
+            if amount == 0 {
+                continue;
+            }
+            let kind = if paid {
+                CashKind::Payment
+            } else {
+                CashKind::Refund
+            };
+            whole.apply(kind, amount)?;
+            let id = Uuid::new_v4();
+            tx.execute("INSERT INTO cash_records(id,entry_id,kind,amount_minor,note) VALUES(?1,?2,?3,?4,'')",params![id.to_string(),entry_id.to_string(),kind.as_str(),amount]).map_err(|_|ApplicationError::Storage)?;
+            tx.execute(
+                "INSERT INTO cash_allocations(record_id,player_id,amount_minor) VALUES(?1,?2,?3)",
+                params![id.to_string(), player_id.to_string(), amount],
+            )
+            .map_err(|_| ApplicationError::Storage)?;
+        }
+        tx.execute("INSERT INTO cash_settlements(id,tournament_id,player_id,entry_keys,paid) VALUES(?1,?2,?3,?4,?5)",params![request_id.to_string(),tournament_id.to_string(),player_id.to_string(),keys,paid]).map_err(|_|ApplicationError::Storage)?;
+        tx.commit().map_err(|_| ApplicationError::Storage)
     }
 }

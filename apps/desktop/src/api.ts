@@ -39,3 +39,8 @@ export const recordCash = (tournamentId: string, record: CashRecord) => invoke<v
 
 export const deleteCategory = (tournamentId: string, categoryId: string) => invoke<Tournament>('delete_category', { tournamentId, categoryId });
 export const registerEntries = (tournamentId: string, categoryId: string, playerGroups: string[][]) => invoke<Entry[]>('register_entries', { tournamentId, categoryId, playerGroups });
+
+export interface CashAllocation { record_id: string; player_id: string; amount_minor: number }
+export interface CashLedger { records: CashRecord[]; allocations: CashAllocation[] }
+export const cashLedger = (tournamentId: string) => invoke<CashLedger>('cash_ledger', { tournamentId });
+export const settlePlayerCash = (requestId: string, tournamentId: string, playerId: string, entryIds: string[], paid: boolean) => invoke<void>('settle_player_cash', { requestId, tournamentId, playerId, entryIds, paid });

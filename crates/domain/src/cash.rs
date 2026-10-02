@@ -89,3 +89,28 @@ mod tests {
         assert_eq!(b.charges - b.discounts - b.payments + b.refunds, 0);
     }
 }
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CashAllocation {
+    pub record_id: Uuid,
+    pub player_id: Uuid,
+    pub amount_minor: i64,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CashLedger {
+    pub records: Vec<CashRecord>,
+    pub allocations: Vec<CashAllocation>,
+}
+
+// Split an unallocated balance deterministically. First member gets
+// the extra minor unit for odd amounts; all shares always sum to the event.
+pub fn cash_share(amount: i64, position: usize, members: usize) -> i64 {
+    let members = members as i64;
+    amount / members
+        + if (position as i64) < (amount % members).abs() {
+            amount.signum()
+        } else {
+            0
+        }
+}

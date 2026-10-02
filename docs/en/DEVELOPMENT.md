@@ -41,8 +41,8 @@ The Players tab shows the shared directory. Add/Edit opens dedicated profile
 screens, including photos, and returns to the list after saving. Delete asks for
 confirmation and protects profiles with existing registrations. Tournament
 registration uses that directory. Entries can be withdrawn/restored, and player
-attendance is shared across categories in a tournament. Schema version 8 supports archived categories and names scoped to discipline; older on-disk databases receive a consistent
-`pre-v8-<uuid>.sqlite` backup before migration.
+attendance is shared across categories in a tournament. Schema version 9 adds member payment allocations and idempotent settlements; older on-disk databases receive a consistent
+`pre-v9-<uuid>.sqlite` backup before migration.
 
 Back/Forward follows screen history. Home returns to the selected module overview,
 then mode selection. The mode chooser has no sidebar. Saves lock navigation until
@@ -141,22 +141,23 @@ See [ADR 0001](../adr/0001-desktop-foundation.md) and
 
 ## Cash desk
 
-Open a tournament and choose Cash desk. Register entries first. Record a charge,
-discount, payment or refund with an amount in RSD and an optional note. Partial payments
-and overpayments are supported. Balances show discounted fees, net received,
-outstanding amounts and credit separately. Withdrawn entries retain their account.
-Amounts accept comma or dot with at most two decimal places. Recorded events
-cannot be edited or deleted. Add explicit compensating events to correct mistakes.
-If confirmation fails, retry the unchanged request; navigation stays locked until
-its outcome is confirmed to prevent accidentally repeating a committed payment.
+Open a tournament and choose Cash desk. The summary shows remaining outstanding
+balance, net received and distinct active registered players. The searchable table
+has one row per player and one column per category, followed by total outstanding
+and Paid. Categories without a registration show a dash. Archived/withdrawn entries
+retain their financial balances and are labeled; they do not add to the active count.
 
-Current scope is accounts per entry with automatic category fees (one shared account for a doubles
-pair), RSD only. Multi-entry allocations, per-person doubles tariffs, financial export remain planned. See ADR 0005 for boundaries.
+Category checkboxes select accounts to settle. Clicking Paid records their remaining
+balances atomically, without entering amounts or notes. Doubles charges split equally:
+500 RSD per pair means 250 RSD per player. Paying one member does not pay the other.
+Unchecking Paid opens a refund confirmation; cancellation leaves records unchanged.
 
-Category fees are configured at creation in RSD. Registration atomically adds one
-charge for the category fee; doubles is charged once per pair and zero is free.
-Existing categories migrate with zero fees and existing cash records are preserved.
-Automatic fees do not mark entries paid. Cash desk defaults to recording payments.
+Existing partial payments, discounts and refunds affect amounts shown. The simplified
+screen does not expose manual charge/discount/partial-payment forms or ledger history;
+those records remain preserved in the backend. Uncertain writes retain their UUID
+and lock controls until a retry confirms the outcome. Smaller windows scroll the
+category columns horizontally. New registrations still receive category fees
+atomically; zero means free participation.
 
 ## Category workspace
 
@@ -170,8 +171,3 @@ Delete asks for confirmation. Empty categories are removed; categories with any
 entry are archived and retain accounts in Cash desk. History routes to removed
 categories explain their unavailable state. Category names are unique within a
 discipline, so Singles and Doubles may share the same name.
-
-Selecting a cash account defaults to Payment and its remaining balance. Edit the
-amount for partial payments. Paid/free entries have no prefilled amount. Notes are
-optional. Selecting another account clears the previous note and recalculates the
-amount. Cash desk labels include category discipline and archive state.

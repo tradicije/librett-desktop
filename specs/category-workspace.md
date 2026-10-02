@@ -1,5 +1,8 @@
 # Category workspace
 
+The current cash-screen workflow is specified in [player cash desk](player-cash-desk.md); manual forms and account selection described below are superseded.
+
+
 - A category row opens details with its own history entry. Registrations, Draw,
   Groups (group formats only) and Bracket are available; planned engines are labeled.
 - Check multiple available singles players and submit once. Entries and fees all
@@ -17,7 +20,7 @@
   do not suggest another payment. Partial payments remain editable.
 - Empty cash notes save successfully, overlong notes fail. Uncertain cash requests
   retain their UUID and exact amount during retries; no double payment is created.
-- v6/v7 migration preserves all existing entries and fees, creates one pre-v8 backup,
+- v6/v7 migration preserves all existing entries and fees, creates one pre-v9 backup,
   restores foreign-key enforcement and retains immutable cash triggers.
 - Case/whitespace variants of a name in the same discipline are rejected by domain
   and database checks. Different formats do not exempt duplicate names.

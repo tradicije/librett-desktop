@@ -6,6 +6,13 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Changed
 
+- Replaced the tournament cash desk's account/form/history blocks with a searchable
+  player table, separate category columns, selection checkboxes and Paid controls.
+- Cash summaries show outstanding balance after payments, net received and unique
+  active registered players; doubles fees split equally between both members.
+- Unified hover, active and keyboard-focus styling across controls, navigation,
+  category rows, checkboxes and lists in both themes.
+
 - Cash notes are optional. Account selection prefills the remaining payable balance
   and still supports partial payments and idempotent retries after uncertain writes.
 - Financial account labels and category deletion prompts include discipline to
@@ -31,6 +38,11 @@ Notable changes to LibreTT are recorded here in English.
 - Removed the pending leagues tab from navigation during tournament development.
 
 ### Added
+
+- Atomic, idempotent player settlements across selected categories, with per-player
+  doubles allocations and confirmed refunds when clearing Paid.
+- SQLite schema 9 with pre-v9 backups and immutable financial allocations/requests;
+  historical partial payments, discounts and ledger records remain preserved.
 
 - Dedicated category workspaces with Registrations, Draw, Groups (for group formats)
   and Bracket sections; competition-engine tabs clearly show their planned status.
