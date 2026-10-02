@@ -12,12 +12,24 @@
 6. Withdrawn registrations retain their records; check-in does not modify money.
 7. Events survive restart with stable IDs, reason and timestamp. SQL updates and
    deletions are rejected by triggers. Corrections use additional events.
-8. A v4 database receives one readable pre-v5 backup before migration. Existing
+8. A v4 database receives one readable pre-v6 backup before migration. Existing
    registrations and player data survive, and an unchanged reopen makes no backup.
 9. The UI supports Serbian/English and all themes. Busy writes lock navigation;
    uncertain failures retain the request and lock form inputs until retry confirms.
 
-Current scope: manual RSD entry accounts, doubles charged as a pair. Payments
-allocated across entries, automatic fees, per-person doubles tariffs and financial
+Current scope: RSD entry accounts with automatic category fees, doubles charged as a pair. Payments
+allocated across entries, per-person doubles tariffs and financial
 export are future increments. Cash desk is an organizer's ledger, not a fiscal or
 accounting system.
+
+## Automatic category fees (ADR 0006)
+
+- Configure 1,000.01 RSD at category creation; each new singles registration has
+  one 100001-minor-unit charge and no payment. Doubles creates one charge per pair.
+- A zero-fee category creates no cash event. Invalid fees cannot create a category.
+- Duplicate participation creates neither another entry nor another charge.
+- If inserting the automatic charge fails, the entry and members roll back.
+- Migration from v5 defaults existing category fees to zero without changing
+  existing manual charges or charging historical entries again.
+- Decimal input accepts comma/dot with at most two decimal places; reject exponent
+  notation, negative amounts, overflow and extra decimals before invoking backend.

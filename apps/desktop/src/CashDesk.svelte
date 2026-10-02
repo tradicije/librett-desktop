@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import Select from './Select.svelte';
+  import { parseMoney, formatMoney } from './money';
   import Icon from './Icon.svelte';
   import { listCash, listEntries, recordCash, desktopAvailable, type Tournament, type Entry, type CashKind, type CashRecord } from './api';
   import { messages, errorKey, type Language, type MessageKey } from './i18n';
@@ -12,20 +13,14 @@
   let loading = $state(false);
   let saving = $state(false);
   let entryId = $state('');
-  let kind = $state<CashKind>('charge');
+  let kind = $state<CashKind>('payment');
   let amount = $state('');
   let note = $state('');
   let pending = $state<CashRecord | null>(null);
   let error = $state<MessageKey | null>(null);
   let notice = $state(false);
   const kinds: CashKind[] = ['charge', 'discount', 'payment', 'refund'];
-  const minor = (value: string): number | null => {
-    const match = /^(\d{1,8})(?:[.,](\d{1,2}))?$/.exec(value.trim());
-    if (!match) return null;
-    const result = Number(match[1]) * 100 + Number((match[2] ?? '').padEnd(2, '0'));
-    return result > 0 && result <= 1_000_000_000 ? result : null;
-  };
-  function money(value: number) { return new Intl.NumberFormat(language === 'sr' ? 'sr-Latn-RS' : 'en-GB', { style: 'currency', currency: 'RSD', minimumFractionDigits: 2 }).format(value / 100); }
+  function money(value: number) { return formatMoney(value, language); }
   function label(entry: Entry) { return `${tournament.categories.find(c => c.id === entry.category_id)?.name ?? ''} · ${entry.members.map(m => m.name).join(' / ')}${entry.status === 'withdrawn' ? ` (${text.withdrawnRegistrations})` : ''}`; }
   function balance(id?: string) {
     const totals = { charge: 0, discount: 0, payment: 0, refund: 0 };
@@ -51,7 +46,7 @@
     event.preventDefault(); if (saving) return;
     error = null; notice = false;
     if (!pending) {
-      const value = minor(amount);
+      const value = parseMoney(amount);
       if (value === null || !entryId || !note.trim() || note.trim().length > 500) { error = 'invalid_cash'; return; }
       pending = { id: crypto.randomUUID(), entry_id: entryId, kind, amount_minor: value, note: note.trim(), created_at: '' };
     }

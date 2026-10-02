@@ -1,0 +1,2 @@
+ALTER TABLE categories ADD COLUMN fee_minor INTEGER NOT NULL DEFAULT 0 CHECK(fee_minor BETWEEN 0 AND 1000000000);
+PRAGMA user_version = 6;

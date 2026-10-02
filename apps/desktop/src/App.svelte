@@ -1,5 +1,6 @@
 <script lang="ts">
   import Select from './Select.svelte';
+  import { parseMoney, formatMoney } from './money';
   import { onMount } from 'svelte';
   import Players from './Players.svelte';
   import CashDesk from './CashDesk.svelte';
@@ -28,6 +29,7 @@
   let selected = $derived(tournaments.find(t => t.id === selectedId));
   let tournamentName = $state('');
   let categoryName = $state('');
+  let categoryFee = $state('0');
   let discipline = $state<Discipline>('singles');
   let format = $state<CompetitionFormat>('groups_knockout');
   let busy = $state(false);
@@ -68,16 +70,18 @@
   async function saveCategory(event: SubmitEvent) {
     event.preventDefault();
     if (!selected) return;
+    const fee = parseMoney(categoryFee, true);
+    if (fee === null) { error = 'invalid_category_fee'; return; }
     busy = true; error = null; notice = null;
     try {
-      const updated = await addCategory(selected.id, categoryName, discipline, format);
+      const updated = await addCategory(selected.id, categoryName, discipline, format, fee);
       tournaments = tournaments.map(t => t.id === updated.id ? updated : t);
-      categoryName = ''; notice = 'categorySaved';
+      categoryName = ''; categoryFee = '0'; notice = 'categorySaved';
     } catch (cause) { error = errorKey(cause); }
     finally { busy = false; }
   }
   function resetView() {
-    categoryName = ''; error = null; notice = null;
+    categoryName = ''; categoryFee = '0'; error = null; notice = null;
     discipline = 'singles'; format = 'groups_knockout';
   }
   function navigate(next: Route) {
@@ -162,12 +166,13 @@
           <h2>{text.categories}</h2>
           {#if selected.categories.length === 0}<p class="muted">{text.noCategories}</p>{/if}
           {#each selected.categories as category (category.id)}
-            <article class="category"><span class="category-icon"><Icon name={category.discipline === 'singles' ? 'user' : 'users'} /></span><div><h3>{category.name}</h3><p>{text[category.discipline]} · {text[category.format]}</p></div></article>
+            <article class="category"><span class="category-icon"><Icon name={category.discipline === 'singles' ? 'user' : 'users'} /></span><div><h3>{category.name}</h3><p>{text[category.discipline]} · {text[category.format]} · {formatMoney(category.fee_minor, language)} {text.feePerEntry}</p></div></article>
           {/each}
         </section>
         <section class="panel form-panel"><h2 class="icon-label"><Icon name="layer-group" />{text.addCategory}</h2>
           <form onsubmit={saveCategory}>
             <label>{text.categoryName}<input bind:value={categoryName} required disabled={navigationLocked} /></label>
+            <label>{text.categoryFee}<input bind:value={categoryFee} inputmode="decimal" required disabled={navigationLocked} placeholder="1000,00" aria-describedby="category-fee-hint" /></label><small class="muted" id="category-fee-hint">{text.categoryFeeHint}</small>
             <label>{text.discipline}<Select label={text.discipline} bind:value={discipline} options={[{ value: 'singles', label: text.singles }, { value: 'doubles', label: text.doubles }]} disabled={navigationLocked} /></label>
             <label>{text.format}<Select label={text.format} bind:value={format} options={[{ value: 'groups_knockout', label: text.groups_knockout }, { value: 'knockout', label: text.knockout }]} disabled={navigationLocked} /></label>
             <button class="primary" disabled={navigationLocked || !desktopAvailable}><Icon name="check-circle" size={18} />{busy ? text.saving : text.save}</button>

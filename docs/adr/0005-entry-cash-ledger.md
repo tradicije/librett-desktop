@@ -2,6 +2,9 @@
 
 Status: Accepted
 
+Category fee automation and pre-v6 backups supersede the relevant boundaries
+below; see [ADR 0006](0006-category-fees.md).
+
 The first usable cash desk records entry charges, discounts, payments and refunds
 as append-only events. Amounts are integer minor units, bounded to 1,000,000,000
 per event and account balance component; no floating point enters persistence.

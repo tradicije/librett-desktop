@@ -14,6 +14,13 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Added
 
+- Category fees configured in RSD during creation; new singles and doubles
+  registrations automatically receive one charge, atomically with entry creation.
+- Zero-fee categories, fee display, payment-first cash desk and SQLite schema 6
+  with pre-v6 backups; existing registrations are not retroactively charged.
+- Tests for exact fee amounts, pair charging, free entry, rollback on charge
+  failure and v5 migration preserving manual financial records.
+
 - Entry cash desk in Serbian and English, with RSD charges, discounts, partial
   payments, refunds, outstanding balances, credit and chronological history.
 - Append-only financial records, integer minor-unit amounts, scoped transactional

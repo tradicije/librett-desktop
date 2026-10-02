@@ -30,9 +30,10 @@ upravlja lokalni operater; nalozi i kontrola administratorskih prava još nisu i
 
 Prijave podržavaju povlačenje i vraćanje, a dolazak se potvrđuje po igraču za ceo
 turnir, kroz sve kategorije. Blagajna čuva zaduženja, popuste, delimične uplate
-i povraćaje uz stanje računa i neizmenjivu istoriju. Prvi korak koristi RSD i
-zajednički račun dubl para; automatske kotizacije, tarife po osobi u dublu i
-raspodela jedne uplate na više kategorija su planirani.
+i povraćaje uz stanje računa i neizmenjivu istoriju. Kotizacija se zadaje pri pravljenju kategorije i svaka nova prijava dobija
+zaduženje automatski; 0 znači besplatno učešće, a kod dubla iznos važi po paru.
+Koristi se RSD; tarife po osobi u dublu i raspodela jedne uplate na više kategorija
+su planirani. Postojeće prijave se ne zadužuju retroaktivno.
 Pogledaj [bezbednosnu politiku](SECURITY-sr.md) za prijave ranjivosti i deljenje
 lokalnih baza.
 

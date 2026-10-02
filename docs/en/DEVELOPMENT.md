@@ -41,8 +41,8 @@ The Players tab shows the shared directory. Add/Edit opens dedicated profile
 screens, including photos, and returns to the list after saving. Delete asks for
 confirmation and protects profiles with existing registrations. Tournament
 registration uses that directory. Entries can be withdrawn/restored, and player
-attendance is shared across categories in a tournament. Schema version 5 adds an immutable cash ledger; older on-disk databases receive a consistent
-`pre-v5-<uuid>.sqlite` backup before migration.
+attendance is shared across categories in a tournament. Schema version 6 adds category fees alongside the immutable cash ledger; older on-disk databases receive a consistent
+`pre-v6-<uuid>.sqlite` backup before migration.
 
 Back/Forward follows screen history. Home returns to the selected module overview,
 then mode selection. The mode chooser has no sidebar. Saves lock navigation until
@@ -150,6 +150,10 @@ cannot be edited or deleted. Add explicit compensating events to correct mistake
 If confirmation fails, retry the unchanged request; navigation stays locked until
 its outcome is confirmed to prevent accidentally repeating a committed payment.
 
-Current scope is manual accounts per entry (one shared account for a doubles
-pair), RSD only. Multi-entry allocations, per-person doubles tariffs, automated
-category fees and financial export remain planned. See ADR 0005 for boundaries.
+Current scope is accounts per entry with automatic category fees (one shared account for a doubles
+pair), RSD only. Multi-entry allocations, per-person doubles tariffs, financial export remain planned. See ADR 0005 for boundaries.
+
+Category fees are configured at creation in RSD. Registration atomically adds one
+charge for the category fee; doubles is charged once per pair and zero is free.
+Existing categories migrate with zero fees and existing cash records are preserved.
+Automatic fees do not mark entries paid. Cash desk defaults to recording payments.

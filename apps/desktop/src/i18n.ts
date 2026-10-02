@@ -1,4 +1,7 @@
 const sr = {
+  categoryFee: 'Kotizacija kategorije (RSD)', categoryFeeHint: '0 = bez kotizacije. Automatsko zaduženje pri prijavi; za dubl iznos važi po paru.', feePerEntry: 'po prijavi',
+  invalid_category_fee: 'Unesi kotizaciju od 0 do 10.000.000 RSD, sa najviše dve decimale.',
+
   cashDesk: 'Blagajna', cashIntro: 'Evidencija po prijavi, u RSD. Dubl ima zajednički račun para. Dolazak i povlačenje ne menjaju uplate.',
   cashAccounts: 'Računi prijava', cashAccount: 'Prijava', cashKind: 'Vrsta zapisa', cashAmount: 'Iznos (RSD)', cashNote: 'Razlog / napomena',
   charge: 'Zaduženje', discount: 'Popust / oslobađanje', payment: 'Uplata', refund: 'Povraćaj', cashRecord: 'Evidentiraj', cashHistory: 'Istorija izabrane prijave',
@@ -56,6 +59,9 @@ const sr = {
 };
 type Messages = typeof sr;
 const en: Messages = {
+  categoryFee: 'Category fee (RSD)', categoryFeeHint: '0 = free entry. Automatically charged on registration; doubles fee is per pair.', feePerEntry: 'per entry',
+  invalid_category_fee: 'Enter a fee from 0 to 10,000,000 RSD with at most two decimal places.',
+
   cashDesk: 'Cash desk', cashIntro: 'Entry accounts in RSD. Doubles uses a shared pair account. Attendance and withdrawal do not change payments.',
   cashAccounts: 'Entry accounts', cashAccount: 'Entry', cashKind: 'Record type', cashAmount: 'Amount (RSD)', cashNote: 'Reason / note',
   charge: 'Charge', discount: 'Discount / waiver', payment: 'Payment', refund: 'Refund', cashRecord: 'Record transaction', cashHistory: 'Selected entry history',

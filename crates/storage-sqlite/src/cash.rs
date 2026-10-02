@@ -219,7 +219,7 @@ mod tests {
                 r.connection
                     .query_row("PRAGMA user_version", [], |r| r.get::<_, i64>(0))
                     .unwrap(),
-                5
+                6
             );
         }
         let files = std::fs::read_dir(&dir)
@@ -228,12 +228,171 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(files.len(), 2);
         let backup = files.iter().find(|p| **p != path).unwrap();
-        assert!(backup.to_string_lossy().contains("pre-v5"));
+        assert!(backup.to_string_lossy().contains("pre-v6"));
         let c = Connection::open(backup).unwrap();
         assert_eq!(
             c.query_row("PRAGMA user_version", [], |r| r.get::<_, i64>(0))
                 .unwrap(),
             4
+        );
+        drop(c);
+        for f in files {
+            std::fs::remove_file(f).unwrap();
+        }
+        std::fs::remove_dir(dir).unwrap();
+    }
+}
+
+#[cfg(test)]
+mod category_fee_tests {
+    use super::*;
+    use librett_application::{
+        add_category_with_fee, create_player, create_tournament, register_entry, PlayerRepository,
+    };
+
+    #[test]
+    fn category_fees_charge_once_per_entry_and_roll_back_atomically() {
+        let path = std::env::temp_dir().join(format!("librett-fees-{}.sqlite", Uuid::new_v4()));
+        let tid;
+        let paid_category;
+        let paid_entry;
+        {
+            let mut r = SqliteTournamentRepository::open(&path).unwrap();
+            tid = create_tournament(&mut r, "Cup").unwrap().id;
+            assert_eq!(
+                add_category_with_fee(
+                    &mut r,
+                    tid,
+                    "Invalid",
+                    Discipline::Singles,
+                    CompetitionFormat::Knockout,
+                    -1
+                ),
+                Err(ApplicationError::InvalidCash)
+            );
+            assert!(r.find(tid).unwrap().categories.is_empty());
+            let t = add_category_with_fee(
+                &mut r,
+                tid,
+                "Singles",
+                Discipline::Singles,
+                CompetitionFormat::Knockout,
+                100_001,
+            )
+            .unwrap();
+            paid_category = t.categories[0].id;
+            let p = create_player(&mut r, "One", "").unwrap();
+            let q = create_player(&mut r, "Two", "").unwrap();
+            paid_entry = register_entry(&mut r, tid, paid_category, vec![p.id])
+                .unwrap()
+                .id;
+            assert_eq!(
+                register_entry(&mut r, tid, paid_category, vec![p.id]),
+                Err(ApplicationError::AlreadyRegistered)
+            );
+            let records = r.list_cash(tid).unwrap();
+            assert_eq!(records.len(), 1);
+            assert_eq!(records[0].amount_minor, 100_001);
+            assert_eq!(records[0].kind, CashKind::Charge);
+            let t = add_category_with_fee(
+                &mut r,
+                tid,
+                "Doubles",
+                Discipline::Doubles,
+                CompetitionFormat::Knockout,
+                50_050,
+            )
+            .unwrap();
+            register_entry(&mut r, tid, t.categories[1].id, vec![p.id, q.id]).unwrap();
+            let records = r.list_cash(tid).unwrap();
+            assert_eq!(records.len(), 2);
+            assert_eq!(records[1].amount_minor, 50_050);
+            let t = add_category_with_fee(
+                &mut r,
+                tid,
+                "Free",
+                Discipline::Singles,
+                CompetitionFormat::Knockout,
+                0,
+            )
+            .unwrap();
+            register_entry(&mut r, tid, t.categories[2].id, vec![p.id]).unwrap();
+            assert_eq!(r.list_cash(tid).unwrap().len(), 2);
+            // Simulate an insertion failure after members have been written.
+            r.connection.execute_batch("CREATE TEMP TRIGGER fail_cash BEFORE INSERT ON cash_records BEGIN SELECT RAISE(ABORT,'test failure'); END;").unwrap();
+            assert_eq!(
+                register_entry(&mut r, tid, paid_category, vec![q.id]),
+                Err(ApplicationError::Storage)
+            );
+            assert_eq!(r.list_entries(paid_category).unwrap().len(), 1);
+            assert_eq!(r.list_cash(tid).unwrap().len(), 2);
+            r.connection
+                .execute_batch("DROP TRIGGER fail_cash;")
+                .unwrap();
+            register_entry(&mut r, tid, paid_category, vec![q.id]).unwrap();
+            assert_eq!(r.list_cash(tid).unwrap().len(), 3);
+        }
+        let r = SqliteTournamentRepository::open(&path).unwrap();
+        assert_eq!(r.find(tid).unwrap().categories[0].fee_minor, 100_001);
+        let records = r.list_cash(tid).unwrap();
+        assert_eq!(records.len(), 3);
+        assert_eq!(records[0].entry_id, paid_entry);
+        drop(r);
+        std::fs::remove_file(path).unwrap();
+    }
+
+    #[test]
+    fn v5_migration_defaults_fees_and_preserves_existing_cash_without_backfill() {
+        let dir = std::env::temp_dir().join(format!("librett-fee-migration-{}", Uuid::new_v4()));
+        std::fs::create_dir(&dir).unwrap();
+        let path = dir.join("data.sqlite");
+        let tid = Uuid::new_v4();
+        let cid = Uuid::new_v4();
+        let eid = Uuid::new_v4();
+        let rid = Uuid::new_v4();
+        let c = Connection::open(&path).unwrap();
+        for migration in [
+            include_str!("../migrations/001_tournaments.sql"),
+            include_str!("../migrations/002_players.sql"),
+            include_str!("../migrations/003_player_profiles.sql"),
+            include_str!("../migrations/004_registration_status.sql"),
+            include_str!("../migrations/005_cash.sql"),
+        ] {
+            c.execute_batch(migration).unwrap();
+        }
+        c.execute(
+            "INSERT INTO tournaments(id,name) VALUES(?1,'Old cup')",
+            [tid.to_string()],
+        )
+        .unwrap();
+        c.execute("INSERT INTO categories(id,tournament_id,name,name_key,discipline,format) VALUES(?1,?2,'Old','old','singles','knockout')",params![cid.to_string(),tid.to_string()]).unwrap();
+        c.execute(
+            "INSERT INTO entries(id,category_id) VALUES(?1,?2)",
+            params![eid.to_string(), cid.to_string()],
+        )
+        .unwrap();
+        c.execute("INSERT INTO cash_records(id,entry_id,kind,amount_minor,note) VALUES(?1,?2,'charge',25000,'Manual fee')",params![rid.to_string(),eid.to_string()]).unwrap();
+        drop(c);
+        for _ in 0..2 {
+            let r = SqliteTournamentRepository::open(&path).unwrap();
+            assert_eq!(r.find(tid).unwrap().categories[0].fee_minor, 0);
+            let records = r.list_cash(tid).unwrap();
+            assert_eq!(records.len(), 1);
+            assert_eq!(records[0].id, rid);
+            assert_eq!(records[0].amount_minor, 25000);
+        }
+        let files = std::fs::read_dir(&dir)
+            .unwrap()
+            .map(|f| f.unwrap().path())
+            .collect::<Vec<_>>();
+        assert_eq!(files.len(), 2);
+        let backup = files.iter().find(|p| **p != path).unwrap();
+        assert!(backup.to_string_lossy().contains("pre-v6"));
+        let c = Connection::open(backup).unwrap();
+        assert_eq!(
+            c.query_row("PRAGMA user_version", [], |r| r.get::<_, i64>(0))
+                .unwrap(),
+            5
         );
         drop(c);
         for f in files {

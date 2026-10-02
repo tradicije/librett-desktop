@@ -22,6 +22,8 @@ pub enum CompetitionFormat {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Category {
+    #[serde(default)]
+    pub fee_minor: i64,
     pub id: Uuid,
     pub name: String,
     pub discipline: Discipline,
@@ -81,6 +83,7 @@ impl Tournament {
             return Err(DomainError::DuplicateCategory);
         }
         self.categories.push(Category {
+            fee_minor: 0,
             id: Uuid::new_v4(),
             name,
             discipline,

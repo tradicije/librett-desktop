@@ -40,14 +40,16 @@ fn add_category(
     name: String,
     discipline: Discipline,
     format: CompetitionFormat,
+    fee_minor: i64,
 ) -> Result<Tournament, ApplicationError> {
     let id = Uuid::parse_str(&tournament_id).map_err(|_| ApplicationError::NotFound)?;
-    application::add_category(
+    application::add_category_with_fee(
         &mut *database.0.lock().map_err(|_| ApplicationError::Storage)?,
         id,
         &name,
         discipline,
         format,
+        fee_minor,
     )
 }
 

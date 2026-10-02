@@ -211,3 +211,25 @@ pub fn record_cash(
     }
     repository.record_cash(tournament_id, record)
 }
+
+pub fn add_category_with_fee(
+    repository: &mut impl TournamentRepository,
+    tournament_id: Uuid,
+    name: &str,
+    discipline: Discipline,
+    format: CompetitionFormat,
+    fee_minor: i64,
+) -> Result<Tournament, ApplicationError> {
+    if !(0..=librett_domain::MAX_CASH_MINOR).contains(&fee_minor) {
+        return Err(ApplicationError::InvalidCash);
+    }
+    let mut tournament = repository.find(tournament_id)?;
+    tournament.add_category(name, discipline, format)?;
+    let category = tournament
+        .categories
+        .last_mut()
+        .ok_or(ApplicationError::Storage)?;
+    category.fee_minor = fee_minor;
+    repository.insert_category(tournament_id, category)?;
+    Ok(tournament)
+}

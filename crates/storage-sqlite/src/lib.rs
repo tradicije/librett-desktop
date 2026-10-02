@@ -17,9 +17,9 @@ impl SqliteTournamentRepository {
         let path = path.as_ref();
         let connection = Connection::open(path)?;
         let version: i64 = connection.query_row("PRAGMA user_version", [], |row| row.get(0))?;
-        if (1..5).contains(&version) {
+        if (1..6).contains(&version) {
             // VACUUM INTO creates a consistent SQLite snapshot before changing an existing schema.
-            let backup = path.with_extension(format!("pre-v5-{}.sqlite", Uuid::new_v4()));
+            let backup = path.with_extension(format!("pre-v6-{}.sqlite", Uuid::new_v4()));
             connection.execute("VACUUM INTO ?1", [backup.to_string_lossy().as_ref()])?;
         }
         Self::initialize(connection)
@@ -29,7 +29,7 @@ impl SqliteTournamentRepository {
         connection.busy_timeout(Duration::from_secs(5))?;
         connection.execute_batch("PRAGMA foreign_keys = ON;")?;
         let version: i64 = connection.query_row("PRAGMA user_version", [], |row| row.get(0))?;
-        if version > 5 {
+        if version > 6 {
             return Err(rusqlite::Error::InvalidQuery);
         }
         if version == 0 {
@@ -57,12 +57,17 @@ impl SqliteTournamentRepository {
             transaction.execute_batch(include_str!("../migrations/005_cash.sql"))?;
             transaction.commit()?;
         }
+        if version < 6 {
+            let transaction = connection.transaction()?;
+            transaction.execute_batch(include_str!("../migrations/006_category_fees.sql"))?;
+            transaction.commit()?;
+        }
         Ok(Self { connection })
     }
 
     fn load_categories(&self, tournament_id: Uuid) -> Result<Vec<Category>, ApplicationError> {
         let mut statement = self.connection.prepare(
-            "SELECT id, name, discipline, format FROM categories WHERE tournament_id = ?1 ORDER BY rowid"
+            "SELECT id, name, discipline, format, fee_minor FROM categories WHERE tournament_id = ?1 ORDER BY rowid"
         ).map_err(|_| ApplicationError::Storage)?;
         let rows = statement
             .query_map([tournament_id.to_string()], |row| {
@@ -71,12 +76,15 @@ impl SqliteTournamentRepository {
                     row.get::<_, String>(1)?,
                     row.get::<_, String>(2)?,
                     row.get::<_, String>(3)?,
+                    row.get::<_, i64>(4)?,
                 ))
             })
             .map_err(|_| ApplicationError::Storage)?;
         rows.map(|row| {
-            let (id, name, discipline, format) = row.map_err(|_| ApplicationError::Storage)?;
+            let (id, name, discipline, format, fee_minor) =
+                row.map_err(|_| ApplicationError::Storage)?;
             Ok(Category {
+                fee_minor,
                 id: Uuid::parse_str(&id).map_err(|_| ApplicationError::Storage)?,
                 name,
                 discipline: match discipline.as_str() {
@@ -160,8 +168,8 @@ impl TournamentRepository for SqliteTournamentRepository {
             CompetitionFormat::GroupsKnockout => "groups_knockout",
         };
         self.connection.execute(
-            "INSERT INTO categories (id, tournament_id, name, name_key, discipline, format) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
-            params![category.id.to_string(), tournament_id.to_string(), category.name, category.name.to_lowercase(), discipline, format],
+            "INSERT INTO categories (id, tournament_id, name, name_key, discipline, format, fee_minor) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+            params![category.id.to_string(), tournament_id.to_string(), category.name, category.name.to_lowercase(), discipline, format, category.fee_minor],
         ).map_err(|_| ApplicationError::Storage)?;
         Ok(())
     }

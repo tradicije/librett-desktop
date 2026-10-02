@@ -32,8 +32,10 @@ accounts and enforced administrator permissions are not implemented yet.
 Tournament entries support withdrawal/restoration and individual player check-in
 shared across categories in the same tournament. The Cash desk records charges,
 discounts, partial payments and refunds with entry balances and immutable history.
-This first increment uses RSD and a shared account per doubles pair; automatic
-fees, per-person doubles tariffs and payments split across categories are planned. Read the [security policy](SECURITY.md) before reporting vulnerabilities
+Set the category fee when creating a category: each new registration is charged
+automatically, with zero meaning free entry. Doubles has one fee per pair.
+This increment uses RSD; per-person doubles tariffs and payments split across
+categories are planned. Existing registrations are not retroactively charged. Read the [security policy](SECURITY.md) before reporting vulnerabilities
 or sharing local databases.
 
 ## AI-assisted development

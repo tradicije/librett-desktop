@@ -18,7 +18,7 @@
 11. A tournament registers existing directory players, with search and independent
     name/club snapshots. Editing profiles does not rewrite past registration names.
 12. Version 2 migration preserves players and registrations, creates one readable
-    pre-v5 backup, and gives old profiles empty optional details.
+    pre-v6 backup, and gives old profiles empty optional details.
 13. Reject invalid birth years, oversized profile fields, unsupported or broken
     photo uploads and external photo URLs. Photos remain available after moving
     or deleting the source image file.

@@ -41,8 +41,8 @@ Tab Igrači prikazuje zajedničku listu. Dodaj/Izmeni otvara zasebne ekrane za
 profile i fotografije, a čuvanje vraća na listu. Brisanje traži potvrdu i čuva
 igrače sa postojećim prijavama. Prijave unutar turnira koriste tu bazu i mogu
 da se povuku i vrate;
-dolazak igrača važi kroz sve kategorije istog turnira. Šema verzije 5 dodaje neizmenjivu finansijsku evidenciju; pre migracije starijih baza pravi se konzistentan
-`pre-v5-<uuid>.sqlite` backup.
+dolazak igrača važi kroz sve kategorije istog turnira. Šema verzije 6 dodaje kotizacije kategorija uz neizmenjivu finansijsku evidenciju; pre migracije starijih baza pravi se konzistentan
+`pre-v6-<uuid>.sqlite` backup.
 
 Nazad/Napred prati istoriju ekrana. Home vraća na pregled izabranog modula, zatim
 na izbor modula koji nema bočni meni. Čuvanje zaključava navigaciju do završetka.
@@ -146,5 +146,9 @@ Ako potvrda upisa ne uspe, ponovi isti zahtev. Navigacija ostaje zaključana dok
 se ishod ne potvrdi, da se već upisana uplata ne bi slučajno ponovila.
 
 Trenutni obim: ručni račun po prijavi (zajednički račun dubl para), samo RSD.
-Raspodela uplate na više prijava, dubl tarife po osobi, automatske kotizacije i
-finansijski izvoz su planirani. Granice su opisane u ADR 0005.
+Raspodela uplate na više prijava, dubl tarife po osobi, finansijski izvoz su planirani. Granice su opisane u ADR 0005.
+
+Kotizacija kategorije zadaje se pri kreiranju u RSD. Prijava automatski dobija
+jedno zaduženje u istoj transakciji; dubl plaća po paru, a 0 znači besplatno.
+Postojeće kategorije dobijaju kotizaciju 0, dok stare prijave i uplate ostaju iste.
+Automatsko zaduženje ne znači da je prijava plaćena. Blagajna podrazumeva unos uplate.

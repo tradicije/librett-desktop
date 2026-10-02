@@ -122,6 +122,17 @@ impl PlayerRepository for SqliteTournamentRepository {
             }
             transaction.execute("INSERT INTO entry_members (entry_id, category_id, player_id, position, name_snapshot, club_snapshot) VALUES (?1, ?2, ?3, ?4, ?5, ?6)", params![entry.id.to_string(), entry.category_id.to_string(), member.id.to_string(), index + 1, member.name, member.club]).map_err(|_| ApplicationError::Storage)?;
         }
+        // Entry, members and initial fee must either all commit or all roll back.
+        let fee: i64 = transaction
+            .query_row(
+                "SELECT fee_minor FROM categories WHERE id=?1",
+                [entry.category_id.to_string()],
+                |row| row.get(0),
+            )
+            .map_err(|_| ApplicationError::Storage)?;
+        if fee > 0 {
+            transaction.execute("INSERT INTO cash_records (id,entry_id,kind,amount_minor,note) VALUES (?1,?2,'charge',?3,'Category fee / Kotizacija kategorije')", params![Uuid::new_v4().to_string(),entry.id.to_string(),fee]).map_err(|_| ApplicationError::Storage)?;
+        }
         transaction.commit().map_err(|_| ApplicationError::Storage)
     }
 }
