@@ -1,64 +1,74 @@
 ![LibreTT](assets/img/logo-dark.png)
 
-# LibreTT
-
 [English](README.md)
 
-LibreTT je planirana slobodna aplikacija otvorenog koda za organizaciju
-stonoteniskih turnira i liga, sa lokalnim radom kao osnovom. LibreTT je naziv
-aplikacije i krovni identitet projekta.
+LibreTT je besplatna aplikacija otvorenog koda za organizaciju stonoteniskih
+turnira i liga, koja se razvija sa lokalnim radom kao osnovom. Namenjena je
+klubovima, organizatorima, igračima i zajednici koja gradi ovaj sport.
+LibreTT je naziv aplikacije i krovni identitet projekta.
 
-**Status: rani razvoj.** Prvi korak implementira lokalno kreiranje i pregled
-turnira, singl/dubl kategorije sa zasebnim izborom formata, lokalnu bazu igrača
-i prijave sa istorijskim snimkom imena/kluba. Ceo tok
-turnira i instaleri za izdanja još nisu dostupni. Pogledaj
-[razvojno uputstvo](docs/sr/DEVELOPMENT.md) za pokretanje i provere.
+**Status: rani razvoj.** Trenutno razvijamo desktop aplikaciju za turnire.
+Žreb, mečevi, rezultati i instaleri za izdanja još nisu dostupni. Uputstvo za
+pokretanje nalazi se u [razvojnoj dokumentaciji](docs/sr/DEVELOPMENT.md).
 
-Interfejs ima svetlu, tamnu i sistemsku temu, pamti izbor i prikazuje odgovarajući
-LibreTT logo. Tabler ikonice su deo lokalnog builda i rade offline. Njihova MIT
-licenca sačuvana je odvojeno od LibreTT AGPL licence;
-pogledaj [napomene o tuđim komponentama](THIRD_PARTY_NOTICES.md).
+## Filozofija projekta
 
-Aplikacija počinje izborom načina takmičenja bez bočnog menija. Turniri otvara taj
-modul; Lige je onemogućena dok ne bude implementirana. Nazad/Napred prati istoriju
-ekrana. Home vraća na pregled modula, a sledeći klik na izbor modula. Tab Igrači
-prikazuje zajedničku listu; Dodaj i Izmeni otvaraju zasebne ekrane za profile.
-Brisanje traži potvrdu, a igrači sa prijavama se čuvaju radi istorije takmičenja.
-Profili podržavaju izmenu godišta, lokacije, kontakta, beleški i
-lokalno sačuvanih fotografija; turniri prijavljuju učesnike iz te baze. Profilima
-upravlja lokalni operater; nalozi i kontrola administratorskih prava još nisu implementirani.
+Stoni tenis nastaje radom ljudi: igrača koji treniraju, klubova koji ih okupljaju,
+sudija, volontera i organizatora koji održavaju takmičenja. Osnovni alat za
+organizaciju i beleženje tog rada treba da bude dostupan svima, bez obzira na
+budžet kluba ili veličinu turnira. **LibreTT polazi od stava da takav alat treba
+da bude besplatan i otvorenog koda.**
 
-Prijave podržavaju povlačenje i vraćanje, a dolazak se potvrđuje po igraču za ceo
-turnir, kroz sve kategorije. Blagajna čuva zaduženja, popuste, delimične uplate
-i povraćaje uz stanje računa i neizmenjivu istoriju. Kotizacija se zadaje pri pravljenju kategorije i svaka nova prijava dobija
-zaduženje automatski; 0 znači besplatno učešće, a kod dubla iznos važi po paru.
-Koristi se RSD; tarife po osobi u dublu i raspodela jedne uplate na više kategorija
-su planirani. Postojeće prijave se ne zadužuju retroaktivno.
-Pogledaj [bezbednosnu politiku](SECURITY-sr.md) za prijave ranjivosti i deljenje
-lokalnih baza.
+Jednostavan alat može da donese korist mnogo veću od svog tehničkog obima.
+Pregledni rezultati i rasporedi mogu da približe takmičenje publici. Statistika
+sačuvana kroz decenije može da pokaže razvoj igrača, rad klubova i istoriju
+čitavih takmičenja. Dostupni, pouzdani podaci mogu da olakšaju praćenje sporta,
+povećaju njegovu vidljivost i pomognu klubovima da predstave svoj rad budućim
+sponzorima. To su mogućnosti koje želimo da otvorimo zajednici, a ne obećanje
+koje zavisi samo od jednog programa.
 
-## Razvoj uz pomoć AI alata
+Postoje drugi alati za organizaciju takmičenja i neki mogu veoma dobro da
+obavljaju taj posao. LibreTT ne zasniva svoju svrhu na tvrdnji da je prvi ili
+jedini. Želimo da ponudimo izbor u kojem su besplatan pristup, otvoren kod,
+lokalni rad i trajna dostupnost podataka deo istog dogovora sa zajednicom.
+Korišćenje aplikacije i pristup sopstvenoj istoriji ne treba uslovljavati
+pretplatom, aktivacijom licence ili kupovinom paketa funkcija.
 
-LibreTT se razvija uz pomoć AI alata pri programiranju. Ideju projekta,
-arhitekturu, odluke o implementaciji i testove osmislio je ili pregledao
-i verifikovao Aleksa Dimitrijević. Ljudski pregled i provera sastavni su
-deo razvoja; pomoć AI alata ne zamenjuje odgovornost za kod.
+**Podaci takmičenja pripadaju zajednici koja ih stvara.** Rezultat nastaje na
+stolu, radom igrača i klubova; aplikacija ga beleži. Zato istorija takmičenja
+ne sme nestati kada se ugasi servis, prestane održavanje programa ili više
+nema novca za pretplatu. Ono što zajednica stvara danas mora moći da sačuva,
+pročita i prenese i za nekoliko decenija.
 
-## Svrha
+Iz tog stava proizlaze konkretni zahtevi: rad bez obaveznog interneta ili naloga,
+lokalno čuvanje podataka, dokumentovani otvoreni formati i arhive čitljive bez
+pokrenutog LibreTT-a i njegovog autora. Rezervna kopija sama nije dovoljna ako
+za njeno čitanje mora da postoji isti servis. Otvoren kod omogućava zajednici
+da proveri kako alat radi, prilagodi ga i nastavi razvoj kada prvobitni
+održavaoci više ne mogu. Otvorenost koda ne znači javno objavljivanje ličnih
+podataka igrača; zajednica koja ih čuva odlučuje o njihovom deljenju.
 
-**Podaci takmičenja pripadaju zajednici koja ih stvara.** Rezultat koji napravi
-igrač ili klub mora da ostane dostupan i kada LibreTT prestane da se održava
-ili radi. Aplikacija služi očuvanju te istorije, a pristup istoriji ne sme
-zavisiti od opstanka aplikacije.
+Ovo su obaveze koje vode razvoj. Lokalna baza već postoji; nezavisni arhivski
+izvoz i interfejs za vraćanje kopije još su planirani. Očuvanje istorije mora
+biti deo funkcionalnosti za rezultate, a ne naknadni dodatak.
 
-Lokalno vlasništvo, dokumentovan otvoreni izvoz i nezavisno čitljive arhive
-su arhitektonski zahtevi. Rezervna kopija sama nije dovoljna: zajednica mora
-moći da čita, prenese i obnovi zapise bez pokrenutog LibreTT-a i centralnog
-servisa. Arhivski izvoz i vraćanje kopije su planirani, još nisu implementirani.
+## Šta trenutno radi
 
-Klubovima i organizatorima dati alat koji radi lokalno, bez obaveznog naloga,
-interneta, aktivacije licence i plaćenih paketa funkcija. Podaci takmičenja
-ostaju prenosivi kroz dokumentovane formate i rezervne kopije.
+- Kreiranje više turnira i singl/dubl kategorija sa zasebnim izborom formata.
+- Zajednička lokalna baza igrača sa profilima, fotografijama i pretragom.
+- Prijave po kategorijama uz istorijski snimak imena i kluba, povlačenje i
+  vraćanje prijave, kao i potvrda dolaska igrača za ceo turnir.
+- Kotizacija kategorije u RSD i automatsko zaduženje pri novoj prijavi;
+  kod dubla iznos važi po paru, a 0 znači besplatno učešće.
+- Blagajna sa popustima, delimičnim uplatama, povraćajima, dugovanjem,
+  preplatama i neizmenjivom istorijom zapisa.
+- Srpski i engleski interfejs, svetla/tamna/sistemska tema, lokalno dostupni
+  Libre Franklin font i Tabler ikonice.
+
+Lige i telefonske aplikacije dolaze kasnije. Tarife po osobi u dublu i raspodela
+jedne uplate na više kategorija još nisu implementirane. Lokalna administracija
+trenutno nema naloge ni kontrolu korisničkih uloga. Za prijavu ranjivosti i
+deljenje lokalnih baza pogledaj [bezbednosnu politiku](SECURITY-sr.md).
 
 ## Planirani obim
 
@@ -83,9 +93,9 @@ Buduća integracija sa bazom igrača na **stoni.rs** omogućiće pretragu i
 preuzimanje podataka za kasniji offline rad. Baza i njen API još ne postoje.
 Lokalni rad neće zavisiti od tog servisa.
 
-## Predlog arhitekture
+## Arhitektura
 
-Predložene tehnologije su **Tauri 2, Rust, TypeScript/Svelte i SQLite**.
+Aplikaciju gradimo uz **Tauri 2, Rust, TypeScript/Svelte i SQLite**.
 Izbor proveravamo ranim prototipom na sva tri sistema, uključujući offline
 instalaciju, štampu, vraćanje rezervne kopije i drugi ekran.
 
@@ -100,11 +110,20 @@ postojeći WordPress projekat preimenuje u `librett-wordpress`.
 ## Dokumentacija i doprinosi
 
 - [Plan desktop aplikacije](docs/DESKTOP_TOURNAMENT_PLAN_SR.md)
+- [Razvojno uputstvo](docs/sr/DEVELOPMENT.md)
 - [Doprinos projektu](CONTRIBUTING-sr.md)
+- [Licence fonta i ikonica](THIRD_PARTY_NOTICES.md)
 - [Changelog — engleski](CHANGELOG.md)
 
 Korisnička i tehnička dokumentacija na srpskom i engleskom razvijaće se uz
 specifikaciju i implementaciju. Detaljan radni plan trenutno je na srpskom.
+
+## Razvoj uz pomoć AI alata
+
+LibreTT se razvija uz pomoć AI alata pri programiranju. Ideju projekta,
+arhitekturu, odluke o implementaciji i testove osmislio je ili pregledao
+i verifikovao Aleksa Dimitrijević. Ljudski pregled i provera sastavni su
+deo razvoja; pomoć AI alata ne zamenjuje odgovornost za kod.
 
 ## Autor i licenca
 

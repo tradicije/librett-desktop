@@ -4,6 +4,12 @@ Notable changes to LibreTT are recorded here in English.
 
 ## Unreleased
 
+### Changed
+
+- Restructured both README files around the project's philosophy, current features
+  and roadmap, removed the redundant title beneath the logo, and expanded the
+  commitment to free access, community-owned data and long-term sporting history.
+
 ### Fixed
 
 - Keep the desktop sidebar anchored to the viewport while main content scrolls.

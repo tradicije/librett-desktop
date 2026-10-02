@@ -1,65 +1,77 @@
 ![LibreTT](assets/img/logo-dark.png)
 
-# LibreTT
-
 [Srpski](README-sr.md)
 
-LibreTT is a planned free and open-source, offline-first application for
-organizing table-tennis tournaments and leagues. LibreTT is both the application
-name and the umbrella project identity.
+LibreTT is a free and open-source application in development for organizing
+table-tennis tournaments and leagues, with offline operation as its foundation.
+It is intended for clubs, organizers, players, and the community that builds
+the sport. LibreTT is both the application name and the umbrella project identity.
 
-**Status: early development.** The first slice creates and lists local tournaments
-and adds singles/doubles categories with independently selected formats. It also
-provides local players and category registrations with historical snapshots. The
-full tournament workflow and release installers are not available yet. See
-[development setup](docs/en/DEVELOPMENT.md) for running and checking the project.
+**Status: early development.** We are currently building the tournament desktop
+application. Draws, matches, results, and release installers are not available
+yet. See the [development documentation](docs/en/DEVELOPMENT.md) to run it.
 
-The interface supports Light, Dark, and System themes, remembers the selection,
-and uses the corresponding LibreTT logo. Tabler Icons are bundled locally and
-work offline. Their MIT license is preserved separately from LibreTT's AGPL
-license; see [third-party notices](THIRD_PARTY_NOTICES.md).
+## Project philosophy
 
-The app opens on a mode-selection dashboard without a sidebar. Tournaments opens
-its module; Leagues is disabled until implemented. Back/Forward follows screen
-history. Home returns to the module overview, then to mode selection on a second
-click. The Players tab shows the shared directory, with Add/Edit opening dedicated
-profile screens. Delete asks for confirmation; players with registrations are
-retained to preserve competition history. Profiles have editable birth year,
-location, contact details, notes, and locally stored photos; tournaments register
-participants from that directory. The local operator manages profiles; user
-accounts and enforced administrator permissions are not implemented yet.
+Table tennis is built by people: players who train, clubs that bring them
+together, referees, volunteers, and organizers who make competitions happen.
+The basic tools for organizing and recording that work should be available to
+everyone, regardless of a club's budget or a tournament's size. **LibreTT starts
+from the belief that such tools should be free of charge and open source.**
 
-Tournament entries support withdrawal/restoration and individual player check-in
-shared across categories in the same tournament. The Cash desk records charges,
-discounts, partial payments and refunds with entry balances and immutable history.
-Set the category fee when creating a category: each new registration is charged
-automatically, with zero meaning free entry. Doubles has one fee per pair.
-This increment uses RSD; per-person doubles tariffs and payments split across
-categories are planned. Existing registrations are not retroactively charged. Read the [security policy](SECURITY.md) before reporting vulnerabilities
-or sharing local databases.
+A simple tool can benefit the sport far beyond its technical scope. Clear
+results and schedules can help audiences follow competitions. Statistics kept
+for decades can document players' development, clubs' work, and the history of
+entire competitions. Accessible, reliable records can make the sport easier to
+follow, increase its visibility, and help clubs present their work to potential
+sponsors. These are opportunities we want to open to the community, rather than
+outcomes that any single application can guarantee.
 
-## AI-assisted development
+Other competition tools exist, and some may serve their users very well.
+LibreTT's purpose does not depend on being the first or the only one. We want
+to offer a choice where free access, open source, offline operation, and lasting
+access to data are part of the same commitment to the community. Using the
+application and accessing your own history should not require a subscription,
+license activation, or purchasing feature tiers.
 
-LibreTT is developed with AI assistance for programming. The project idea,
-architecture, implementation decisions, and tests are authored or reviewed
-and verified by Aleksa Dimitrijević. Human review and verification remain
-part of development; AI assistance does not replace responsibility for the code.
+**Competition data belongs to the community that creates it.** A result is
+produced at the table through players' and clubs' work; the application records
+it. Competition history must therefore survive a service shutting down,
+software maintenance ending, or a subscription becoming unaffordable. What the
+community creates today must remain possible to preserve, read, and transfer
+decades from now.
 
-## Purpose
+That principle sets concrete requirements: operation without mandatory internet
+access or accounts, local storage, documented open formats, and archives that
+can be read without running LibreTT or relying on its author. A backup is not
+enough if reading it requires the same service to remain alive. Open source lets
+the community inspect the tool, adapt it, and continue development when its
+original maintainers can no longer do so. Open source does not mean publishing
+players' personal data; the community holding those records decides how to
+share them.
 
-**Competition data belongs to the community that creates it.** A result produced
-by a player or club must remain available even if LibreTT is no longer maintained
-or stops working. The application preserves that history; access to it must not
-depend on the application's survival.
+These commitments guide development. Local storage already exists; independent
+archival export and a restoration interface are still planned. Preserving
+history must be part of the results workflow, rather than an afterthought.
 
-Local ownership, documented open exports, and independently readable archives
-are architectural requirements. Backups alone are not enough: the community
-must be able to read, transfer, and recover records without running LibreTT or
-a central service. Archival export and restoration are planned, not yet implemented.
+## What works today
 
-Give clubs and organizers tools they can operate locally, without mandatory
-accounts, internet access, license activation, or paid feature tiers. Keep
-competition data portable through documented formats and backups.
+- Multiple tournaments and singles/doubles categories with independently selected
+  competition formats.
+- A shared local player directory with profiles, photos, and search.
+- Category registrations with historical name/club snapshots, withdrawal and
+  restoration, and tournament-wide player check-in.
+- Category fees in RSD with automatic charges for new registrations; doubles
+  fees are per pair, and zero means free entry.
+- A cash desk with discounts, partial payments, refunds, outstanding balances,
+  credit, and immutable record history.
+- Serbian and English interfaces, Light/Dark/System themes, and locally bundled
+  Libre Franklin fonts and Tabler icons.
+
+Leagues and phone applications come later. Per-person doubles tariffs and
+payments split across categories are not implemented yet. Local administration
+currently has no accounts or enforced user roles. Read the
+[security policy](SECURITY.md) before reporting vulnerabilities or sharing databases.
 
 ## Planned scope
 
@@ -84,9 +96,9 @@ Future integration with a player directory on **stoni.rs** will allow online
 search and download for subsequent offline use. That directory and its API do
 not exist yet. Local operation will remain independent of that service.
 
-## Architecture proposal
+## Architecture
 
-The proposed stack is **Tauri 2, Rust, TypeScript/Svelte, and SQLite**. It remains
+The application uses **Tauri 2, Rust, TypeScript/Svelte, and SQLite**. It remains
 subject to an early cross-platform prototype, including offline installation,
 printing, backup restoration, and second-screen support.
 
@@ -101,12 +113,21 @@ rename the existing WordPress project to `librett-wordpress`.
 ## Documentation and contributions
 
 - [Desktop application plan (Serbian)](docs/DESKTOP_TOURNAMENT_PLAN_SR.md)
+- [Development setup](docs/en/DEVELOPMENT.md)
 - [Contributing](CONTRIBUTING.md)
+- [Font and icon licenses](THIRD_PARTY_NOTICES.md)
 - [Changelog](CHANGELOG.md)
 
 English and Serbian user and technical documentation will grow with the
 specification and implementation. The current detailed planning document is
 available in Serbian.
+
+## AI-assisted development
+
+LibreTT is developed with AI assistance for programming. The project idea,
+architecture, implementation decisions, and tests are authored or reviewed
+and verified by Aleksa Dimitrijević. Human review and verification remain
+part of development; AI assistance does not replace responsibility for the code.
 
 ## Author and license
 
