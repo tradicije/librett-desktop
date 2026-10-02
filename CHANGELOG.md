@@ -7,7 +7,8 @@ Notable changes to LibreTT are recorded here in English.
 ### Changed
 
 - Replaced the tournament cash desk's account/form/history blocks with a searchable
-  player table, separate category columns, selection checkboxes and Paid controls.
+  player table, separate category columns, initially empty selection checkboxes and a Pay button. Only selected categories
+  are settled; each paid category shows its own status and cannot be charged again.
 - Cash summaries show outstanding balance after payments, net received and unique
   active registered players; doubles fees split equally between both members.
 - Unified hover, active and keyboard-focus styling across controls, navigation,

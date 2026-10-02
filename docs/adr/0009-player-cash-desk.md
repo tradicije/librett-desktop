@@ -3,12 +3,13 @@
 Status: accepted.
 
 The cash desk becomes a searchable player list, with category checkboxes and a
-Paid control per player. Summary values are remaining outstanding balance, net
+Pay button per player. Summary values are remaining outstanding balance, net
 received, and the number of distinct active registered players. They are computed
 from financial records, independently of the search or category selection.
 
-Checking Paid records actual payments for selected categories' remaining balances.
-Unchecking is an explicit, confirmed refund, not deletion of history. Existing
+Category selections start empty. Clicking Pay records actual payments for selected
+categories' remaining balances, clears selection and marks each settled category Paid.
+Paid categories cannot be selected again. Existing
 partial payments, discounts, refunds and overpayments remain part of the ledger.
 A request UUID makes the entire multi-category settlement atomic and idempotent.
 Amounts are calculated from persisted records inside an immediate transaction,
@@ -27,5 +28,4 @@ not a player's displayed total or tournament summary.
 
 Schema v9 adds immutable allocation and settlement records with pre-v9 backups.
 The ledger still supports partial payments and discounts in existing data and
-backend operations; this simplified screen only settles remaining balances or
-refunds selected payments. It does not provide manual adjustment entry.
+backend operations; this simplified screen only settles selected remaining balances. It does not provide manual adjustment entry.

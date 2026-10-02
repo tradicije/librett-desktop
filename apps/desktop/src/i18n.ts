@@ -1,7 +1,7 @@
 const sr = {
-  playerCashIntro: 'Čekiraj kategorije koje naplaćuješ i označi Plaćeno. Dubl kotizacija deli se na dva igrača.',
+  playerCashIntro: 'Izaberi kategorije koje igrač plaća i klikni Plati. Dubl kotizacija deli se na dva igrača.',
   notRegisteredCategory: 'Nije prijavljen u ovu kategoriju',
-  registeredPlayers: 'Prijavljeno', paid: 'Plaćeno', partner: 'Partner', searchCashPlayers: 'Pretraži igrača, klub ili kategoriju',
+  cashActions: 'Naplata', pay: 'Plati', registeredPlayers: 'Prijavljeno', paid: 'Plaćeno', partner: 'Partner', searchCashPlayers: 'Pretraži igrača, klub ili kategoriju',
   selectCashCategory: 'Izaberi kategoriju za naplatu', selectedCashAmount: 'Izabrano za naplatu',
   confirmCashRefund: 'Potvrdi povraćaj', cashRefundHint: 'Poništavanje oznake Plaćeno evidentira povraćaj primljenih uplata za izabrane kategorije ovog igrača. Finansijska istorija ostaje sačuvana.',
 
@@ -75,9 +75,9 @@ const sr = {
 };
 type Messages = typeof sr;
 const en: Messages = {
-  playerCashIntro: 'Check the categories to collect and mark Paid. Doubles fees are split between both players.',
+  playerCashIntro: 'Select the categories the player is paying for and click Pay. Doubles fees are split between both players.',
   notRegisteredCategory: 'Not registered in this category',
-  registeredPlayers: 'Registered', paid: 'Paid', partner: 'Partner', searchCashPlayers: 'Search player, club or category',
+  cashActions: 'Payment', pay: 'Pay', registeredPlayers: 'Registered', paid: 'Paid', partner: 'Partner', searchCashPlayers: 'Search player, club or category',
   selectCashCategory: 'Select category for payment', selectedCashAmount: 'Selected for payment',
   confirmCashRefund: 'Confirm refund', cashRefundHint: 'Unchecking Paid records a refund of received payments for this player’s selected categories. Financial history is preserved.',
 

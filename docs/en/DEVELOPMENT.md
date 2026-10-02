@@ -144,16 +144,18 @@ See [ADR 0001](../adr/0001-desktop-foundation.md) and
 Open a tournament and choose Cash desk. The summary shows remaining outstanding
 balance, net received and distinct active registered players. The searchable table
 has one row per player and one column per category, followed by total outstanding
-and Paid. Categories without a registration show a dash. Archived/withdrawn entries
+and a Pay button. Categories without a registration show a dash. Archived/withdrawn entries
 retain their financial balances and are labeled; they do not add to the active count.
 
-Category checkboxes select accounts to settle. Clicking Paid records their remaining
+Category checkboxes start unchecked and select unpaid accounts to settle. Clicking
+Pay records their remaining
 balances atomically, without entering amounts or notes. Doubles charges split equally:
 500 RSD per pair means 250 RSD per player. Paying one member does not pay the other.
-Unchecking Paid opens a refund confirmation; cancellation leaves records unchanged.
+Settled categories display Paid and cannot be selected again. A successful payment
+clears the selection; payment status remains visible after reopening this screen.
 
 Existing partial payments, discounts and refunds affect amounts shown. The simplified
-screen does not expose manual charge/discount/partial-payment forms or ledger history;
+screen does not expose manual charge/discount/partial-payment/refund forms or ledger history;
 those records remain preserved in the backend. Uncertain writes retain their UUID
 and lock controls until a retry confirms the outcome. Smaller windows scroll the
 category columns horizontally. New registrations still receive category fees

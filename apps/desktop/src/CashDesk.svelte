@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, tick } from 'svelte';
+  import { onMount } from 'svelte';
   import Icon from './Icon.svelte';
   import { formatMoney } from './money';
   import { cashLedger, listEntries, settlePlayerCash, desktopAvailable, type Tournament, type Entry, type CashLedger } from './api';
@@ -17,8 +17,6 @@
   let notice = $state(false);
   type Request = { id: string; playerId: string; entryIds: string[]; paid: boolean };
   let pending = $state<Request | null>(null);
-  let refund = $state<{ playerId: string; name: string; entryIds: string[]; amount: number } | null>(null);
-  let dialog: HTMLDialogElement;
   function money(amount: number) { return formatMoney(amount, language); }
   function share(amount: number, position: number, count: number) { return Math.trunc(amount / count) + (position < Math.abs(amount % count) ? Math.sign(amount) : 0); }
   function entryBalance(entry: Entry, playerId?: string) {
@@ -48,7 +46,7 @@
     return [...players.values()].map(player => {
       const accounts = player.entries.map(entry => ({ entry, ...entryBalance(entry,player.id) }));
       const chosen = accounts.filter(a => selected[player.id]?.includes(a.entry.id));
-      return { ...player, accounts, remaining: accounts.reduce((sum,a) => sum+a.remaining,0), selectedRemaining: chosen.reduce((sum,a) => sum+a.remaining,0), selectedNet: chosen.reduce((sum,a) => sum+Math.max(0,a.net),0), paid: chosen.length > 0 && chosen.every(a => a.remaining === 0) };
+      return { ...player, accounts, remaining: accounts.reduce((sum,a) => sum+a.remaining,0), selectedRemaining: chosen.reduce((sum,a) => sum+a.remaining,0) };
     }).sort((a,b) => a.name.localeCompare(b.name,language));
   });
   let filtered = $derived(rows.filter(row => `${row.name} ${row.club} ${row.entries.map(categoryLabel).join(' ')}`.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase())));
@@ -61,9 +59,7 @@
     try {
       const [cash, groups] = await Promise.all([cashLedger(tournament.id), Promise.all(tournament.categories.map(c => listEntries(c.id)))]);
       ledger = cash; entries = groups.flat();
-      const selections: Record<string,string[]> = {};
-      for (const entry of entries) for (const member of entry.members) (selections[member.id] ??= []).push(entry.id);
-      selected = selections; loaded = true;
+      selected = {}; loaded = true;
     } catch (cause) { error = errorKey(cause); }
     finally { loading = false; }
   }
@@ -74,19 +70,11 @@
     selected = { ...selected, [playerId]: choices.includes(entryId) ? choices.filter(id => id !== entryId) : [...choices,entryId] };
     notice = false;
   }
-  async function markPaid(row: typeof rows[number]) {
-    if (busy || !selected[row.id]?.length) return;
-    if (row.paid) {
-      refund = { playerId: row.id, name: row.name, entryIds: [...selected[row.id]], amount: row.selectedNet };
-      await tick(); dialog.showModal(); return;
-    }
-    pending = { id: crypto.randomUUID(), playerId: row.id, entryIds: [...selected[row.id]], paid: true };
+  async function paySelected(row: typeof rows[number]) {
+    if (busy || row.selectedRemaining <= 0) return;
+    const entryIds = row.accounts.filter(account => account.remaining > 0 && selected[row.id]?.includes(account.entry.id)).map(account => account.entry.id);
+    pending = { id: crypto.randomUUID(), playerId: row.id, entryIds, paid: true };
     await save();
-  }
-  async function confirmRefund() {
-    if (!refund || busy) return;
-    pending = { id: crypto.randomUUID(), playerId: refund.playerId, entryIds: refund.entryIds, paid: false };
-    dialog.close(); await save();
   }
   async function save() {
     if (!pending || saving) return;
@@ -94,6 +82,7 @@
     try {
       await settlePlayerCash(pending.id,tournament.id,pending.playerId,pending.entryIds,pending.paid);
       ledger = await cashLedger(tournament.id);
+      selected = { ...selected, [pending.playerId]: [] };
       pending = null; busy = false; notice = true;
     } catch (cause) {
       error = errorKey(cause);
@@ -115,7 +104,7 @@
     <!-- svelte-ignore a11y_no_noninteractive_tabindex (Keyboard users need a focusable container to scroll the category matrix horizontally.) -->
     <div class="cash-table-scroll" role="region" aria-label={text.cashDesk} tabindex="0">
       <table class="cash-player-table" style:min-width={`${380 + cashCategories.length * 170}px`}>
-        <thead><tr><th scope="col">{text.firstPlayer}</th>{#each cashCategories as category (category.id)}<th scope="col">{category.name}<small>{text[category.discipline]}{category.archived ? ` · ${text.archivedCategory}` : ''}</small></th>{/each}<th scope="col">{text.outstanding}</th><th scope="col">{text.paid}</th></tr></thead>
+        <thead><tr><th scope="col">{text.firstPlayer}</th>{#each cashCategories as category (category.id)}<th scope="col">{category.name}<small>{text[category.discipline]}{category.archived ? ` · ${text.archivedCategory}` : ''}</small></th>{/each}<th scope="col">{text.outstanding}</th><th scope="col">{text.cashActions}</th></tr></thead>
         <tbody>
           {#each filtered as row (row.id)}
             <tr class="cash-player-row" class:is-paid={row.remaining === 0}>
@@ -124,14 +113,14 @@
                 {@const account = row.accounts.find(a => a.entry.category_id === category.id)}
                 <td>
                   {#if account}
-                    <label class="cash-category-choice"><input type="checkbox" checked={selected[row.id]?.includes(account.entry.id)} onchange={() => toggleCategory(row.id,account.entry.id)} disabled={busy} aria-label={`${text.selectCashCategory}: ${row.name} · ${categoryLabel(account.entry)}`} /><span class="cash-category-amount">{money(account.remaining)}</span></label>
+                    <label class="cash-category-choice"><input type="checkbox" checked={selected[row.id]?.includes(account.entry.id)} onchange={() => toggleCategory(row.id,account.entry.id)} disabled={busy || account.remaining === 0} aria-label={`${text.selectCashCategory}: ${row.name} · ${categoryLabel(account.entry)}`} /><span class="cash-category-amount">{account.remaining === 0 ? text.paid : money(account.remaining)}</span></label>
                     {#if account.entry.members.length === 2}<small class="cash-cell-detail">{account.entry.members.find(m => m.id !== row.id)?.name}</small>{/if}
                     {#if account.entry.status === 'withdrawn'}<small class="cash-cell-detail">{text.withdrawnRegistrations}</small>{/if}
                   {:else}<span class="cash-cell-empty" aria-label={text.notRegisteredCategory}>—</span>{/if}
                 </td>
               {/each}
               <td class="cash-player-total"><strong>{money(row.remaining)}</strong>{#if row.selectedRemaining !== row.remaining}<small>{text.selectedCashAmount}: {money(row.selectedRemaining)}</small>{/if}</td>
-              <td><label class="paid-choice"><input type="checkbox" checked={row.paid} onchange={(event) => { event.currentTarget.checked = row.paid; void markPaid(row); }} disabled={busy || !selected[row.id]?.length || (row.paid && row.selectedNet === 0)} aria-label={`${text.paid}: ${row.name}`} /><span>{text.paid}</span></label></td>
+              <td><button class="primary cash-pay-button" onclick={() => paySelected(row)} disabled={busy || row.selectedRemaining <= 0} aria-label={`${text.pay}: ${row.name}`}>{text.pay}</button></td>
             </tr>
           {/each}
         </tbody>
@@ -140,6 +129,3 @@
     {#if !filtered.length}<p class="muted">{rows.length ? text.noPlayers : text.cashNoEntries}</p>{/if}
   </section>
 {/if}
-<dialog class="confirm-dialog" bind:this={dialog} aria-labelledby="cash-refund-title" onclose={() => { refund = null; }}>
-  <h2 id="cash-refund-title">{text.confirmCashRefund}</h2><p>{refund?.name} · {refund ? money(refund.amount) : ''}</p><p>{text.cashRefundHint}</p><div class="dialog-actions"><button class="secondary" onclick={() => dialog.close()}>{text.cancelDelete}</button><button class="primary" onclick={confirmRefund}>{text.refund}</button></div>
-</dialog>

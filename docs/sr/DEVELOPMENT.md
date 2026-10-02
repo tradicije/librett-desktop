@@ -139,17 +139,18 @@ Pogledaj [ADR 0001](../adr/0001-desktop-foundation.md) i
 
 Otvori turnir i izaberi Blagajna. Na vrhu su preostalo dugovanje, neto primljeno
 i broj različitih aktivno prijavljenih igrača. Tabela ima pretragu, red po igraču,
-posebnu kolonu za svaku kategoriju, ukupno dugovanje i checkbox Plaćeno.
+posebnu kolonu za svaku kategoriju, ukupno dugovanje i dugme Plati.
 Ako igrač nije prijavljen u kategoriju, prikazuje se crtica. Arhivirane kategorije
 i povučene prijave zadržavaju finansije i oznake, ali ne povećavaju aktivni broj.
 
-Checkbox-evi kategorija biraju šta naplaćuješ. Klik na Plaćeno upisuje preostale
+Checkbox-evi počinju bez kvačica i biraju neplaćene kategorije. Klik na Plati upisuje preostale
 iznose zajedno, bez unosa iznosa ili napomene. Dubl od 500 RSD po paru deli se
 na 250 RSD po igraču. Uplata jednog člana ne označava partnera kao plaćenog.
-Poništavanje oznake otvara potvrdu povraćaja; odustajanje ne menja zapise.
+Plaćene kategorije dobijaju oznaku Plaćeno i ne mogu ponovo da se izaberu.
+Posle uplate izbor se prazni; status ostaje vidljiv i nakon ponovnog otvaranja.
 
 Ranije delimične uplate, popusti i povraćaji ulaze u računanje. Ovaj pojednostavljeni
-ekran nema ručni unos zaduženja/popusta/delimičnih uplata ni prikaz istorije;
+ekran nema ručni unos zaduženja/popusta/delimičnih uplata/povraćaja ni prikaz istorije;
 svi finansijski zapisi ostaju sačuvani u bazi. Neizvestan upis zadržava isti UUID
 i zaključava kontrole do potvrde ponavljanjem zahteva. U manjim prozorima kolone
 kategorija skroluju se horizontalno. Nove prijave i dalje automatski dobijaju
