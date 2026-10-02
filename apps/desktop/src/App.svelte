@@ -22,6 +22,7 @@
   let historyIndex = $state(0);
   let route = $derived(history[historyIndex]);
   let inPlayers = $derived(route.view === 'players' || route.view === 'player-create' || route.view === 'player-edit');
+  let pageLabel = $derived(route.view === 'dashboard' ? text.dashboard : route.view === 'cash' ? text.cashDesk : inPlayers ? text.playerTab : text.tournaments);
   let mode = $derived(route.view === 'dashboard' ? 'dashboard' : 'tournaments');
   let childBusy = $state(false);
   let tournaments = $state<Tournament[]>([]);
@@ -109,6 +110,7 @@
 <div class="shell" class:dashboard-shell={mode === 'dashboard'}>
   {#if mode !== 'dashboard'}<aside>
     <a class="brand" href="/" onclick={(event) => { event.preventDefault(); if (!navigationLocked) home(); }}><img src={resolvedTheme === 'dark' ? darkLogo : lightLogo} alt="LibreTT" width="2048" height="552" /></a>
+    <p class="sidebar-label">{text.workspace}</p>
     <nav aria-label={text.navigation}>
       <button class="nav-item" class:active={!inPlayers} aria-current={!inPlayers ? 'page' : undefined} disabled={navigationLocked} onclick={openTournaments}><Icon name="trophy" />{text.tournaments}</button>
       <button class="nav-item" class:active={inPlayers} aria-current={inPlayers ? 'page' : undefined} disabled={navigationLocked} onclick={() => navigate({ view: 'players' })}><Icon name="users" />{text.playerTab}</button>
@@ -116,7 +118,7 @@
     <div class="sidebar-bottom"><span class="icon-label"><Icon name="desktop" size={16} />{text.local}</span><small>© 2026 Aleksa Dimitrijević</small></div>
   </aside>{/if}
   <main>
-    <header>
+    <header class="app-toolbar">
       <div class="header-navigation">
         {#if mode === 'dashboard'}<img class="dashboard-logo" src={resolvedTheme === 'dark' ? darkLogo : lightLogo} alt="LibreTT" width="2048" height="552" />{/if}
         <div class="navigation-controls" aria-label={text.navigation}>
@@ -124,26 +126,28 @@
           <button class="icon-button" aria-label={text.goForward} title={text.goForward} disabled={navigationLocked || historyIndex === history.length - 1} onclick={() => travel(1)}><Icon name="arrow-right" /></button>
           <button class="icon-button" aria-label={text.goHome} title={text.goHome} disabled={navigationLocked || mode === 'dashboard'} onclick={home}><Icon name="home" /></button>
         </div>
+        {#if mode !== 'dashboard'}<div class="breadcrumb"><span>{text.tournaments}</span><span class="breadcrumb-divider">/</span><strong>{selected?.name ?? pageLabel}</strong>{#if route.view === 'cash'}<span class="breadcrumb-divider">/</span><span>{text.cashDesk}</span>{/if}</div>{/if}
       </div>
       <div class="preferences">
-        <label><Icon name={theme === 'system' ? 'desktop' : theme === 'dark' ? 'moon' : 'sun'} size={18} />{text.theme}<Select label={text.theme} bind:value={theme} options={[{ value: 'system', label: text.themeSystem }, { value: 'light', label: text.themeLight }, { value: 'dark', label: text.themeDark }]} /></label>
-        <label><Icon name="globe" size={18} />{text.language}<Select label={text.language} bind:value={language} options={[{ value: 'sr', label: 'Srpski' }, { value: 'en', label: 'English' }]} /></label>
+        <label><Icon name={theme === 'system' ? 'desktop' : theme === 'dark' ? 'moon' : 'sun'} size={18} /><span class="preference-label">{text.theme}</span><Select label={text.theme} bind:value={theme} options={[{ value: 'system', label: text.themeSystem }, { value: 'light', label: text.themeLight }, { value: 'dark', label: text.themeDark }]} /></label>
+        <label><Icon name="globe" size={18} /><span class="preference-label">{text.language}</span><Select label={text.language} bind:value={language} options={[{ value: 'sr', label: 'Srpski' }, { value: 'en', label: 'English' }]} /></label>
       </div>
     </header>
+    <div class="workspace-content" class:mode-content={mode === 'dashboard'}>
     {#if !desktopAvailable}<p class="banner">{text.preview}</p>{/if}
     {#if mode === 'tournaments' && error}<div class="error" role="alert">{text[error]} {#if !loaded && desktopAvailable}<button disabled={loading} onclick={load}>{text.retry}</button>{/if}</div>{/if}
     <div class="notice" role="status" aria-live="polite">{notice ? text[notice] : ''}</div>
     {#if mode === 'dashboard'}
-      <div class="heading"><div><p class="eyebrow">LibreTT</p><h1>{text.chooseMode}</h1><p class="muted">{text.dashboardIntro}</p></div></div>
+      <div class="heading"><div><p class="eyebrow">{text.workspace}</p><h1>{text.chooseMode}</h1><p class="muted">{text.dashboardIntro}</p></div></div>
       <div class="mode-grid">
         <button class="mode-card" onclick={openTournaments}>
-          <span class="mode-icon"><Icon name="trophy" size={32} /></span>
+          <span class="mode-card-top"><span class="mode-icon"><Icon name="trophy" size={24} /></span></span>
           <span class="mode-title">{text.tournaments}</span>
           <span class="mode-description">{text.tournamentModeDescription}</span>
           <span class="mode-action">{text.openTournaments}<Icon name="arrow-right" size={18} /></span>
         </button>
         <button class="mode-card mode-unavailable" disabled aria-describedby="league-status">
-          <span class="mode-icon"><Icon name="list" size={32} /></span>
+          <span class="mode-card-top"><span class="mode-icon"><Icon name="list" size={24} /></span></span>
           <span class="mode-title">{text.leagues}</span>
           <span class="mode-description">{text.leagueModeDescription}</span>
           <span class="pill" id="league-status">{text.later}</span>
@@ -159,11 +163,10 @@
     {:else if selected && route.view === 'cash'}
       {#key selected.id}<CashDesk tournament={selected} {language} bind:busy={childBusy} />{/key}
     {:else if selected}
-      <button disabled={navigationLocked} onclick={() => navigate({ view: 'cash', id: selected.id })}><Icon name="cash" />{text.cashDesk}</button>
-      <div class="heading"><div><p class="eyebrow">{text.selected}</p><h1>{selected.name}</h1></div><span class="pill">{selected.categories.length} · {text.categories}</span></div>
+      <div class="heading"><div><p class="eyebrow">{text.selected}</p><h1>{selected.name}</h1></div><button class="secondary icon-label" disabled={navigationLocked} onclick={() => navigate({ view: 'cash', id: selected.id })}><Icon name="cash" size={18} />{text.cashDesk}<Icon name="arrow-right" size={16} /></button></div>
       <div class="columns">
         <section class="panel">
-          <h2>{text.categories}</h2>
+          <div class="section-heading"><h2>{text.categories}</h2><span class="pill">{selected.categories.length}</span></div>
           {#if selected.categories.length === 0}<p class="muted">{text.noCategories}</p>{/if}
           {#each selected.categories as category (category.id)}
             <article class="category"><span class="category-icon"><Icon name={category.discipline === 'singles' ? 'user' : 'users'} /></span><div><h3>{category.name}</h3><p>{text[category.discipline]} · {text[category.format]} · {formatMoney(category.fee_minor, language)} {text.feePerEntry}</p></div></article>
@@ -181,18 +184,19 @@
       </div>
       {#key selected.id}<Players tournament={selected} {language} bind:busy={childBusy} />{/key}
     {:else}
-      <div class="heading"><div><p class="eyebrow">LibreTT</p><h1>{text.subtitle}</h1><p class="muted">{text.intro}</p></div></div>
+      <div class="heading"><div><p class="eyebrow">LibreTT</p><h1>{text.tournaments}</h1><p class="muted">{text.intro}</p></div></div>
       <div class="columns">
-        <section class="panel">
-          <div class="section-heading"><h2>{text.tournaments}</h2><span class="pill">{tournaments.length}</span></div>
+        <section class="panel tournament-directory">
+          <div class="section-heading"><h2>{text.tournamentList}</h2><span class="pill">{tournaments.length}</span></div>
           {#if loading}<p class="muted" role="status">{text.loading}</p>
           {:else if tournaments.length === 0 && (!desktopAvailable || loaded)}<div class="empty"><span class="empty-icon"><Icon name="trophy" size={28} /></span><h3>{text.empty}</h3><p>{text.emptyText}</p></div>
           {:else}
-            {#each tournaments as tournament (tournament.id)}<button class="tournament" disabled={busy} onclick={() => select(tournament.id)}><div><strong>{tournament.name}</strong><small>{tournament.categories.length} · {text.categories}</small></div><Icon name="arrow-right" /></button>{/each}
+            {#each tournaments as tournament (tournament.id)}<button class="tournament" disabled={busy} onclick={() => select(tournament.id)}><span class="row-icon"><Icon name="trophy" size={18} /></span><div class="row-content"><strong>{tournament.name}</strong><small>{tournament.categories.length} · {text.categories}</small></div><Icon name="arrow-right" /></button>{/each}
           {/if}
         </section>
         <section class="panel form-panel"><h2 class="icon-label"><Icon name="trophy" />{text.newTournament}</h2><form onsubmit={create}><label>{text.tournamentName}<input bind:value={tournamentName} required disabled={busy || loading} /></label><button class="primary" disabled={busy || loading || !desktopAvailable || !loaded}><Icon name="plus" size={18} />{busy ? text.saving : text.create}</button></form></section>
       </div>
     {/if}
+    </div>
   </main>
 </div>

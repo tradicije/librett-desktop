@@ -73,19 +73,25 @@
 {#if loaded || !desktopAvailable}
   <section class="panel form-panel player-editor">
     <form onsubmit={save}>
+      <fieldset class="form-group"><legend>{text.profileDetails}</legend><div class="form-fields">
       <label>{text.playerName}<input bind:value={name} required maxlength="120" disabled={busy} /></label>
       <label>{text.club}<input bind:value={club} maxlength="120" disabled={busy} /></label>
       <label>{text.birthYear}<input type="number" bind:value={birthYear} min="1900" max={currentYear} step="1" disabled={busy} /></label>
       <label>{text.city}<input bind:value={city} maxlength="2000" disabled={busy} /></label>
       <label>{text.country}<input bind:value={country} maxlength="2000" disabled={busy} /></label>
+      </div></fieldset>
+      <fieldset class="form-group"><legend>{text.contactDetails}</legend><div class="form-fields">
       <label>{text.email}<input type="email" bind:value={email} maxlength="2000" disabled={busy} /></label>
       <label>{text.phone}<input type="tel" bind:value={phone} maxlength="2000" disabled={busy} /></label>
+      </div></fieldset>
+      <fieldset class="form-group"><legend>{text.additionalDetails}</legend>
       <label>{text.notes}<textarea bind:value={notes} maxlength="2000" rows="3" disabled={busy}></textarea></label>
       <label>{text.photo}<input type="file" accept="image/jpeg,image/png,image/webp" onchange={readPhoto} bind:this={fileInput} disabled={busy} /></label>
       <p class="muted">{text.photoHint}</p>
       {#if photo}<div class="photo-preview"><img class="player-photo" src={photo} alt={text.photo} /><button type="button" class="secondary" disabled={busy} onclick={() => { photo = null; if (fileInput) fileInput.value = ''; }}>{text.removePhoto}</button></div>{/if}
-      <button class="primary" disabled={busy || !desktopAvailable || !loaded}><Icon name="check-circle" />{busy ? text.saving : text.savePlayer}</button>
-      <button type="button" class="secondary icon-label" disabled={busy} onclick={oncancel}><Icon name="arrow-left" size={18} />{text.cancelEdit}</button>
+      </fieldset>
+      <div class="form-actions"><button class="primary" disabled={busy || !desktopAvailable || !loaded}><Icon name="check-circle" />{busy ? text.saving : text.savePlayer}</button>
+      <button type="button" class="secondary icon-label" disabled={busy} onclick={oncancel}><Icon name="arrow-left" size={18} />{text.cancelEdit}</button></div>
     </form>
   </section>
 {/if}

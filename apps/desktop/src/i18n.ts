@@ -1,4 +1,6 @@
 const sr = {
+  workspace: 'Takmičenja', tournamentList: 'Svi turniri', profileDetails: 'Profil igrača', contactDetails: 'Kontakt', additionalDetails: 'Fotografija i beleške',
+
   categoryFee: 'Kotizacija kategorije (RSD)', categoryFeeHint: '0 = bez kotizacije. Automatsko zaduženje pri prijavi; za dubl iznos važi po paru.', feePerEntry: 'po prijavi',
   invalid_category_fee: 'Unesi kotizaciju od 0 do 10.000.000 RSD, sa najviše dve decimale.',
 
@@ -59,6 +61,8 @@ const sr = {
 };
 type Messages = typeof sr;
 const en: Messages = {
+  workspace: 'Competitions', tournamentList: 'All tournaments', profileDetails: 'Player profile', contactDetails: 'Contact', additionalDetails: 'Photo and notes',
+
   categoryFee: 'Category fee (RSD)', categoryFeeHint: '0 = free entry. Automatically charged on registration; doubles fee is per pair.', feePerEntry: 'per entry',
   invalid_category_fee: 'Enter a fee from 0 to 10,000,000 RSD with at most two decimal places.',
 

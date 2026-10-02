@@ -6,6 +6,13 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Changed
 
+- Redesigned desktop screens with a compact sidebar, persistent context toolbar,
+  restrained typography, consistent controls and denser competition/player lists.
+- Grouped player editing fields, added initial avatars and a search toolbar,
+  clarified registration summaries and highlighted selected cash accounts.
+- Consolidated theme styles while retaining the LibreTT palette, local font/icons,
+  keyboard focus, responsive layouts and reduced-motion support.
+
 - Restructured both README files around the project's philosophy, current features
   and roadmap, removed the redundant title beneath the logo, and expanded the
   commitment to free access, community-owned data and long-term sporting history.

@@ -75,7 +75,7 @@
     <div class="columns">
       <section class="panel"><h2>{text.cashAccounts}</h2>
         {#each accounts as account (account.entry.id)}
-          <button class="tournament" class:active={entryId === account.entry.id} disabled={busy} onclick={() => { entryId = account.entry.id; error = null; notice = false; }}><div><strong>{label(account.entry)}</strong><small>{text.amountDue}: {money(account.due)} · {text.netReceived}: {money(account.net)}</small><small>{text.outstanding}: {money(Math.max(0, account.due-account.net))} · {text.credit}: {money(Math.max(0,account.net-account.due))}</small></div><Icon name="arrow-right" /></button>
+          <button class="tournament cash-account" aria-pressed={entryId === account.entry.id} class:active={entryId === account.entry.id} disabled={busy} onclick={() => { entryId = account.entry.id; error = null; notice = false; }}><div class="row-content"><strong>{label(account.entry)}</strong><small>{text.amountDue}: {money(account.due)} · {text.netReceived}: {money(account.net)}</small><small>{text.outstanding}: {money(Math.max(0, account.due-account.net))} · {text.credit}: {money(Math.max(0,account.net-account.due))}</small></div><Icon name="arrow-right" /></button>
         {/each}
       </section>
       <section class="panel form-panel"><h2>{text.cashRecord}</h2><form onsubmit={save}>

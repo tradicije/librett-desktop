@@ -47,13 +47,13 @@
 <p role="status" class="notice">{notice ? text.playerDeleted : ''}</p>
 <section class="panel player-directory">
   <div class="section-heading"><h2>{text.directory}</h2><span class="pill">{players.length}</span></div>
-  <label class="field-label">{text.searchPlayers}<input type="search" bind:value={search} /></label>
+  <div class="directory-toolbar"><label class="search-field"><Icon name="search" size={17} /><input aria-label={text.searchPlayers} placeholder={text.searchPlayers} type="search" bind:value={search} /></label><span class="muted">{filtered.length} / {players.length}</span></div>
   {#if loading}<p role="status">{text.loading}</p>{:else if !filtered.length}<p class="muted">{text.noPlayers}</p>{/if}
   {#each filtered as player (player.id)}
     <article class="player-profile">
-      {#if player.photo}<img class="player-photo" src={player.photo} alt={player.name} />{:else}<span class="player-avatar"><Icon name="user" size={28} /></span>{/if}
+      {#if player.photo}<img class="player-photo" src={player.photo} alt={player.name} />{:else}<span class="player-avatar" aria-hidden="true">{player.name.split(/\s+/).slice(0, 2).map(part => part[0]).join('').toLocaleUpperCase()}</span>{/if}
       <div class="player-details"><h3>{player.name}</h3><p>{[player.club, player.birth_year, player.city, player.country].filter(Boolean).join(' · ')}</p>
-        {#if player.email}<p>{player.email}</p>{/if}{#if player.phone}<p>{player.phone}</p>{/if}{#if player.notes}<p class="player-notes">{player.notes}</p>{/if}
+        <p class="player-contact">{[player.email, player.phone].filter(Boolean).join(' · ')}</p>
       </div>
       <div class="player-actions">
         <button class="secondary icon-label" disabled={busy} onclick={() => onedit(player.id)} aria-label={`${text.editPlayer}: ${player.name}`}><Icon name="edit" size={18} />{text.editPlayer}</button>

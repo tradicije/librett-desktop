@@ -89,14 +89,14 @@
   <div class="columns">
     <section class="panel"><h3 class="icon-label"><Icon name="list" />{text.entries}</h3>
       {#if entriesLoaded}
-        <p class="muted">{text.activeRegistrations}: {activeEntries.length} · {text.withdrawnRegistrations}: {entries.length - activeEntries.length} · {text.arrivedPlayers}: {checkedInCount}</p>
+        <div class="registration-summary"><span><strong>{activeEntries.length}</strong>{text.activeRegistrations}</span><span><strong>{checkedInCount}</strong>{text.arrivedPlayers}</span><span><strong>{entries.length - activeEntries.length}</strong>{text.withdrawnRegistrations}</span></div>
       {/if}
       <label>{text.entryFilter}<Select label={text.entryFilter} bind:value={statusFilter} options={[{ value: 'all', label: text.allRegistrations }, { value: 'registered', label: text.activeRegistrations }, { value: 'withdrawn', label: text.withdrawnRegistrations }]} disabled={busy} /></label>
       {#if categoryId && !entriesLoaded && desktopAvailable}<p class="muted">{text.loading}</p>
       {:else if !visibleEntries.length}<p class="muted">{entries.length ? text.noFilteredEntries : text.noEntries}</p>{/if}
       {#each visibleEntries as entry (entry.id)}
         <article class="entry-card" class:entry-withdrawn={entry.status === 'withdrawn'}>
-          <div class="entry-heading"><h3>{entry.members.map(p => p.name).join(' / ')}</h3><span class="pill">{entry.status === 'withdrawn' ? text.withdrawnRegistrations : text.activeRegistrations}</span></div>
+          <div class="entry-heading"><h3>{entry.members.map(p => p.name).join(' / ')}</h3><span class="pill" class:status-active={entry.status !== 'withdrawn'}>{entry.status === 'withdrawn' ? text.withdrawnRegistrations : text.activeRegistrations}</span></div>
           <p class="muted">{entry.members.map(p => p.club).filter(Boolean).join(' / ')}</p>
           {#each entry.members as member (member.id)}
             <div class="attendance-row"><span>{member.name} · {member.checked_in ? text.arrived : text.notArrived}</span>
