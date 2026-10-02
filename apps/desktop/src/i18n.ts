@@ -1,16 +1,24 @@
 const sr = {
+  registrations: 'Prijave', draw: 'Žreb', groups: 'Grupe', bracket: 'Kostur', categorySections: 'Delovi kategorije',
+  stageNotReady: 'Ovaj deo takmičenja je u pripremi. Za sada možeš da urediš prijave; generisanje žreba i mečeva dolazi sledeće.',
+  deleteCategory: 'Obriši kategoriju', deleteCategoryHint: 'Prazna kategorija briše se trajno. Kategorija sa prijavama arhivira se: nestaje iz aktivnog turnira, a prijave i finansijska istorija ostaju sačuvane u blagajni.',
+  categoryRemoved: 'Kategorija je uklonjena iz aktivnog turnira.', categoryUnavailable: 'Kategorija je obrisana ili arhivirana.', backToTournament: 'Vrati se na turnir', archivedCategory: 'Arhivirana kategorija',
+  bulkSinglesHint: 'Označi igrače i prijavi ih zajedno. Kotizacija se dodaje automatski za svakog.',
+  bulkDoublesHint: 'Označi dva igrača, dodaj par, pa ponovi za sledeći par. Prijavi sve pripremljene parove zajedno.',
+  registerSelected: 'Prijavi izabrane', alreadyInCategory: 'Već prijavljen', addPair: 'Dodaj par', removePair: 'Ukloni par',
+
   workspace: 'Takmičenja', tournamentList: 'Svi turniri', profileDetails: 'Profil igrača', contactDetails: 'Kontakt', additionalDetails: 'Fotografija i beleške',
 
   categoryFee: 'Kotizacija kategorije (RSD)', categoryFeeHint: '0 = bez kotizacije. Automatsko zaduženje pri prijavi; za dubl iznos važi po paru.', feePerEntry: 'po prijavi',
   invalid_category_fee: 'Unesi kotizaciju od 0 do 10.000.000 RSD, sa najviše dve decimale.',
 
   cashDesk: 'Blagajna', cashIntro: 'Evidencija po prijavi, u RSD. Dubl ima zajednički račun para. Dolazak i povlačenje ne menjaju uplate.',
-  cashAccounts: 'Računi prijava', cashAccount: 'Prijava', cashKind: 'Vrsta zapisa', cashAmount: 'Iznos (RSD)', cashNote: 'Razlog / napomena',
+  cashAccounts: 'Računi prijava', cashAccount: 'Prijava', cashKind: 'Vrsta zapisa', cashAmount: 'Iznos (RSD)', cashNote: 'Napomena (opciono)',
   charge: 'Zaduženje', discount: 'Popust / oslobađanje', payment: 'Uplata', refund: 'Povraćaj', cashRecord: 'Evidentiraj', cashHistory: 'Istorija izabrane prijave',
   netReceived: 'Neto primljeno', outstanding: 'Dugovanje', credit: 'Preplata', amountDue: 'Kotizacija posle popusta', cashSaved: 'Zapis je sačuvan.',
   cashNoEntries: 'Prvo prijavi igrače u kategorije turnira.', cashEmptyHistory: 'Ova prijava još nema finansijskih zapisa.',
   cashRetryHint: 'Potvrda upisa nije završena. Ponovi isti zahtev da proveriš i završiš upis bez duple naplate.',
-  invalid_cash: 'Unesi pozitivan iznos do 10.000.000 RSD i razlog. Popust ne sme premašiti zaduženje, a povraćaj primljene uplate.',
+  invalid_cash: 'Unesi pozitivan iznos do 10.000.000 RSD. Popust ne sme premašiti zaduženje, a povraćaj primljene uplate.',
 
   activeRegistrations: 'Aktivne prijave', withdrawnRegistrations: 'Povučene prijave', arrivedPlayers: 'Prisutni u aktivnim prijavama',
   arrived: 'Prisutan', notArrived: 'Dolazak nije potvrđen', markArrived: 'Potvrdi dolazak', markAbsent: 'Poništi dolazak',
@@ -54,25 +62,33 @@ const sr = {
   saving: 'Čuvanje…', loading: 'Učitavanje…', local: 'Lokalni rad', retry: 'Pokušaj ponovo',
   preview: 'Pregled interfejsa u pregledaču. Za čuvanje turnira pokreni desktop aplikaciju.',
   error: 'Radnja nije uspela. Pokušaj ponovo.', name_required: 'Unesi naziv.',
-  name_too_long: 'Naziv može imati najviše 120 znakova.', duplicate_category: 'Kategorija sa tim nazivom već postoji.',
+  name_too_long: 'Naziv može imati najviše 120 znakova.', duplicate_category: 'Kategorija sa tim nazivom već postoji za ovu disciplinu.',
   not_found: 'Turnir nije pronađen. Osveži pregled.', storage: 'Podaci nisu sačuvani ili učitani. Pokušaj ponovo.',
   count: 'turnira', selected: 'Izabrani turnir', back: 'Svi turniri', created: 'Turnir je sačuvan.',
   categorySaved: 'Kategorija je sačuvana.', language: 'Jezik',
 };
 type Messages = typeof sr;
 const en: Messages = {
+  registrations: 'Registrations', draw: 'Draw', groups: 'Groups', bracket: 'Bracket', categorySections: 'Category sections',
+  stageNotReady: 'This competition stage is in development. Manage registrations here for now; draw and match generation comes next.',
+  deleteCategory: 'Delete category', deleteCategoryHint: 'Empty categories are permanently deleted. Categories with entries are archived: removed from the active tournament while registrations and financial history remain in the cash desk.',
+  categoryRemoved: 'Category removed from the active tournament.', categoryUnavailable: 'Category deleted or archived.', backToTournament: 'Back to tournament', archivedCategory: 'Archived category',
+  bulkSinglesHint: 'Check players and register them together. Each entry receives its category fee automatically.',
+  bulkDoublesHint: 'Check two players, add a pair, then repeat for the next pair. Register all prepared pairs together.',
+  registerSelected: 'Register selected', alreadyInCategory: 'Already registered', addPair: 'Add pair', removePair: 'Remove pair',
+
   workspace: 'Competitions', tournamentList: 'All tournaments', profileDetails: 'Player profile', contactDetails: 'Contact', additionalDetails: 'Photo and notes',
 
   categoryFee: 'Category fee (RSD)', categoryFeeHint: '0 = free entry. Automatically charged on registration; doubles fee is per pair.', feePerEntry: 'per entry',
   invalid_category_fee: 'Enter a fee from 0 to 10,000,000 RSD with at most two decimal places.',
 
   cashDesk: 'Cash desk', cashIntro: 'Entry accounts in RSD. Doubles uses a shared pair account. Attendance and withdrawal do not change payments.',
-  cashAccounts: 'Entry accounts', cashAccount: 'Entry', cashKind: 'Record type', cashAmount: 'Amount (RSD)', cashNote: 'Reason / note',
+  cashAccounts: 'Entry accounts', cashAccount: 'Entry', cashKind: 'Record type', cashAmount: 'Amount (RSD)', cashNote: 'Note (optional)',
   charge: 'Charge', discount: 'Discount / waiver', payment: 'Payment', refund: 'Refund', cashRecord: 'Record transaction', cashHistory: 'Selected entry history',
   netReceived: 'Net received', outstanding: 'Outstanding', credit: 'Credit', amountDue: 'Fee after discounts', cashSaved: 'Record saved.',
   cashNoEntries: 'Register players in tournament categories first.', cashEmptyHistory: 'This entry has no financial records yet.',
   cashRetryHint: 'Write confirmation is incomplete. Retry the same request to verify and finish without duplicate payment.',
-  invalid_cash: 'Enter a positive amount up to 10,000,000 RSD and a reason. Discounts cannot exceed charges; refunds cannot exceed payments.',
+  invalid_cash: 'Enter a positive amount up to 10,000,000 RSD. Discounts cannot exceed charges; refunds cannot exceed payments.',
 
   activeRegistrations: 'Active registrations', withdrawnRegistrations: 'Withdrawn registrations', arrivedPlayers: 'Checked-in active players',
   arrived: 'Checked in', notArrived: 'Not checked in', markArrived: 'Check in', markAbsent: 'Undo check-in',
@@ -116,7 +132,7 @@ const en: Messages = {
   saving: 'Saving…', loading: 'Loading…', local: 'Local operation', retry: 'Try again',
   preview: 'Browser interface preview. Start the desktop application to save tournaments.',
   error: 'The action failed. Please try again.', name_required: 'Enter a name.',
-  name_too_long: 'Names can contain at most 120 characters.', duplicate_category: 'A category with this name already exists.',
+  name_too_long: 'Names can contain at most 120 characters.', duplicate_category: 'A category with this name already exists for this discipline.',
   not_found: 'Tournament not found. Refresh the overview.', storage: 'Data could not be saved or loaded. Please try again.',
   count: 'tournaments', selected: 'Selected tournament', back: 'All tournaments', created: 'Tournament saved.',
   categorySaved: 'Category saved.', language: 'Language',

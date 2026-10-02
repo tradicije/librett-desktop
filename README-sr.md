@@ -56,12 +56,17 @@ biti deo funkcionalnosti za rezultate, a ne naknadni dodatak.
 
 - Kreiranje više turnira i singl/dubl kategorija sa zasebnim izborom formata.
 - Zajednička lokalna baza igrača sa profilima, fotografijama i pretragom.
+- Detalji kategorije sa čekiranjem više igrača za singl i sastavljanjem dubl
+  parova; singl i dubl mogu imati isti naziv kategorije.
 - Prijave po kategorijama uz istorijski snimak imena i kluba, povlačenje i
   vraćanje prijave, kao i potvrda dolaska igrača za ceo turnir.
 - Kotizacija kategorije u RSD i automatsko zaduženje pri novoj prijavi;
   kod dubla iznos važi po paru, a 0 znači besplatno učešće.
 - Blagajna sa popustima, delimičnim uplatama, povraćajima, dugovanjem,
-  preplatama i neizmenjivom istorijom zapisa.
+  preplatama i neizmenjivom istorijom zapisa. Iznos uplate se popunjava iz
+  preostalog duga, a napomena je opciona.
+- Brisanje praznih kategorija i arhiviranje kategorija sa prijavama, uz
+  očuvanje prijava i finansijske istorije.
 - Srpski i engleski interfejs, svetla/tamna/sistemska tema, lokalno dostupni
   Libre Franklin font i Tabler ikonice.
 

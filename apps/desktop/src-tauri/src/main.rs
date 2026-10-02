@@ -1,7 +1,8 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use librett_application::{
-    self as application, ApplicationError, CashRepository, PlayerRepository, TournamentRepository,
+    self as application, ApplicationError, CashRepository, CategoryRepository, PlayerRepository,
+    TournamentRepository,
 };
 use librett_domain::{
     CompetitionFormat, Discipline, Entry, EntryStatus, Player, PlayerProfile, Tournament,
@@ -69,6 +70,8 @@ fn main() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            delete_category,
+            register_entries,
             list_cash,
             record_cash,
             list_tournaments,
@@ -229,5 +232,30 @@ fn record_cash(
         &mut *database.0.lock().map_err(|_| ApplicationError::Storage)?,
         tournament_id,
         record,
+    )
+}
+
+#[tauri::command]
+fn delete_category(
+    database: tauri::State<Database>,
+    tournament_id: Uuid,
+    category_id: Uuid,
+) -> Result<Tournament, ApplicationError> {
+    let mut repo = database.0.lock().map_err(|_| ApplicationError::Storage)?;
+    repo.delete_category(tournament_id, category_id)?;
+    repo.find(tournament_id)
+}
+#[tauri::command]
+fn register_entries(
+    database: tauri::State<Database>,
+    tournament_id: Uuid,
+    category_id: Uuid,
+    player_groups: Vec<Vec<Uuid>>,
+) -> Result<Vec<Entry>, ApplicationError> {
+    application::register_entries(
+        &mut *database.0.lock().map_err(|_| ApplicationError::Storage)?,
+        tournament_id,
+        category_id,
+        player_groups,
     )
 }

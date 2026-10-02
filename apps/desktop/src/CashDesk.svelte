@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, untrack } from 'svelte';
   import Select from './Select.svelte';
   import { parseMoney, formatMoney } from './money';
   import Icon from './Icon.svelte';
@@ -21,11 +21,28 @@
   let notice = $state(false);
   const kinds: CashKind[] = ['charge', 'discount', 'payment', 'refund'];
   function money(value: number) { return formatMoney(value, language); }
-  function label(entry: Entry) { return `${tournament.categories.find(c => c.id === entry.category_id)?.name ?? ''} · ${entry.members.map(m => m.name).join(' / ')}${entry.status === 'withdrawn' ? ` (${text.withdrawnRegistrations})` : ''}`; }
+  function label(entry: Entry) {
+    const category = tournament.categories.find(c => c.id === entry.category_id);
+    const title = `${category?.name ?? ''} · ${text[category?.discipline ?? 'singles']} · ${entry.members.map(m => m.name).join(' / ')}`;
+    return title + (category?.archived ? ` (${text.archivedCategory})` : '') + (entry.status === 'withdrawn' ? ` (${text.withdrawnRegistrations})` : '');
+  }
   function balance(id?: string) {
     const totals = { charge: 0, discount: 0, payment: 0, refund: 0 };
     for (const r of records) if (!id || r.entry_id === id) totals[r.kind] += r.amount_minor;
     return { due: totals.charge - totals.discount, net: totals.payment - totals.refund, ...totals };
+  }
+  function suggestedAmount(id: string) {
+    const b = balance(id);
+    const remaining = Math.max(0, b.due - b.net);
+    return remaining ? (remaining / 100).toFixed(2) : '';
+  }
+  $effect(() => {
+    const id = entryId; const transactionKind = kind;
+    untrack(() => { if (!pending) { amount = transactionKind === 'payment' ? suggestedAmount(id) : ''; note = ''; } });
+  });
+  function chooseAccount(id: string) {
+    if (busy) return;
+    entryId = id; kind = 'payment'; amount = suggestedAmount(id); note = ''; error = null; notice = false;
   }
   let accounts = $derived(entries.map(entry => ({ entry, ...balance(entry.id) })));
   let outstanding = $derived(accounts.reduce((n,a) => n + Math.max(0,a.due-a.net),0));
@@ -38,6 +55,7 @@
       const [cash, categories] = await Promise.all([listCash(tournament.id), Promise.all(tournament.categories.map(c => listEntries(c.id)))]);
       records = cash; entries = categories.flat(); loaded = true;
       if (!entryId) entryId = entries[0]?.id ?? '';
+      if (kind === 'payment') amount = suggestedAmount(entryId);
     } catch (cause) { error = errorKey(cause); }
     finally { loading = false; }
   }
@@ -47,7 +65,7 @@
     error = null; notice = false;
     if (!pending) {
       const value = parseMoney(amount);
-      if (value === null || !entryId || !note.trim() || note.trim().length > 500) { error = 'invalid_cash'; return; }
+      if (value === null || !entryId || note.trim().length > 500) { error = 'invalid_cash'; return; }
       pending = { id: crypto.randomUUID(), entry_id: entryId, kind, amount_minor: value, note: note.trim(), created_at: '' };
     }
     busy = true; saving = true;
@@ -55,7 +73,7 @@
       await recordCash(tournament.id, pending);
       // Keep the same request if refresh fails after a committed write.
       records = await listCash(tournament.id);
-      pending = null; amount = ''; note = ''; notice = true; busy = false;
+      pending = null; amount = kind === 'payment' ? suggestedAmount(entryId) : ''; note = ''; notice = true; busy = false;
     } catch (cause) {
       error = errorKey(cause);
       if (cause === 'invalid_cash' || cause === 'not_found') { pending = null; busy = false; }
@@ -75,14 +93,14 @@
     <div class="columns">
       <section class="panel"><h2>{text.cashAccounts}</h2>
         {#each accounts as account (account.entry.id)}
-          <button class="tournament cash-account" aria-pressed={entryId === account.entry.id} class:active={entryId === account.entry.id} disabled={busy} onclick={() => { entryId = account.entry.id; error = null; notice = false; }}><div class="row-content"><strong>{label(account.entry)}</strong><small>{text.amountDue}: {money(account.due)} · {text.netReceived}: {money(account.net)}</small><small>{text.outstanding}: {money(Math.max(0, account.due-account.net))} · {text.credit}: {money(Math.max(0,account.net-account.due))}</small></div><Icon name="arrow-right" /></button>
+          <button class="tournament cash-account" aria-pressed={entryId === account.entry.id} class:active={entryId === account.entry.id} disabled={busy} onclick={() => chooseAccount(account.entry.id)}><div class="row-content"><strong>{label(account.entry)}</strong><small>{text.amountDue}: {money(account.due)} · {text.netReceived}: {money(account.net)}</small><small>{text.outstanding}: {money(Math.max(0, account.due-account.net))} · {text.credit}: {money(Math.max(0,account.net-account.due))}</small></div><Icon name="arrow-right" /></button>
         {/each}
       </section>
       <section class="panel form-panel"><h2>{text.cashRecord}</h2><form onsubmit={save}>
         <label>{text.cashAccount}<Select label={text.cashAccount} bind:value={entryId} options={entries.map(e => ({ value: e.id, label: label(e) }))} disabled={busy} /></label>
         <label>{text.cashKind}<Select label={text.cashKind} bind:value={kind} options={kinds.map(k => ({ value: k, label: text[k] }))} disabled={busy} /></label>
         <label>{text.cashAmount}<input bind:value={amount} inputmode="decimal" required disabled={busy} placeholder="1000,00" /></label>
-        <label>{text.cashNote}<textarea bind:value={note} required maxlength="500" disabled={busy}></textarea></label>
+        <label>{text.cashNote}<textarea bind:value={note} maxlength="500" disabled={busy}></textarea></label>
         <button class="primary" disabled={saving || !entryId}><Icon name="check-circle" />{saving ? text.saving : pending ? text.retry : text.cashRecord}</button>
       </form></section>
     </div>

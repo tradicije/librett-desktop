@@ -2,10 +2,10 @@
   import Select from './Select.svelte';
   import { onMount } from 'svelte';
   import Icon from './Icon.svelte';
-  import { desktopAvailable, listEntries, listPlayers, registerEntry, setEntryStatus, setPlayerAttendance, type EntryStatus, type Entry, type Player, type Tournament } from './api';
+  import { desktopAvailable, listEntries, listPlayers, registerEntries, setEntryStatus, setPlayerAttendance, type EntryStatus, type Entry, type Player, type Tournament, type Category } from './api';
   import { errorKey, messages, type Language, type MessageKey } from './i18n';
 
-  let { tournament, language, busy = $bindable(false) }: { tournament: Tournament; language: Language; busy?: boolean } = $props();
+  let { tournament, category, language, busy = $bindable(false) }: { tournament: Tournament; category: Category; language: Language; busy?: boolean } = $props();
   let text = $derived(messages[language]);
   let players = $state<Player[]>([]);
   let entries = $state<Entry[]>([]);
@@ -14,10 +14,11 @@
   let visibleEntries = $derived(entries.filter(entry => statusFilter === 'all' || entry.status === statusFilter));
   let activeEntries = $derived(entries.filter(entry => entry.status !== 'withdrawn'));
   let checkedInCount = $derived(activeEntries.reduce((sum, entry) => sum + entry.members.filter(member => member.checked_in).length, 0));
-  let categoryId = $state('');
-  let category = $derived(tournament.categories.find(c => c.id === categoryId));
-  let first = $state('');
-  let second = $state('');
+  let categoryId = $derived(category.id);
+  let checked = $state<string[]>([]);
+  let pairs = $state<string[][]>([]);
+  let queued = $derived(pairs.flat());
+  let groups = $derived(category.discipline === 'singles' ? checked.map(id => [id]) : pairs);
   let loading = $state(false);
   let playersLoaded = $state(false);
   let entriesLoaded = $state(false);
@@ -25,7 +26,6 @@
   let error = $state<MessageKey | null>(null);
   let notice = $state<MessageKey | null>(null);
   let filtered = $derived(players.filter(p => `${p.name} ${p.club}`.toLowerCase().includes(search.trim().toLowerCase())));
-  let available = $derived(players.filter(p => !entries.some(e => e.members.some(m => m.id === p.id))));
 
   async function loadPlayers() {
     loading = true; error = null;
@@ -35,12 +35,11 @@
   }
   onMount(() => { if (desktopAvailable) void loadPlayers(); });
   let requestVersion = 0;
-  $effect(() => { if (!categoryId && tournament.categories.length) categoryId = tournament.categories[0].id; });
   $effect(() => {
     void reload;
     const id = categoryId;
     const version = ++requestVersion;
-    entries = []; entriesLoaded = false; first = ''; second = '';
+    entries = []; entriesLoaded = false; checked = []; pairs = [];
     if (!desktopAvailable || !id) return;
     void listEntries(id).then(result => {
       if (version === requestVersion) { entries = result; entriesLoaded = true; }
@@ -51,11 +50,24 @@
     event.preventDefault(); if (!category) return;
     busy = true; error = null; notice = null;
     try {
-      const entry = await registerEntry(tournament.id, category.id, category.discipline === 'doubles' ? [first, second] : [first]);
-      entries = [...entries, entry]; first = ''; second = ''; notice = 'entrySaved';
-    } catch (cause) { error = errorKey(cause); }
+      const saved = await registerEntries(tournament.id, category.id, groups);
+      entries = [...entries, ...saved]; checked = []; pairs = []; notice = 'entrySaved';
+    } catch (cause) {
+      error = errorKey(cause);
+      try {
+        entries = await listEntries(category.id);
+        const claimed = new Set(entries.flatMap(entry => entry.members.map(member => member.id)));
+        checked = checked.filter(id => !claimed.has(id));
+        pairs = pairs.filter(pair => !pair.some(id => claimed.has(id)));
+      } catch { /* Keep the original error and selection for retry. */ }
+    }
     finally { busy = false; }
   }
+  function toggle(id: string) {
+    if (busy) return;
+    checked = checked.includes(id) ? checked.filter(item => item !== id) : [...checked, id];
+  }
+  function addPair() { if (checked.length === 2) { pairs = [...pairs, [...checked]]; checked = []; } }
   async function changeStatus(entry: Entry) {
     if (busy) return;
     const next: EntryStatus = entry.status === 'withdrawn' ? 'registered' : 'withdrawn';
@@ -82,8 +94,6 @@
 </script>
 
 <section class="players-section">
-  <h2 class="icon-label"><Icon name="users" />{text.players}</h2>
-  <p class="muted">{text.registrationDirectoryHint}</p>
   {#if error}<p class="error" role="alert">{text[error]}<button disabled={loading || busy} onclick={() => { reload += 1; void loadPlayers(); }}>{text.retry}</button></p>{/if}
   <p class="notice" role="status">{notice ? text[notice] : ''}</p>
   <div class="columns">
@@ -108,11 +118,23 @@
       {/each}
     </section>
     <section class="panel form-panel"><h3>{text.register}</h3><form onsubmit={register}>
-      <label>{text.chooseCategory}<Select label={text.chooseCategory} bind:value={categoryId} options={tournament.categories.map(item => ({ value: item.id, label: `${item.name} · ${text[item.discipline]}` }))} disabled={busy} /></label>
       <label>{text.searchPlayers}<input type="search" bind:value={search} disabled={busy} /></label>
-      <label>{text.firstPlayer}<Select label={text.firstPlayer} bind:value={first} options={available.filter(player => player.id === first || filtered.some(p => p.id === player.id)).map(player => ({ value: player.id, label: player.name + (player.club ? ` · ${player.club}` : '') }))} disabled={busy || !entriesLoaded} placeholder={text.choosePlayer} /></label>
-      {#if category?.discipline === 'doubles'}<label>{text.secondPlayer}<Select label={text.secondPlayer} bind:value={second} options={available.filter(p => p.id !== first && (p.id === second || filtered.some(item => item.id === p.id))).map(player => ({ value: player.id, label: player.name + (player.club ? ` · ${player.club}` : '') }))} disabled={busy || !entriesLoaded} placeholder={text.choosePlayer} /></label>{/if}
-      <button class="primary" disabled={busy || !desktopAvailable || !category || !playersLoaded || !entriesLoaded || !first || (category.discipline === 'doubles' && (!second || first === second))}><Icon name="check-circle" size={18} />{busy ? text.saving : text.register}</button>
+      <p class="muted">{category.discipline === 'singles' ? text.bulkSinglesHint : text.bulkDoublesHint}</p>
+      <div class="registration-picker">
+        {#each filtered as player (player.id)}
+          {@const registered = entries.some(e => e.members.some(m => m.id === player.id))}
+          {@const inPair = queued.includes(player.id)}
+          <label class="picker-row"><input type="checkbox" checked={registered || inPair || checked.includes(player.id)} onchange={() => toggle(player.id)} disabled={busy || !entriesLoaded || registered || inPair || (category.discipline === 'doubles' && checked.length >= 2 && !checked.includes(player.id))} /><span><strong>{player.name}</strong><small>{player.club}</small></span>{#if registered}<span class="pill">{text.alreadyInCategory}</span>{/if}</label>
+        {/each}
+        {#if !filtered.length}<p class="muted">{text.noPlayers}</p>{/if}
+      </div>
+      {#if category.discipline === 'doubles'}
+        <button type="button" class="secondary icon-label" onclick={addPair} disabled={busy || checked.length !== 2}><Icon name="users" size={16} />{text.addPair}</button>
+        {#each pairs as pair, index}
+          <div class="pair-row"><span>{pair.map(id => players.find(p => p.id === id)?.name).join(' / ')}</span><button type="button" class="icon-button" aria-label={`${text.removePair}: ${index + 1}`} disabled={busy} onclick={() => { pairs = pairs.filter((_, i) => i !== index); }}><Icon name="trash" size={16} /></button></div>
+        {/each}
+      {/if}
+      <button class="primary" disabled={busy || !desktopAvailable || !playersLoaded || !entriesLoaded || !groups.length}><Icon name="check-circle" size={18} />{busy ? text.saving : text.registerSelected} ({groups.length})</button>
     </form></section>
   </div>
 </section>

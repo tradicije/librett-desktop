@@ -5,6 +5,8 @@ use std::{path::Path, time::Duration};
 use uuid::Uuid;
 
 mod cash;
+#[cfg(test)]
+mod category_tests;
 mod players;
 mod registration;
 
@@ -17,9 +19,9 @@ impl SqliteTournamentRepository {
         let path = path.as_ref();
         let connection = Connection::open(path)?;
         let version: i64 = connection.query_row("PRAGMA user_version", [], |row| row.get(0))?;
-        if (1..6).contains(&version) {
+        if (1..8).contains(&version) {
             // VACUUM INTO creates a consistent SQLite snapshot before changing an existing schema.
-            let backup = path.with_extension(format!("pre-v6-{}.sqlite", Uuid::new_v4()));
+            let backup = path.with_extension(format!("pre-v8-{}.sqlite", Uuid::new_v4()));
             connection.execute("VACUUM INTO ?1", [backup.to_string_lossy().as_ref()])?;
         }
         Self::initialize(connection)
@@ -29,7 +31,7 @@ impl SqliteTournamentRepository {
         connection.busy_timeout(Duration::from_secs(5))?;
         connection.execute_batch("PRAGMA foreign_keys = ON;")?;
         let version: i64 = connection.query_row("PRAGMA user_version", [], |row| row.get(0))?;
-        if version > 6 {
+        if version > 8 {
             return Err(rusqlite::Error::InvalidQuery);
         }
         if version == 0 {
@@ -62,12 +64,37 @@ impl SqliteTournamentRepository {
             transaction.execute_batch(include_str!("../migrations/006_category_fees.sql"))?;
             transaction.commit()?;
         }
+        if version < 7 {
+            let transaction = connection.transaction()?;
+            transaction.execute_batch(include_str!("../migrations/007_category_archive.sql"))?;
+            transaction.commit()?;
+        }
+        if version < 8 {
+            // SQLite requires FK enforcement off outside a transaction when
+            // rebuilding a referenced table. Verify all references before commit.
+            connection.execute_batch("PRAGMA foreign_keys = OFF;")?;
+            let result = (|| -> Result<(), rusqlite::Error> {
+                let transaction = connection.transaction()?;
+                transaction.execute_batch(include_str!("../migrations/008_category_names.sql"))?;
+                let broken: i64 = transaction.query_row(
+                    "SELECT count(*) FROM pragma_foreign_key_check",
+                    [],
+                    |row| row.get(0),
+                )?;
+                if broken != 0 {
+                    return Err(rusqlite::Error::InvalidQuery);
+                }
+                transaction.commit()
+            })();
+            connection.execute_batch("PRAGMA foreign_keys = ON;")?;
+            result?;
+        }
         Ok(Self { connection })
     }
 
     fn load_categories(&self, tournament_id: Uuid) -> Result<Vec<Category>, ApplicationError> {
         let mut statement = self.connection.prepare(
-            "SELECT id, name, discipline, format, fee_minor FROM categories WHERE tournament_id = ?1 ORDER BY rowid"
+            "SELECT id, name, discipline, format, fee_minor, archived FROM categories WHERE tournament_id = ?1 ORDER BY rowid"
         ).map_err(|_| ApplicationError::Storage)?;
         let rows = statement
             .query_map([tournament_id.to_string()], |row| {
@@ -77,13 +104,15 @@ impl SqliteTournamentRepository {
                     row.get::<_, String>(2)?,
                     row.get::<_, String>(3)?,
                     row.get::<_, i64>(4)?,
+                    row.get::<_, bool>(5)?,
                 ))
             })
             .map_err(|_| ApplicationError::Storage)?;
         rows.map(|row| {
-            let (id, name, discipline, format, fee_minor) =
+            let (id, name, discipline, format, fee_minor, archived) =
                 row.map_err(|_| ApplicationError::Storage)?;
             Ok(Category {
+                archived,
                 fee_minor,
                 id: Uuid::parse_str(&id).map_err(|_| ApplicationError::Storage)?,
                 name,
@@ -238,5 +267,37 @@ mod tests {
             Err(ApplicationError::Storage)
         );
         assert!(repository.list().unwrap().is_empty());
+    }
+}
+
+impl librett_application::CategoryRepository for SqliteTournamentRepository {
+    fn delete_category(
+        &mut self,
+        tournament_id: Uuid,
+        category_id: Uuid,
+    ) -> Result<(), ApplicationError> {
+        let tx = self
+            .connection
+            .transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)
+            .map_err(|_| ApplicationError::Storage)?;
+        let used: Option<bool> = tx.query_row("SELECT EXISTS(SELECT 1 FROM entries WHERE category_id=c.id) FROM categories c WHERE c.id=?1 AND c.tournament_id=?2 AND c.archived=0",params![category_id.to_string(),tournament_id.to_string()],|r|r.get(0)).optional().map_err(|_|ApplicationError::Storage)?;
+        match used {
+            Some(true) => {
+                tx.execute(
+                    "UPDATE categories SET archived=1 WHERE id=?1",
+                    [category_id.to_string()],
+                )
+                .map_err(|_| ApplicationError::Storage)?;
+            }
+            Some(false) => {
+                tx.execute(
+                    "DELETE FROM categories WHERE id=?1",
+                    [category_id.to_string()],
+                )
+                .map_err(|_| ApplicationError::Storage)?;
+            }
+            None => return Err(ApplicationError::NotFound),
+        }
+        tx.commit().map_err(|_| ApplicationError::Storage)
     }
 }

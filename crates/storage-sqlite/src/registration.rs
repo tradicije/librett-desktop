@@ -265,7 +265,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(files.len(), 2);
         let backup = files.iter().find(|p| **p != path).unwrap();
-        assert!(backup.to_string_lossy().contains("pre-v6"));
+        assert!(backup.to_string_lossy().contains("pre-v8"));
         let connection = Connection::open(backup).unwrap();
         assert_eq!(
             connection

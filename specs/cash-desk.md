@@ -5,14 +5,14 @@
 2. Payments may exceed the fee. Display credit independently from other entries'
    outstanding balances; tournament totals must not offset those two quantities.
 3. Discounts above accumulated charges and refunds above received payments fail
-   without a write. Zero, negative, out-of-bound amounts and empty reasons fail.
+   without a write. Zero, negative, out-of-bound amounts fail; notes are optional and limited to 500 characters.
 4. Repeating the same request UUID and content writes once; conflicting reuse fails.
    A write that succeeds before an IPC/refresh failure can be retried safely.
 5. Another tournament cannot access or write this entry's account.
 6. Withdrawn registrations retain their records; check-in does not modify money.
-7. Events survive restart with stable IDs, reason and timestamp. SQL updates and
+7. Events survive restart with stable IDs, optional note and timestamp. SQL updates and
    deletions are rejected by triggers. Corrections use additional events.
-8. A v4 database receives one readable pre-v6 backup before migration. Existing
+8. A v4 database receives one readable pre-v8 backup before migration. Existing
    registrations and player data survive, and an unchanged reopen makes no backup.
 9. The UI supports Serbian/English and all themes. Busy writes lock navigation;
    uncertain failures retain the request and lock form inputs until retry confirms.

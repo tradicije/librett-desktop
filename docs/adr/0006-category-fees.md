@@ -2,6 +2,8 @@
 
 Status: accepted.
 
+The current migration target is v8 with pre-v8 backups; see ADR 0008.
+
 Categories define an RSD fee in integer minor units, zero meaning free entry.
 Creating a category requires an explicit fee in the UI. Each successful new
 registration adds one immutable charge for that category's fee in the same

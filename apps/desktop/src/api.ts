@@ -2,7 +2,7 @@ import { invoke, isTauri } from '@tauri-apps/api/core';
 
 export type Discipline = 'singles' | 'doubles';
 export type CompetitionFormat = 'knockout' | 'groups_knockout';
-export interface Category { fee_minor: number; id: string; name: string; discipline: Discipline; format: CompetitionFormat }
+export interface Category { archived: boolean; fee_minor: number; id: string; name: string; discipline: Discipline; format: CompetitionFormat }
 export interface Tournament { id: string; name: string; categories: Category[] }
 export interface PlayerProfile { birth_year: number | null; city: string; country: string; email: string; phone: string; notes: string; photo: string | null }
 export interface Player extends PlayerProfile { id: string; name: string; club: string }
@@ -36,3 +36,6 @@ export type CashKind = 'charge' | 'discount' | 'payment' | 'refund';
 export interface CashRecord { id: string; entry_id: string; kind: CashKind; amount_minor: number; note: string; created_at: string }
 export const listCash = (tournamentId: string) => invoke<CashRecord[]>('list_cash', { tournamentId });
 export const recordCash = (tournamentId: string, record: CashRecord) => invoke<void>('record_cash', { tournamentId, record });
+
+export const deleteCategory = (tournamentId: string, categoryId: string) => invoke<Tournament>('delete_category', { tournamentId, categoryId });
+export const registerEntries = (tournamentId: string, categoryId: string, playerGroups: string[][]) => invoke<Entry[]>('register_entries', { tournamentId, categoryId, playerGroups });

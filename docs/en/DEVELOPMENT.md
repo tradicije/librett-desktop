@@ -41,8 +41,8 @@ The Players tab shows the shared directory. Add/Edit opens dedicated profile
 screens, including photos, and returns to the list after saving. Delete asks for
 confirmation and protects profiles with existing registrations. Tournament
 registration uses that directory. Entries can be withdrawn/restored, and player
-attendance is shared across categories in a tournament. Schema version 6 adds category fees alongside the immutable cash ledger; older on-disk databases receive a consistent
-`pre-v6-<uuid>.sqlite` backup before migration.
+attendance is shared across categories in a tournament. Schema version 8 supports archived categories and names scoped to discipline; older on-disk databases receive a consistent
+`pre-v8-<uuid>.sqlite` backup before migration.
 
 Back/Forward follows screen history. Home returns to the selected module overview,
 then mode selection. The mode chooser has no sidebar. Saves lock navigation until
@@ -142,7 +142,7 @@ See [ADR 0001](../adr/0001-desktop-foundation.md) and
 ## Cash desk
 
 Open a tournament and choose Cash desk. Register entries first. Record a charge,
-discount, payment or refund with an amount in RSD and a reason. Partial payments
+discount, payment or refund with an amount in RSD and an optional note. Partial payments
 and overpayments are supported. Balances show discounted fees, net received,
 outstanding amounts and credit separately. Withdrawn entries retain their account.
 Amounts accept comma or dot with at most two decimal places. Recorded events
@@ -157,3 +157,21 @@ Category fees are configured at creation in RSD. Registration atomically adds on
 charge for the category fee; doubles is charged once per pair and zero is free.
 Existing categories migrate with zero fees and existing cash records are preserved.
 Automatic fees do not mark entries paid. Cash desk defaults to recording payments.
+
+## Category workspace
+
+Click a category row to open its Registrations tab. Check several singles players
+and register them together, or select two doubles players and add each pair to the
+queue before submitting. Already registered players remain marked and unavailable.
+Batch registration is atomic, including automatic charges. Draw, Groups and Bracket
+are navigation placeholders until competition engines are built; knockout omits Groups.
+
+Delete asks for confirmation. Empty categories are removed; categories with any
+entry are archived and retain accounts in Cash desk. History routes to removed
+categories explain their unavailable state. Category names are unique within a
+discipline, so Singles and Doubles may share the same name.
+
+Selecting a cash account defaults to Payment and its remaining balance. Edit the
+amount for partial payments. Paid/free entries have no prefilled amount. Notes are
+optional. Selecting another account clears the previous note and recalculates the
+amount. Cash desk labels include category discipline and archive state.

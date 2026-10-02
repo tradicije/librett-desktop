@@ -59,12 +59,17 @@ history must be part of the results workflow, rather than an afterthought.
 - Multiple tournaments and singles/doubles categories with independently selected
   competition formats.
 - A shared local player directory with profiles, photos, and search.
+- Category workspaces with checkbox batch singles registration and explicit doubles
+  pair selection; names may repeat across singles and doubles.
 - Category registrations with historical name/club snapshots, withdrawal and
   restoration, and tournament-wide player check-in.
 - Category fees in RSD with automatic charges for new registrations; doubles
   fees are per pair, and zero means free entry.
 - A cash desk with discounts, partial payments, refunds, outstanding balances,
-  credit, and immutable record history.
+  credit, and immutable record history. Payment amounts default to the remaining
+  balance and notes are optional.
+- Confirmed deletion of empty categories and archiving of used categories,
+  preserving registrations and cash history.
 - Serbian and English interfaces, Light/Dark/System themes, and locally bundled
   Libre Franklin fonts and Tabler icons.
 

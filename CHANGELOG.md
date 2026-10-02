@@ -6,6 +6,11 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Changed
 
+- Cash notes are optional. Account selection prefills the remaining payable balance
+  and still supports partial payments and idempotent retries after uncertain writes.
+- Financial account labels and category deletion prompts include discipline to
+  distinguish singles/doubles categories sharing a name.
+
 - Redesigned desktop screens with a compact sidebar, persistent context toolbar,
   restrained typography, consistent controls and denser competition/player lists.
 - Grouped player editing fields, added initial avatars and a search toolbar,
@@ -26,6 +31,15 @@ Notable changes to LibreTT are recorded here in English.
 - Removed the pending leagues tab from navigation during tournament development.
 
 ### Added
+
+- Dedicated category workspaces with Registrations, Draw, Groups (for group formats)
+  and Bracket sections; competition-engine tabs clearly show their planned status.
+- Checkbox batch singles registration and explicit doubles-pair queues, saved
+  atomically with member snapshots and automatic category charges.
+- Confirmed category removal: delete empty categories and archive used categories
+  while preserving registrations, attendance and cash accounts.
+- SQLite schema versions 7/8 with pre-v8 backups, category archiving and category
+  names unique per tournament and discipline (same name allowed for singles/doubles).
 
 - Category fees configured in RSD during creation; new singles and doubles
   registrations automatically receive one charge, atomically with entry creation.

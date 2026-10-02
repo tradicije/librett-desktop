@@ -104,34 +104,46 @@ impl PlayerRepository for SqliteTournamentRepository {
         }).collect()
     }
 
-    fn insert_entry(&mut self, entry: &Entry) -> Result<(), ApplicationError> {
+    fn insert_entries(&mut self, entries: &[Entry]) -> Result<(), ApplicationError> {
         let transaction = self
             .connection
             .transaction()
             .map_err(|_| ApplicationError::Storage)?;
-        transaction
-            .execute(
-                "INSERT INTO entries (id, category_id) VALUES (?1, ?2)",
-                params![entry.id.to_string(), entry.category_id.to_string()],
-            )
-            .map_err(|_| ApplicationError::Storage)?;
-        for (index, member) in entry.members.iter().enumerate() {
-            let claimed: bool = transaction.query_row("SELECT EXISTS(SELECT 1 FROM entry_members WHERE category_id = ?1 AND player_id = ?2)", params![entry.category_id.to_string(), member.id.to_string()], |row| row.get(0)).map_err(|_| ApplicationError::Storage)?;
-            if claimed {
-                return Err(ApplicationError::AlreadyRegistered);
+        for entry in entries {
+            let active: bool = transaction
+                .query_row(
+                    "SELECT EXISTS(SELECT 1 FROM categories WHERE id=?1 AND archived=0)",
+                    [entry.category_id.to_string()],
+                    |r| r.get(0),
+                )
+                .map_err(|_| ApplicationError::Storage)?;
+            if !active {
+                return Err(ApplicationError::NotFound);
             }
-            transaction.execute("INSERT INTO entry_members (entry_id, category_id, player_id, position, name_snapshot, club_snapshot) VALUES (?1, ?2, ?3, ?4, ?5, ?6)", params![entry.id.to_string(), entry.category_id.to_string(), member.id.to_string(), index + 1, member.name, member.club]).map_err(|_| ApplicationError::Storage)?;
-        }
-        // Entry, members and initial fee must either all commit or all roll back.
-        let fee: i64 = transaction
-            .query_row(
-                "SELECT fee_minor FROM categories WHERE id=?1",
-                [entry.category_id.to_string()],
-                |row| row.get(0),
-            )
-            .map_err(|_| ApplicationError::Storage)?;
-        if fee > 0 {
-            transaction.execute("INSERT INTO cash_records (id,entry_id,kind,amount_minor,note) VALUES (?1,?2,'charge',?3,'Category fee / Kotizacija kategorije')", params![Uuid::new_v4().to_string(),entry.id.to_string(),fee]).map_err(|_| ApplicationError::Storage)?;
+            transaction
+                .execute(
+                    "INSERT INTO entries (id, category_id) VALUES (?1, ?2)",
+                    params![entry.id.to_string(), entry.category_id.to_string()],
+                )
+                .map_err(|_| ApplicationError::Storage)?;
+            for (index, member) in entry.members.iter().enumerate() {
+                let claimed: bool = transaction.query_row("SELECT EXISTS(SELECT 1 FROM entry_members WHERE category_id = ?1 AND player_id = ?2)", params![entry.category_id.to_string(), member.id.to_string()], |row| row.get(0)).map_err(|_| ApplicationError::Storage)?;
+                if claimed {
+                    return Err(ApplicationError::AlreadyRegistered);
+                }
+                transaction.execute("INSERT INTO entry_members (entry_id, category_id, player_id, position, name_snapshot, club_snapshot) VALUES (?1, ?2, ?3, ?4, ?5, ?6)", params![entry.id.to_string(), entry.category_id.to_string(), member.id.to_string(), index + 1, member.name, member.club]).map_err(|_| ApplicationError::Storage)?;
+            }
+            // Entry, members and initial fee must either all commit or all roll back.
+            let fee: i64 = transaction
+                .query_row(
+                    "SELECT fee_minor FROM categories WHERE id=?1",
+                    [entry.category_id.to_string()],
+                    |row| row.get(0),
+                )
+                .map_err(|_| ApplicationError::Storage)?;
+            if fee > 0 {
+                transaction.execute("INSERT INTO cash_records (id,entry_id,kind,amount_minor,note) VALUES (?1,?2,'charge',?3,'Category fee / Kotizacija kategorije')", params![Uuid::new_v4().to_string(),entry.id.to_string(),fee]).map_err(|_| ApplicationError::Storage)?;
+            }
         }
         transaction.commit().map_err(|_| ApplicationError::Storage)
     }

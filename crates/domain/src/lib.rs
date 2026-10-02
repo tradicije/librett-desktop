@@ -23,6 +23,8 @@ pub enum CompetitionFormat {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Category {
     #[serde(default)]
+    pub archived: bool,
+    #[serde(default)]
     pub fee_minor: i64,
     pub id: Uuid,
     pub name: String,
@@ -78,11 +80,12 @@ impl Tournament {
         if self
             .categories
             .iter()
-            .any(|c| c.name.to_lowercase() == name.to_lowercase())
+            .any(|c| c.discipline == discipline && c.name.to_lowercase() == name.to_lowercase())
         {
             return Err(DomainError::DuplicateCategory);
         }
         self.categories.push(Category {
+            archived: false,
             fee_minor: 0,
             id: Uuid::new_v4(),
             name,

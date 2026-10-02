@@ -40,7 +40,11 @@ pub trait PlayerRepository {
         &self,
         category_id: Uuid,
     ) -> Result<Vec<librett_domain::Entry>, ApplicationError>;
-    fn insert_entry(&mut self, entry: &librett_domain::Entry) -> Result<(), ApplicationError>;
+    fn insert_entries(&mut self, entries: &[librett_domain::Entry])
+        -> Result<(), ApplicationError>;
+    fn insert_entry(&mut self, entry: &librett_domain::Entry) -> Result<(), ApplicationError> {
+        self.insert_entries(std::slice::from_ref(entry))
+    }
 }
 
 pub fn create_player(
@@ -89,7 +93,7 @@ pub fn register_entry(
     let category = tournament
         .categories
         .iter()
-        .find(|c| c.id == category_id)
+        .find(|c| c.id == category_id && !c.archived)
         .ok_or(ApplicationError::NotFound)?;
     let members = player_ids
         .into_iter()
@@ -204,7 +208,6 @@ pub fn record_cash(
 ) -> Result<(), ApplicationError> {
     record.note = record.note.trim().to_owned();
     if !(1..=librett_domain::MAX_CASH_MINOR).contains(&record.amount_minor)
-        || record.note.is_empty()
         || record.note.chars().count() > 500
     {
         return Err(ApplicationError::InvalidCash);
@@ -232,4 +235,58 @@ pub fn add_category_with_fee(
     category.fee_minor = fee_minor;
     repository.insert_category(tournament_id, category)?;
     Ok(tournament)
+}
+
+pub trait CategoryRepository {
+    fn delete_category(
+        &mut self,
+        tournament_id: Uuid,
+        category_id: Uuid,
+    ) -> Result<(), ApplicationError>;
+}
+
+pub fn register_entries(
+    repository: &mut (impl TournamentRepository + PlayerRepository),
+    tournament_id: Uuid,
+    category_id: Uuid,
+    player_groups: Vec<Vec<Uuid>>,
+) -> Result<Vec<librett_domain::Entry>, ApplicationError> {
+    if player_groups.is_empty() || player_groups.len() > 1000 {
+        return Err(ApplicationError::InvalidMembers);
+    }
+    let tournament = repository.find(tournament_id)?;
+    let category = tournament
+        .categories
+        .iter()
+        .find(|c| c.id == category_id && !c.archived)
+        .ok_or(ApplicationError::NotFound)?;
+    let mut claimed = repository
+        .list_entries(category_id)?
+        .iter()
+        .flat_map(|e| e.members.iter().map(|m| m.id))
+        .collect::<std::collections::HashSet<_>>();
+    let mut entries = Vec::new();
+    for ids in player_groups {
+        let players = ids
+            .into_iter()
+            .map(|id| repository.find_player(id))
+            .collect::<Result<Vec<_>, _>>()?;
+        let entry = librett_domain::Entry::new(category_id, category.discipline, players)?;
+        for member in &entry.members {
+            if !claimed.insert(member.id) {
+                return Err(ApplicationError::AlreadyRegistered);
+            }
+        }
+        entries.push(entry);
+    }
+    repository.insert_entries(&entries)?;
+    let ids = entries
+        .iter()
+        .map(|e| e.id)
+        .collect::<std::collections::HashSet<_>>();
+    Ok(repository
+        .list_entries(category_id)?
+        .into_iter()
+        .filter(|e| ids.contains(&e.id))
+        .collect())
 }
