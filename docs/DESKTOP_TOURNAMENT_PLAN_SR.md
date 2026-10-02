@@ -237,12 +237,17 @@ Isti ulaz može da reprodukuje isti žreb. Razdvajanje kluba je ograničenje sa
 vidljivim upozorenjem kad ga nije moguće zadovoljiti. Regenerisanje potvrđenog
 žreba je posebna evidentirana radnja, a posle početka igre ograničeno pravilima.
 
-Za grupe organizator bira broj grupa i broj učesnika koji prolaze iz svake.
-Kriterijumi rangiranja podešavaju se po kategoriji. Podrazumevani redosled je
-međusobni rezultat, mini-tabela samo između izjednačenih učesnika kada ih je tri
-ili više, zatim setovi pa poeni. Način računanja setova/poena, raspodela grupa
-različite veličine, nastavak razrešavanja delimičnog izjednačenja i obrada nultog
-imenitelja preciziraju se u [specifikaciji žreba](../specs/draw-and-ranking.md).
+Organizator ručno označava i poređa nosioce. Za grupe bira broj grupa i broj
+učesnika koji prolaze iz svake; automatska raspodela pravi grupe približno iste
+veličine i razdvaja nosioce.
+Kriterijumi rangiranja podešavaju se po kategoriji. Podrazumevani
+redosled je međusobni rezultat, mini-tabela samo između izjednačenih učesnika
+kada ih je tri ili više, zatim odnos setova pa odnos poena. Nulti imenitelj i
+nastavak razrešavanja delimičnog izjednačenja definisani su u
+[specifikaciji žreba](../specs/draw-and-ranking.md). Pozitivan broj dobijenih
+setova/poena uz nula izgubljenih daje najbolji odnos; nula prema nula ostaje
+izjednačeno. Ako ostane više bye mesta nego nosilaca, preostala mesta se dodeljuju
+nasumično i organizator može da ih izmeni.
 Ne koristimo nasumičan ID kao nevidljivo konačno sportsko pravilo.
 
 ## 7. Telefoni i internet
