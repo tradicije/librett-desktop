@@ -12,7 +12,7 @@
 5. Unknown entries, wrong tournament ownership, and attendance without a
    registration in the tournament fail without modifying records.
 6. Reopening preserves attendance and status. Repeated writes of the same state
-   are valid. A version 3 migration produces one readable pre-v4 backup.
+   are valid. A version 3 migration produces one readable pre-v5 backup.
 7. Filter all/active/withdrawn entries. Totals describe the selected category's
    active entries, withdrawn entries, and checked-in players in active entries.
 8. Saves disable navigation and mutation controls. Failed saves leave the previous

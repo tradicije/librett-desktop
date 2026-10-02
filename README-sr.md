@@ -29,7 +29,10 @@ lokalno sačuvanih fotografija; turniri prijavljuju učesnike iz te baze. Profil
 upravlja lokalni operater; nalozi i kontrola administratorskih prava još nisu implementirani.
 
 Prijave podržavaju povlačenje i vraćanje, a dolazak se potvrđuje po igraču za ceo
-turnir, kroz sve kategorije. Evidencija uplata je sledeći planirani korak.
+turnir, kroz sve kategorije. Blagajna čuva zaduženja, popuste, delimične uplate
+i povraćaje uz stanje računa i neizmenjivu istoriju. Prvi korak koristi RSD i
+zajednički račun dubl para; automatske kotizacije, tarife po osobi u dublu i
+raspodela jedne uplate na više kategorija su planirani.
 Pogledaj [bezbednosnu politiku](SECURITY-sr.md) za prijave ranjivosti i deljenje
 lokalnih baza.
 

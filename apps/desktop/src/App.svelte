@@ -2,6 +2,7 @@
   import Select from './Select.svelte';
   import { onMount } from 'svelte';
   import Players from './Players.svelte';
+  import CashDesk from './CashDesk.svelte';
   import PlayerDirectory from './PlayerDirectory.svelte';
   import PlayerEditor from './PlayerEditor.svelte';
   import Icon from './Icon.svelte';
@@ -15,7 +16,7 @@
   let theme = $state<ThemePreference>(savedTheme());
   let resolvedTheme = $state<ResolvedTheme>(document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light');
   let text = $derived(messages[language]);
-  type Route = { view: 'dashboard' | 'tournaments' | 'players' | 'player-create' | 'player-edit' | 'tournament'; id?: string };
+  type Route = { view: 'dashboard' | 'tournaments' | 'players' | 'player-create' | 'player-edit' | 'tournament' | 'cash'; id?: string };
   let history = $state<Route[]>([{ view: 'dashboard' }]);
   let historyIndex = $state(0);
   let route = $derived(history[historyIndex]);
@@ -23,7 +24,7 @@
   let mode = $derived(route.view === 'dashboard' ? 'dashboard' : 'tournaments');
   let childBusy = $state(false);
   let tournaments = $state<Tournament[]>([]);
-  let selectedId = $derived(route.view === 'tournament' ? route.id : null);
+  let selectedId = $derived((route.view === 'tournament' || route.view === 'cash') ? route.id : null);
   let selected = $derived(tournaments.find(t => t.id === selectedId));
   let tournamentName = $state('');
   let categoryName = $state('');
@@ -151,7 +152,10 @@
         <PlayerEditor {language} playerId={route.id} bind:busy={childBusy}
           onsaved={() => { navigate({ view: 'players' }); notice = 'playerSaved'; }} oncancel={() => navigate({ view: 'players' })} />
       {/key}
+    {:else if selected && route.view === 'cash'}
+      {#key selected.id}<CashDesk tournament={selected} {language} bind:busy={childBusy} />{/key}
     {:else if selected}
+      <button disabled={navigationLocked} onclick={() => navigate({ view: 'cash', id: selected.id })}><Icon name="cash" />{text.cashDesk}</button>
       <div class="heading"><div><p class="eyebrow">{text.selected}</p><h1>{selected.name}</h1></div><span class="pill">{selected.categories.length} · {text.categories}</span></div>
       <div class="columns">
         <section class="panel">
@@ -163,10 +167,10 @@
         </section>
         <section class="panel form-panel"><h2 class="icon-label"><Icon name="layer-group" />{text.addCategory}</h2>
           <form onsubmit={saveCategory}>
-            <label>{text.categoryName}<input bind:value={categoryName} required disabled={busy} /></label>
-            <label>{text.discipline}<Select label={text.discipline} bind:value={discipline} options={[{ value: 'singles', label: text.singles }, { value: 'doubles', label: text.doubles }]} disabled={busy} /></label>
-            <label>{text.format}<Select label={text.format} bind:value={format} options={[{ value: 'groups_knockout', label: text.groups_knockout }, { value: 'knockout', label: text.knockout }]} disabled={busy} /></label>
-            <button class="primary" disabled={busy || !desktopAvailable}><Icon name="check-circle" size={18} />{busy ? text.saving : text.save}</button>
+            <label>{text.categoryName}<input bind:value={categoryName} required disabled={navigationLocked} /></label>
+            <label>{text.discipline}<Select label={text.discipline} bind:value={discipline} options={[{ value: 'singles', label: text.singles }, { value: 'doubles', label: text.doubles }]} disabled={navigationLocked} /></label>
+            <label>{text.format}<Select label={text.format} bind:value={format} options={[{ value: 'groups_knockout', label: text.groups_knockout }, { value: 'knockout', label: text.knockout }]} disabled={navigationLocked} /></label>
+            <button class="primary" disabled={navigationLocked || !desktopAvailable}><Icon name="check-circle" size={18} />{busy ? text.saving : text.save}</button>
           </form>
         </section>
       </div>

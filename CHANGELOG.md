@@ -14,6 +14,13 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Added
 
+- Entry cash desk in Serbian and English, with RSD charges, discounts, partial
+  payments, refunds, outstanding balances, credit and chronological history.
+- Append-only financial records, integer minor-unit amounts, scoped transactional
+  balance validation and idempotent requests for safe retries after uncertain writes.
+- SQLite schema version 5 with pre-v5 backups, cash ledger regression tests and
+  documented first-increment limits (manual entry accounts, shared doubles accounts).
+
 - English and Serbian security policies covering vulnerability reporting,
   supported development versions, local data, and current trust boundaries.
 - Tournament-wide per-player attendance, independent doubles check-in, and

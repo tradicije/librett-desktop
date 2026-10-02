@@ -31,3 +31,8 @@ export const setEntryStatus = (tournamentId: string, entryId: string, status: En
   invoke<void>('set_entry_status', { tournamentId, entryId, status });
 export const setPlayerAttendance = (tournamentId: string, playerId: string, checkedIn: boolean) =>
   invoke<void>('set_player_attendance', { tournamentId, playerId, checkedIn });
+
+export type CashKind = 'charge' | 'discount' | 'payment' | 'refund';
+export interface CashRecord { id: string; entry_id: string; kind: CashKind; amount_minor: number; note: string; created_at: string }
+export const listCash = (tournamentId: string) => invoke<CashRecord[]>('list_cash', { tournamentId });
+export const recordCash = (tournamentId: string, record: CashRecord) => invoke<void>('record_cash', { tournamentId, record });

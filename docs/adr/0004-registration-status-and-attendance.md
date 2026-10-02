@@ -2,6 +2,9 @@
 
 Status: accepted.
 
+Schema version 5 supersedes the migration target and backup naming below;
+see [ADR 0005](0005-entry-cash-ledger.md).
+
 Registration, attendance, and payment are independent. The next desktop slice
 adds registration withdrawal/restoration and tournament-wide player attendance.
 Cash-desk accounting follows separately: dues, discounts/waivers, partial payments,

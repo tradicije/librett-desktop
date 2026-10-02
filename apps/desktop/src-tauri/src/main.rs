@@ -1,7 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use librett_application::{
-    self as application, ApplicationError, PlayerRepository, TournamentRepository,
+    self as application, ApplicationError, CashRepository, PlayerRepository, TournamentRepository,
 };
 use librett_domain::{
     CompetitionFormat, Discipline, Entry, EntryStatus, Player, PlayerProfile, Tournament,
@@ -67,6 +67,8 @@ fn main() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            list_cash,
+            record_cash,
             list_tournaments,
             create_tournament,
             add_category,
@@ -201,5 +203,29 @@ fn set_player_attendance(
         Uuid::parse_str(&tournament_id).map_err(|_| ApplicationError::NotFound)?,
         Uuid::parse_str(&player_id).map_err(|_| ApplicationError::NotFound)?,
         checked_in,
+    )
+}
+
+#[tauri::command]
+fn list_cash(
+    database: tauri::State<Database>,
+    tournament_id: Uuid,
+) -> Result<Vec<librett_domain::CashRecord>, ApplicationError> {
+    database
+        .0
+        .lock()
+        .map_err(|_| ApplicationError::Storage)?
+        .list_cash(tournament_id)
+}
+#[tauri::command]
+fn record_cash(
+    database: tauri::State<Database>,
+    tournament_id: Uuid,
+    record: librett_domain::CashRecord,
+) -> Result<(), ApplicationError> {
+    application::record_cash(
+        &mut *database.0.lock().map_err(|_| ApplicationError::Storage)?,
+        tournament_id,
+        record,
     )
 }

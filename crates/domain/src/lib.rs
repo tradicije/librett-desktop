@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+mod cash;
+pub use cash::{CashBalance, CashKind, CashRecord, MAX_CASH_MINOR};
 mod players;
 pub use players::{Entry, EntryMember, EntryStatus, Player, PlayerProfile};
 
@@ -36,6 +38,7 @@ pub struct Tournament {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum DomainError {
+    InvalidCash,
     InvalidProfile,
     InvalidMembers,
     NameRequired,

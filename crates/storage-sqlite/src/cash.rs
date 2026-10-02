@@ -1,0 +1,244 @@
+use super::*;
+use librett_application::CashRepository;
+use librett_domain::{CashBalance, CashKind, CashRecord};
+
+fn records(
+    connection: &Connection,
+    tournament_id: Uuid,
+) -> Result<Vec<CashRecord>, ApplicationError> {
+    let mut statement = connection.prepare("SELECT r.id,r.entry_id,r.kind,r.amount_minor,r.note,r.created_at FROM cash_records r JOIN entries e ON e.id=r.entry_id JOIN categories c ON c.id=e.category_id WHERE c.tournament_id=?1 ORDER BY r.rowid").map_err(|_| ApplicationError::Storage)?;
+    let rows = statement
+        .query_map([tournament_id.to_string()], |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, String>(2)?,
+                row.get::<_, i64>(3)?,
+                row.get::<_, String>(4)?,
+                row.get::<_, String>(5)?,
+            ))
+        })
+        .map_err(|_| ApplicationError::Storage)?;
+    rows.map(|row| {
+        let (id, entry, kind, amount_minor, note, created_at) =
+            row.map_err(|_| ApplicationError::Storage)?;
+        Ok(CashRecord {
+            id: Uuid::parse_str(&id).map_err(|_| ApplicationError::Storage)?,
+            entry_id: Uuid::parse_str(&entry).map_err(|_| ApplicationError::Storage)?,
+            kind: match kind.as_str() {
+                "charge" => CashKind::Charge,
+                "discount" => CashKind::Discount,
+                "payment" => CashKind::Payment,
+                "refund" => CashKind::Refund,
+                _ => return Err(ApplicationError::Storage),
+            },
+            amount_minor,
+            note,
+            created_at,
+        })
+    })
+    .collect()
+}
+
+impl CashRepository for SqliteTournamentRepository {
+    fn list_cash(&self, tournament_id: Uuid) -> Result<Vec<CashRecord>, ApplicationError> {
+        self.find(tournament_id)?;
+        records(&self.connection, tournament_id)
+    }
+    fn record_cash(
+        &mut self,
+        tournament_id: Uuid,
+        record: CashRecord,
+    ) -> Result<(), ApplicationError> {
+        // Immediate locking prevents concurrent balance checks from both succeeding.
+        let tx = self
+            .connection
+            .transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)
+            .map_err(|_| ApplicationError::Storage)?;
+        let exists:bool=tx.query_row("SELECT EXISTS(SELECT 1 FROM entries e JOIN categories c ON c.id=e.category_id WHERE e.id=?1 AND c.tournament_id=?2)",params![record.entry_id.to_string(),tournament_id.to_string()],|r|r.get(0)).map_err(|_|ApplicationError::Storage)?;
+        if !exists {
+            return Err(ApplicationError::NotFound);
+        }
+        let current = records(&tx, tournament_id)?;
+        if let Some(old) = current.iter().find(|r| r.id == record.id) {
+            return if old.entry_id == record.entry_id
+                && old.kind == record.kind
+                && old.amount_minor == record.amount_minor
+                && old.note == record.note
+            {
+                Ok(())
+            } else {
+                Err(ApplicationError::InvalidCash)
+            };
+        }
+        let mut balance = CashBalance::default();
+        for r in current.iter().filter(|r| r.entry_id == record.entry_id) {
+            balance
+                .apply(r.kind, r.amount_minor)
+                .map_err(|_| ApplicationError::Storage)?;
+        }
+        balance.apply(record.kind, record.amount_minor)?;
+        tx.execute(
+            "INSERT INTO cash_records (id,entry_id,kind,amount_minor,note) VALUES (?1,?2,?3,?4,?5)",
+            params![
+                record.id.to_string(),
+                record.entry_id.to_string(),
+                record.kind.as_str(),
+                record.amount_minor,
+                record.note
+            ],
+        )
+        .map_err(|_| ApplicationError::Storage)?;
+        tx.commit().map_err(|_| ApplicationError::Storage)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use librett_application::{
+        add_category, create_player, create_tournament, record_cash, register_entry,
+        set_entry_status,
+    };
+    #[test]
+    fn ledger_scopes_retries_refunds_withdrawal_restart_and_immutability() {
+        let path = std::env::temp_dir().join(format!("librett-cash-{}.sqlite", Uuid::new_v4()));
+        let tournament;
+        let entry;
+        {
+            let mut repo = SqliteTournamentRepository::open(&path).unwrap();
+            let t = create_tournament(&mut repo, "Cup").unwrap();
+            tournament = t.id;
+            let t = add_category(
+                &mut repo,
+                t.id,
+                "Singles",
+                Discipline::Singles,
+                CompetitionFormat::Knockout,
+            )
+            .unwrap();
+            let p = create_player(&mut repo, "Player", "").unwrap();
+            entry = register_entry(&mut repo, t.id, t.categories[0].id, vec![p.id])
+                .unwrap()
+                .id;
+            let charge = CashRecord {
+                id: Uuid::new_v4(),
+                entry_id: entry,
+                kind: CashKind::Charge,
+                amount_minor: 100_000,
+                note: "Fee".into(),
+                created_at: String::new(),
+            };
+            assert_eq!(
+                record_cash(&mut repo, Uuid::new_v4(), charge.clone()),
+                Err(ApplicationError::NotFound)
+            );
+            record_cash(&mut repo, tournament, charge.clone()).unwrap();
+            record_cash(&mut repo, tournament, charge.clone()).unwrap();
+            let mut conflict = charge.clone();
+            conflict.amount_minor += 1;
+            assert_eq!(
+                record_cash(&mut repo, tournament, conflict),
+                Err(ApplicationError::InvalidCash)
+            );
+            for (kind, amount) in [
+                (CashKind::Discount, 20_000),
+                (CashKind::Payment, 30_000),
+                (CashKind::Payment, 60_000),
+                (CashKind::Refund, 10_000),
+            ] {
+                record_cash(
+                    &mut repo,
+                    tournament,
+                    CashRecord {
+                        id: Uuid::new_v4(),
+                        kind,
+                        amount_minor: amount,
+                        ..charge.clone()
+                    },
+                )
+                .unwrap();
+            }
+            let invalid = CashRecord {
+                id: Uuid::new_v4(),
+                kind: CashKind::Refund,
+                amount_minor: 80_001,
+                ..charge
+            };
+            assert_eq!(
+                record_cash(&mut repo, tournament, invalid),
+                Err(ApplicationError::InvalidCash)
+            );
+            set_entry_status(
+                &mut repo,
+                tournament,
+                entry,
+                librett_domain::EntryStatus::Withdrawn,
+            )
+            .unwrap();
+            assert!(repo
+                .connection
+                .execute("DELETE FROM cash_records", [])
+                .is_err());
+            assert!(repo
+                .connection
+                .execute("UPDATE cash_records SET amount_minor=1", [])
+                .is_err());
+        }
+        let repo = SqliteTournamentRepository::open(&path).unwrap();
+        let saved = repo.list_cash(tournament).unwrap();
+        assert_eq!(saved.len(), 5);
+        let mut b = CashBalance::default();
+        for r in saved {
+            assert_eq!(r.entry_id, entry);
+            assert!(!r.created_at.is_empty());
+            b.apply(r.kind, r.amount_minor).unwrap();
+        }
+        assert_eq!(b.charges - b.discounts - b.payments + b.refunds, 0);
+        drop(repo);
+        std::fs::remove_file(path).unwrap();
+    }
+    #[test]
+    fn v4_backup_is_created_once_before_cash_migration() {
+        let dir = std::env::temp_dir().join(format!("librett-cash-migration-{}", Uuid::new_v4()));
+        std::fs::create_dir(&dir).unwrap();
+        let path = dir.join("data.sqlite");
+        let c = Connection::open(&path).unwrap();
+        for migration in [
+            include_str!("../migrations/001_tournaments.sql"),
+            include_str!("../migrations/002_players.sql"),
+            include_str!("../migrations/003_player_profiles.sql"),
+            include_str!("../migrations/004_registration_status.sql"),
+        ] {
+            c.execute_batch(migration).unwrap();
+        }
+        drop(c);
+        for _ in 0..2 {
+            let r = SqliteTournamentRepository::open(&path).unwrap();
+            assert_eq!(
+                r.connection
+                    .query_row("PRAGMA user_version", [], |r| r.get::<_, i64>(0))
+                    .unwrap(),
+                5
+            );
+        }
+        let files = std::fs::read_dir(&dir)
+            .unwrap()
+            .map(|r| r.unwrap().path())
+            .collect::<Vec<_>>();
+        assert_eq!(files.len(), 2);
+        let backup = files.iter().find(|p| **p != path).unwrap();
+        assert!(backup.to_string_lossy().contains("pre-v5"));
+        let c = Connection::open(backup).unwrap();
+        assert_eq!(
+            c.query_row("PRAGMA user_version", [], |r| r.get::<_, i64>(0))
+                .unwrap(),
+            4
+        );
+        drop(c);
+        for f in files {
+            std::fs::remove_file(f).unwrap();
+        }
+        std::fs::remove_dir(dir).unwrap();
+    }
+}

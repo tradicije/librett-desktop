@@ -34,16 +34,15 @@ It needs no network connection after development dependencies are installed.
 The current slice supports tournaments, categories, local player profiles,
 name/club search, and singles/doubles category registration.
 Singles/doubles and category formats are stored settings; draw and match engines
-are not implemented. There is no result entry or cash desk,
+are not implemented. There is no result entry,
 export/restore UI, or installer yet. Development version `0.1.0` is not a release.
 
 The Players tab shows the shared directory. Add/Edit opens dedicated profile
 screens, including photos, and returns to the list after saving. Delete asks for
 confirmation and protects profiles with existing registrations. Tournament
 registration uses that directory. Entries can be withdrawn/restored, and player
-attendance is shared across categories in a tournament. Schema version 4 adds
-registration status and attendance; older on-disk databases receive a consistent
-`pre-v4-<uuid>.sqlite` backup before migration.
+attendance is shared across categories in a tournament. Schema version 5 adds an immutable cash ledger; older on-disk databases receive a consistent
+`pre-v5-<uuid>.sqlite` backup before migration.
 
 Back/Forward follows screen history. Home returns to the selected module overview,
 then mode selection. The mode chooser has no sidebar. Saves lock navigation until
@@ -139,3 +138,18 @@ CARGO_TARGET_DIR=/tmp/librett-target cargo test --workspace --exclude librett-de
 
 See [ADR 0001](../adr/0001-desktop-foundation.md) and
 [setup scenarios](../../specs/tournament-setup.md).
+
+## Cash desk
+
+Open a tournament and choose Cash desk. Register entries first. Record a charge,
+discount, payment or refund with an amount in RSD and a reason. Partial payments
+and overpayments are supported. Balances show discounted fees, net received,
+outstanding amounts and credit separately. Withdrawn entries retain their account.
+Amounts accept comma or dot with at most two decimal places. Recorded events
+cannot be edited or deleted. Add explicit compensating events to correct mistakes.
+If confirmation fails, retry the unchanged request; navigation stays locked until
+its outcome is confirmed to prevent accidentally repeating a committed payment.
+
+Current scope is manual accounts per entry (one shared account for a doubles
+pair), RSD only. Multi-entry allocations, per-person doubles tariffs, automated
+category fees and financial export remain planned. See ADR 0005 for boundaries.

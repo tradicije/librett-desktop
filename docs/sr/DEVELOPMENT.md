@@ -34,16 +34,15 @@ Posle instalacije razvojnih zavisnosti lokalne operacije ne zahtevaju internet.
 Trenutno podržavamo turnire, kategorije, lokalne igrače, pretragu po imenu/klubu
 i prijavljivanje singl/dubl učesnika.
 Singl/dubl i formati se čuvaju kao podešavanja; žreb i mečevi još nisu
-implementirani. Još nema blagajne, rezultata, interfejsa za izvoz/oporavak
+implementirani. Još nema rezultata, interfejsa za izvoz/oporavak
 ili instalera. Razvojna verzija `0.1.0` nije objavljeno izdanje.
 
 Tab Igrači prikazuje zajedničku listu. Dodaj/Izmeni otvara zasebne ekrane za
 profile i fotografije, a čuvanje vraća na listu. Brisanje traži potvrdu i čuva
 igrače sa postojećim prijavama. Prijave unutar turnira koriste tu bazu i mogu
 da se povuku i vrate;
-dolazak igrača važi kroz sve kategorije istog turnira. Šema verzije 4 dodaje status
-prijava i dolaske; pre migracije starijih baza pravi se konzistentan
-`pre-v4-<uuid>.sqlite` backup.
+dolazak igrača važi kroz sve kategorije istog turnira. Šema verzije 5 dodaje neizmenjivu finansijsku evidenciju; pre migracije starijih baza pravi se konzistentan
+`pre-v5-<uuid>.sqlite` backup.
 
 Nazad/Napred prati istoriju ekrana. Home vraća na pregled izabranog modula, zatim
 na izbor modula koji nema bočni meni. Čuvanje zaključava navigaciju do završetka.
@@ -135,3 +134,17 @@ CARGO_TARGET_DIR=/tmp/librett-target cargo test --workspace --exclude librett-de
 
 Pogledaj [ADR 0001](../adr/0001-desktop-foundation.md) i
 [prihvatne scenarije](../../specs/tournament-setup.md).
+
+## Blagajna
+
+Otvori turnir i izaberi Blagajna. Prvo prijavi učesnike. Unesi zaduženje, popust,
+uplatu ili povraćaj u RSD, uz razlog. Podržane su delimične uplate i preplate.
+Pregled razlikuje kotizaciju posle popusta, neto primljeno, dugovanje i preplatu.
+Povučene prijave zadržavaju račun. Iznos prihvata tačku ili zarez i najviše dve
+decimale. Zapisi se ne menjaju i ne brišu; ispravke su novi kompenzujući zapisi.
+Ako potvrda upisa ne uspe, ponovi isti zahtev. Navigacija ostaje zaključana dok
+se ishod ne potvrdi, da se već upisana uplata ne bi slučajno ponovila.
+
+Trenutni obim: ručni račun po prijavi (zajednički račun dubl para), samo RSD.
+Raspodela uplate na više prijava, dubl tarife po osobi, automatske kotizacije i
+finansijski izvoz su planirani. Granice su opisane u ADR 0005.

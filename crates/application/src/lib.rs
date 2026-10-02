@@ -5,6 +5,7 @@ use uuid::Uuid;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ApplicationError {
+    InvalidCash,
     PlayerInUse,
     InvalidProfile,
     InvalidMembers,
@@ -19,6 +20,7 @@ pub enum ApplicationError {
 impl From<DomainError> for ApplicationError {
     fn from(error: DomainError) -> Self {
         match error {
+            DomainError::InvalidCash => Self::InvalidCash,
             DomainError::InvalidProfile => Self::InvalidProfile,
             DomainError::InvalidMembers => Self::InvalidMembers,
             DomainError::NameRequired => Self::NameRequired,
@@ -181,4 +183,31 @@ pub fn set_player_attendance(
     checked_in: bool,
 ) -> Result<(), ApplicationError> {
     repository.set_player_attendance(tournament_id, player_id, checked_in)
+}
+
+pub trait CashRepository {
+    fn list_cash(
+        &self,
+        tournament_id: Uuid,
+    ) -> Result<Vec<librett_domain::CashRecord>, ApplicationError>;
+    fn record_cash(
+        &mut self,
+        tournament_id: Uuid,
+        record: librett_domain::CashRecord,
+    ) -> Result<(), ApplicationError>;
+}
+
+pub fn record_cash(
+    repository: &mut impl CashRepository,
+    tournament_id: Uuid,
+    mut record: librett_domain::CashRecord,
+) -> Result<(), ApplicationError> {
+    record.note = record.note.trim().to_owned();
+    if !(1..=librett_domain::MAX_CASH_MINOR).contains(&record.amount_minor)
+        || record.note.is_empty()
+        || record.note.chars().count() > 500
+    {
+        return Err(ApplicationError::InvalidCash);
+    }
+    repository.record_cash(tournament_id, record)
 }

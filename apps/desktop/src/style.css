@@ -527,3 +527,9 @@ textarea:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px;
 .attendance-row button { flex-shrink: 0; }
 .entry-withdrawn .entry-heading { color: var(--text-muted); }
 @media(max-width:650px) { .entry-heading, .attendance-row { flex-wrap: wrap; } }
+
+.cash-totals { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.cash-totals strong { font-size: 1.3rem; }
+.cash-history { margin-top: 1.5rem; }
+.cash-history p { overflow-wrap: anywhere; white-space: pre-wrap; }
+@media (max-width: 800px) { .cash-totals { grid-template-columns: 1fr; } }

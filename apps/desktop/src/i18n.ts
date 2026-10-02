@@ -1,4 +1,12 @@
 const sr = {
+  cashDesk: 'Blagajna', cashIntro: 'Evidencija po prijavi, u RSD. Dubl ima zajednički račun para. Dolazak i povlačenje ne menjaju uplate.',
+  cashAccounts: 'Računi prijava', cashAccount: 'Prijava', cashKind: 'Vrsta zapisa', cashAmount: 'Iznos (RSD)', cashNote: 'Razlog / napomena',
+  charge: 'Zaduženje', discount: 'Popust / oslobađanje', payment: 'Uplata', refund: 'Povraćaj', cashRecord: 'Evidentiraj', cashHistory: 'Istorija izabrane prijave',
+  netReceived: 'Neto primljeno', outstanding: 'Dugovanje', credit: 'Preplata', amountDue: 'Kotizacija posle popusta', cashSaved: 'Zapis je sačuvan.',
+  cashNoEntries: 'Prvo prijavi igrače u kategorije turnira.', cashEmptyHistory: 'Ova prijava još nema finansijskih zapisa.',
+  cashRetryHint: 'Potvrda upisa nije završena. Ponovi isti zahtev da proveriš i završiš upis bez duple naplate.',
+  invalid_cash: 'Unesi pozitivan iznos do 10.000.000 RSD i razlog. Popust ne sme premašiti zaduženje, a povraćaj primljene uplate.',
+
   activeRegistrations: 'Aktivne prijave', withdrawnRegistrations: 'Povučene prijave', arrivedPlayers: 'Prisutni u aktivnim prijavama',
   arrived: 'Prisutan', notArrived: 'Dolazak nije potvrđen', markArrived: 'Potvrdi dolazak', markAbsent: 'Poništi dolazak',
   withdrawEntry: 'Povuci prijavu', restoreEntry: 'Vrati prijavu', registrationUpdated: 'Status prijave je sačuvan.',
@@ -48,6 +56,14 @@ const sr = {
 };
 type Messages = typeof sr;
 const en: Messages = {
+  cashDesk: 'Cash desk', cashIntro: 'Entry accounts in RSD. Doubles uses a shared pair account. Attendance and withdrawal do not change payments.',
+  cashAccounts: 'Entry accounts', cashAccount: 'Entry', cashKind: 'Record type', cashAmount: 'Amount (RSD)', cashNote: 'Reason / note',
+  charge: 'Charge', discount: 'Discount / waiver', payment: 'Payment', refund: 'Refund', cashRecord: 'Record transaction', cashHistory: 'Selected entry history',
+  netReceived: 'Net received', outstanding: 'Outstanding', credit: 'Credit', amountDue: 'Fee after discounts', cashSaved: 'Record saved.',
+  cashNoEntries: 'Register players in tournament categories first.', cashEmptyHistory: 'This entry has no financial records yet.',
+  cashRetryHint: 'Write confirmation is incomplete. Retry the same request to verify and finish without duplicate payment.',
+  invalid_cash: 'Enter a positive amount up to 10,000,000 RSD and a reason. Discounts cannot exceed charges; refunds cannot exceed payments.',
+
   activeRegistrations: 'Active registrations', withdrawnRegistrations: 'Withdrawn registrations', arrivedPlayers: 'Checked-in active players',
   arrived: 'Checked in', notArrived: 'Not checked in', markArrived: 'Check in', markAbsent: 'Undo check-in',
   withdrawEntry: 'Withdraw entry', restoreEntry: 'Restore entry', registrationUpdated: 'Registration status saved.',
@@ -99,7 +115,7 @@ export type Language = 'sr' | 'en';
 export const messages = { sr, en };
 export type MessageKey = keyof Messages;
 export function errorKey(error: unknown): MessageKey {
-  return typeof error === 'string' && ['player_in_use', 'invalid_profile', 'name_required', 'name_too_long', 'duplicate_category', 'not_found', 'storage', 'invalid_members', 'already_registered'].includes(error)
+  return typeof error === 'string' && ['invalid_cash', 'player_in_use', 'invalid_profile', 'name_required', 'name_too_long', 'duplicate_category', 'not_found', 'storage', 'invalid_members', 'already_registered'].includes(error)
     ? error as MessageKey : 'error';
 }
 export function savedLanguage(): Language {
