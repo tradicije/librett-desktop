@@ -10,6 +10,12 @@ Notable changes to LibreTT are recorded here in English.
   and Cash desk. Draw, Matches and Results are category-level tabs; their workflows
   are clearly marked as in development.
 
+### Planned
+
+- Agreed category draw options for both automatic and manual setup, bye placement
+  for the strongest seeds, organizer-selected group count/qualifiers, and default
+  group ranking by head-to-head mini-table, sets, then points. Implementation is pending.
+
 - Replaced the tournament cash desk's account/form/history blocks with a searchable
   player table, separate category columns, initially empty selection checkboxes and Collect/Refund buttons. Only selected categories
   are settled; each paid category shows its own status. Confirmed refunds return only selected player/category payments

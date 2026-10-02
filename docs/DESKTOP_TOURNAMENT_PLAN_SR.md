@@ -213,13 +213,15 @@ Tok organizatora:
 7. Proverava rangiranje i potvrđuje prolaz u nokaut ako postoje grupe.
 8. Završava kosture kategorija, objavljuje plasman i izvozi arhivu turnira.
 
-Unutar turnira predložena navigacija je: Pregled, Kategorije, Igrači i prijave,
-Blagajna, Žreb, Mečevi i stolovi, Rezultati, Izvoz. Izbor kategorije filtrira
-žreb i mečeve; pregled i blagajna mogu prikazati ceo turnir.
+Glavne kartice turnira su Pregled, Kategorije, Prijave i Blagajna. Unutar svake
+kategorije nalaze se Prijave, Žreb, Mečevi i Rezultati. Pregled i blagajna mogu
+prikazati ceo turnir; žreb, mečevi i rezultati vezani su za izabranu kategoriju.
 
-Automatski režim generiše grupe/kostur prema nosiocima i podešavanjima.
-Ručni režim omogućava organizatoru da rasporedi učesnike po grupama ili mestima
-kostura; moguć je i automatski predlog pa ručna izmena pre potvrde. Oba režima
+Organizator uvek može da izabere automatski ili ručni žreb za kategoriju.
+Automatski režim generiše grupe/kostur prema nosiocima i podešavanjima, a
+organizator pregleda predlog pre potvrde. U direktnom nokautu bye mesta pripadaju
+najjačim nosiocima; organizator može da ih dodeli i ručno. Ručni režim omogućava
+raspoređivanje učesnika po grupama ili mestima kostura. Oba režima
 koriste istu validaciju: duplikati, kapacitet, pripadnost kategoriji, struktura
 kostura i očuvanje odigranih mečeva. U ručnom režimu odstupanje od pravila
 nosilaca daje objašnjeno upozorenje i evidentiranu odluku. Pri istovremenom radu
@@ -235,10 +237,13 @@ Isti ulaz može da reprodukuje isti žreb. Razdvajanje kluba je ograničenje sa
 vidljivim upozorenjem kad ga nije moguće zadovoljiti. Regenerisanje potvrđenog
 žreba je posebna evidentirana radnja, a posle početka igre ograničeno pravilima.
 
-Rangiranje mora da objasni primenjene kriterijume. Pre koda definišemo mini-tabelu
-za dva, tri i više izjednačenih učesnika, ponovno poređenje preostale podgrupe,
-odnose setova/poena i obradu nultog imenitelja. Ne koristimo nasumičan ID kao
-nevidljivo konačno sportsko pravilo.
+Za grupe organizator bira broj grupa i broj učesnika koji prolaze iz svake.
+Kriterijumi rangiranja podešavaju se po kategoriji. Podrazumevani redosled je
+međusobni rezultat, mini-tabela samo između izjednačenih učesnika kada ih je tri
+ili više, zatim setovi pa poeni. Način računanja setova/poena, raspodela grupa
+različite veličine, nastavak razrešavanja delimičnog izjednačenja i obrada nultog
+imenitelja preciziraju se u [specifikaciji žreba](../specs/draw-and-ranking.md).
+Ne koristimo nasumičan ID kao nevidljivo konačno sportsko pravilo.
 
 ## 7. Telefoni i internet
 
@@ -333,7 +338,8 @@ da aplikacija već postoji ili može da se instalira.
 
 - Da li prihvatamo Rust + TypeScript/Svelte + Tauri kao početni stack?
 - Koji stvarni turnir i pravilnik koristimo za prvi pilot?
-- Veličine grupa, broj prolaznika, nosioci, mini-tabele, treće mesto i izuzeci.
+- Izvor i redosled nosilaca, izuzeci pravilnika, treće mesto i detalji računanja
+  seta/poena i nastavka rangiranja.
 - Podržani OS minimumi, starost računara i raspoložive mašine za proveru.
 - Srpsko pismo; naziv LibreTT i AGPL-3.0-or-later su zabeleženi u dokumentima.
 
