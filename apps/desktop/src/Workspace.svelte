@@ -46,6 +46,26 @@
     }
   }
   let selectedCategory = $derived(activeCategories.find(c => c.id === route.categoryId));
+  let breadcrumbs = $derived.by(() => {
+    const items: { label: string; route: Route }[] = [];
+    if (inPlayers) {
+      items.push({ label: text.playerTab, route: { view: 'players' } });
+      if (route.view !== 'players') items.push({ label: route.view === 'player-create' ? text.addPlayer : text.editPlayer, route: { ...route } });
+      return items;
+    }
+    items.push({ label: text.tournaments, route: { view: 'tournaments' } });
+    if (selected) {
+      items.push({ label: selected.name, route: { view: 'tournament', id: selected.id, tournamentTab: 'overview' } });
+      if (route.view === 'tournament') {
+        if (tournamentTab !== 'overview') items.push({ label: tournamentTabLabel(tournamentTab), route: { ...route } });
+      } else {
+        items.push({ label: text.categories, route: { view: 'tournament', id: selected.id, tournamentTab: 'categories' } });
+        if (selectedCategory) items.push({ label: selectedCategory.name, route: { view: 'category', id: selected.id, categoryId: selectedCategory.id, categoryTab: 'settings' } });
+        items.push({ label: route.view === 'category-create' ? text.addCategory : route.view === 'category-edit' ? text.editCategory : text[route.categoryTab ?? 'registrations'], route: { ...route } });
+      }
+    }
+    return items;
+  });
   let pendingCategory = $state<Category | null>(null);
   let categoryDialog: HTMLDialogElement;
   let tournamentName = $state('');
@@ -156,13 +176,21 @@
           <button class="icon-button" aria-label={text.goBack} title={text.goBack} disabled={navigationLocked || historyIndex === 0} onclick={() => travel(-1)}><Icon name="arrow-left" /></button>
           <button class="icon-button" aria-label={text.goForward} title={text.goForward} disabled={navigationLocked || historyIndex === history.length - 1} onclick={() => travel(1)}><Icon name="arrow-right" /></button>
         </div>
-        {#if mode !== 'dashboard'}<div class="breadcrumb"><span>{text.tournaments}</span><span class="breadcrumb-divider">/</span><strong>{selected?.name ?? pageLabel}</strong>{#if route.view === 'category' && selectedCategory}<span class="breadcrumb-divider">/</span><span>{selectedCategory.name}</span>{/if}</div>{/if}
+        {#if mode !== 'dashboard'}
+          <nav class="breadcrumb" aria-label="Breadcrumb">
+            {#each breadcrumbs as crumb, index}
+              {#if index > 0}<span class="breadcrumb-divider" aria-hidden="true">/</span>{/if}
+              <button data-open-tab disabled={navigationLocked} aria-current={index === breadcrumbs.length - 1 ? 'page' : undefined} title={crumb.label} onclick={() => navigate(crumb.route)}>{crumb.label}</button>
+            {/each}
+          </nav>
+        {/if}
       </div>
       <div class="preferences">
         <label><Icon name={theme === 'system' ? 'desktop' : theme === 'dark' ? 'moon' : 'sun'} size={18} /><span class="preference-label">{text.theme}</span><Select label={text.theme} bind:value={theme} options={[{ value: 'system', label: text.themeSystem }, { value: 'light', label: text.themeLight }, { value: 'dark', label: text.themeDark }]} /></label>
         <label><Icon name="globe" size={18} /><span class="preference-label">{text.language}</span><Select label={text.language} bind:value={language} options={[{ value: 'sr', label: 'Srpski' }, { value: 'en', label: 'English' }]} /></label>
       </div>
     </header>
+    <div class="workspace-scroll">
     <div class="workspace-content" class:mode-content={mode === 'dashboard'}>
     {#if !desktopAvailable}<p class="banner">{text.preview}</p>{/if}
     {#if mode === 'tournaments' && error}<div class="error" role="alert">{text[error]} {#if !loaded && desktopAvailable}<button disabled={loading} onclick={load}>{text.retry}</button>{/if}</div>{/if}
@@ -244,6 +272,7 @@
         <section class="panel form-panel"><h2 class="icon-label"><Icon name="trophy" />{text.newTournament}</h2><form onsubmit={create}><label>{text.tournamentName}<input bind:value={tournamentName} required disabled={busy || loading} /></label><button class="primary" disabled={busy || loading || !desktopAvailable || !loaded}><Icon name="plus" size={18} />{busy ? text.saving : text.create}</button></form></section>
       </div>
     {/if}
+    </div>
     </div>
   </main>
 </div>

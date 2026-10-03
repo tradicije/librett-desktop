@@ -61,7 +61,7 @@
   });
   $effect(() => { resolvedTheme = saveTheme(theme); });
   function workspaceScroller() {
-    return document.getElementById(activeId === homeId ? 'home-workspace' : `work-panel-${activeId}`);
+    return document.getElementById(activeId === homeId ? 'home-workspace' : `work-panel-${activeId}`)?.querySelector<HTMLElement>('.workspace-scroll');
   }
   function restoreScroll(position: number) {
     workspaceScroller()?.scrollTo({ top: position, left: 0, behavior: 'instant' });
@@ -245,9 +245,9 @@
   .titlebar-home.active { background: var(--surface); }
   .titlebar-home { border: 0; background: transparent; width: 32px; flex-shrink: 0; padding: 6px; }
   .new-work-tab { border: 0; background: transparent; font-size: 20px; width: 32px; flex-shrink: 0; }
-  .workspace-frame { position: fixed; inset: 48px 0 0; overflow: auto; overscroll-behavior-y: contain; }
+  .workspace-frame { position: fixed; inset: 48px 0 0; overflow: hidden; }
   .workspace-frame[hidden] { display: none; }
-  .workspace-frame :global(.shell) { min-height: calc(100dvh - 48px); }
+  .workspace-frame :global(.shell) { height: 100%; min-height: 0; }
   .workspace-frame :global(aside) { top: 0; height: calc(100dvh - 48px); }
   .workspace-frame :global(.app-toolbar) { top: 0; }
   @media (max-width: 650px) { .workspace-frame :global(aside) { height: auto; } }

@@ -52,6 +52,6 @@ retention applies while switching between working tabs, not every history entry.
 
 
 Workspace scrolling uses a bounded container below the 48px title bar. The root
-document does not scroll, and vertical overscroll cannot chain into it. Sticky
-sidebars and toolbars use the container origin; tab switching restores the
-container scroll position. This isolates the tab row from macOS elastic scrolling.
+document does not scroll, and vertical overscroll cannot chain into it. Sidebars and navigation toolbars sit outside the content scroll region; tab
+switching restores the content container scroll position. Breadcrumb buttons
+use workspace navigation and support the same new-tab actions as other links. This isolates the tab row from macOS elastic scrolling.

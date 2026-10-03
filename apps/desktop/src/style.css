@@ -58,7 +58,7 @@ button, input, textarea { transition: background-color 120ms, border-color 120ms
 .icon svg { display: block; }
 .icon-label { display: inline-flex; align-items: center; gap: 8px; }
 .shell { display: flex; min-height: 100vh; }
-aside { position: sticky; top: 0; align-self: flex-start; width: 208px; flex-shrink: 0; height: 100vh; height: 100dvh; overflow-y: auto; display: flex; flex-direction: column; padding: 24px 12px 18px; border-right: 1px solid var(--border-subtle); background: var(--surface); }
+aside { position: sticky; top: 0; align-self: flex-start; width: 208px; flex-shrink: 0; height: 100vh; height: 100dvh; overflow-y: auto; overscroll-behavior-y: none; display: flex; flex-direction: column; padding: 24px 12px 18px; border-right: 1px solid var(--border-subtle); background: var(--surface); }
 .brand { display: block; padding: 0 12px; width: 162px; margin-bottom: 38px; }
 .brand img { display: block; width: 100%; height: auto; }
 .sidebar-label { margin: 0 12px 10px; font-size: 10px; font-weight: 600; color: var(--text-muted); }
@@ -69,15 +69,18 @@ nav { display: grid; gap: 3px; }
 .sidebar-bottom { margin-top: auto; padding: 24px 12px 0; font-size: 11px; color: var(--text-secondary); }
 .sidebar-bottom .icon { color: var(--primary); }
 .sidebar-bottom small { display: block; margin-top: 12px; font-size: 9px; color: var(--text-muted); }
-main { flex: 1; min-width: 0; }
-.app-toolbar { position: sticky; top: 0; z-index: 15; display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 62px; padding: 12px 28px; background: var(--background); border-bottom: 1px solid var(--border-subtle); }
+main { display: flex; flex-direction: column; flex: 1; min-width: 0; min-height: 0; overflow: hidden; }
+.workspace-scroll { flex: 1; min-height: 0; overflow: auto; overscroll-behavior-y: contain; }
+.app-toolbar { flex-shrink: 0; position: relative; top: 0; z-index: 15; display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 62px; padding: 12px 28px; background: var(--background); border-bottom: 1px solid var(--border-subtle); }
 .header-navigation, .navigation-controls, .preferences, .preferences label, .breadcrumb { display: flex; align-items: center; }
 .header-navigation { gap: 18px; min-width: 0; }
 .navigation-controls { gap: 3px; flex-shrink: 0; }
 .icon-button { width: 30px; min-height: 30px; padding: 0; border-color: transparent; background: transparent; color: var(--text-secondary); }
 .icon-button .icon svg { width: 17px; height: 17px; }
 .breadcrumb { gap: 10px; min-width: 0; font-size: 11px; color: var(--text-secondary); }
-.breadcrumb strong { color: var(--text-primary); font-weight: 550; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 230px; }
+.breadcrumb button { min-height: 0; padding: 3px 0; border: 0; background: transparent; font-size: 11px; color: var(--text-secondary); font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 180px; }
+.breadcrumb button:hover:enabled { color: var(--primary); text-decoration: underline; background: transparent; }
+.breadcrumb button[aria-current="page"] { color: var(--text-primary); font-weight: 550; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 230px; }
 .breadcrumb-divider { color: var(--text-muted); }
 .preferences { gap: 12px; flex-shrink: 0; }
 .preferences label { gap: 7px; font-size: 11px; color: var(--text-muted); }
@@ -220,7 +223,7 @@ form > .primary { justify-self: start; }
   .brand { width: 152px; }
   .workspace-content { padding: 24px 24px 48px; }
   .app-toolbar { padding: 12px 20px; }
-  .breadcrumb > span:first-child, .breadcrumb > span:first-child + .breadcrumb-divider { display: none; }
+  .breadcrumb > button:first-child, .breadcrumb > button:first-child + .breadcrumb-divider { display: none; }
   .columns { grid-template-columns: minmax(0, 1.2fr) minmax(245px, 1fr); gap: 16px; }
   .player-actions { flex-direction: column; gap: 2px; }
   .cash-totals strong { font-size: 20px; }
@@ -232,7 +235,7 @@ form > .primary { justify-self: start; }
   .player-actions { flex-direction: row; }
 }
 @media (max-width: 650px) {
-  .shell { display: block; }
+  .shell { flex-direction: column; }
   aside { position: static; width: 100%; height: auto; overflow: visible; padding: 14px 16px; flex-direction: row; align-items: center; justify-content: space-between; border-right: 0; border-bottom: 1px solid var(--border-subtle); }
   .brand { width: 115px; margin: 0; padding: 0; }
   nav { display: flex; }

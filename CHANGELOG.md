@@ -6,6 +6,10 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Changed
 
+- Breadcrumbs navigate to parent screens and support opening destinations in a
+  new tab. Sidebar and navigation toolbar sit outside the content scroll region
+  so elastic scrolling does not move them.
+
 - README headers include the LibreTT title, a short description and badges for
   the AGPL license, Tauri 2, Svelte 5 and offline support. Logos are centered
   and set to 360px width in both languages.

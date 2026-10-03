@@ -286,5 +286,6 @@ pre-v11 backup. Vidi [ADR 0012](../adr/0012-category-rules-and-draw-view.md).
 
 Skrol radnog prostora je u zasebnom kontejneru ispod gornje trake od 48px.
 Dokument ne skroluje, a vertikalni skrol se ne prenosi na njega. Sidebar i toolbar
-vezani su za vrh kontejnera; promena taba vraća njegovu poziciju skrola. Tako macOS
+su izvan prostora sadržaja koji skroluje; promena taba vraća poziciju sadržaja.
+Breadcrumbs otvaraju roditeljske ekrane i podržavaju otvaranje u novom tabu. Tako macOS
 efekat istezanja na krajevima skrola ne pomera gornje tabove.
