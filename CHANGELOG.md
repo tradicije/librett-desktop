@@ -6,7 +6,8 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Changed
 
-- Added a Rust shields.io badge to both README headers.
+- Added a Rust stable shields.io badge to both README headers, matching the
+  label/value format of the other badges.
 - Knockout entrants retain group/place prefixes (A1, B2, etc.) beside their names
   as they advance. Pending qualifiers use the same compact labels.
 - Simplified draw copy and toolbar actions; removed the duplicate bracket heading
