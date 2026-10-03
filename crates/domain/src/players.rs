@@ -46,18 +46,7 @@ impl PlayerProfile {
             }
         }
         if let Some(photo) = &self.photo {
-            if photo.len() > 350_000 {
-                return Err(DomainError::InvalidProfile);
-            }
-            let encoded = photo
-                .strip_prefix("data:image/jpeg;base64,")
-                .ok_or(DomainError::InvalidProfile)?;
-            let bytes = STANDARD
-                .decode(encoded)
-                .map_err(|_| DomainError::InvalidProfile)?;
-            if !bytes.starts_with(&[0xff, 0xd8, 0xff]) || !bytes.ends_with(&[0xff, 0xd9]) {
-                return Err(DomainError::InvalidProfile);
-            }
+            validate_jpeg(photo, false)?;
         }
         Ok(self)
     }
@@ -189,4 +178,38 @@ impl Entry {
                 .collect(),
         })
     }
+}
+
+pub fn validate_jpeg(photo: &str, cover: bool) -> Result<(), DomainError> {
+    if photo.len() > if cover { 1_000_000 } else { 350_000 } {
+        return Err(DomainError::InvalidProfile);
+    }
+    let encoded = photo
+        .strip_prefix("data:image/jpeg;base64,")
+        .ok_or(DomainError::InvalidProfile)?;
+    let bytes = STANDARD
+        .decode(encoded)
+        .map_err(|_| DomainError::InvalidProfile)?;
+    if !bytes.starts_with(&[0xff, 0xd8, 0xff]) || !bytes.ends_with(&[0xff, 0xd9]) {
+        return Err(DomainError::InvalidProfile);
+    }
+    let mut decoder = jpeg_decoder::Decoder::new(std::io::Cursor::new(bytes));
+    decoder.set_max_decoding_buffer_size(if cover { 1024 * 768 * 4 } else { 512 * 512 * 4 });
+    decoder
+        .read_info()
+        .map_err(|_| DomainError::InvalidProfile)?;
+    let info = decoder.info().ok_or(DomainError::InvalidProfile)?;
+    let (width, height) = (usize::from(info.width), usize::from(info.height));
+    if width == 0
+        || height == 0
+        || if cover {
+            width > 1024 || height > 768 || (width * 9 != height * 16 && width * 3 != height * 4)
+        } else {
+            width > 512 || height > 512
+        }
+    {
+        return Err(DomainError::InvalidProfile);
+    }
+    decoder.decode().map_err(|_| DomainError::InvalidProfile)?;
+    Ok(())
 }

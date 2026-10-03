@@ -46,8 +46,7 @@ Dirty draw drafts remain local and rely on membership/revision checks when saved
 
 Several mounted workspaces use more memory than one screen; closing a tab frees
 its state. IDs for repeated dialogs are instance-specific. Tabs are session-local
-and restart does not restore unsaved forms. Native window closing retains its
-existing behavior. Routing inside a tab still replaces its current child screen;
+and restart does not restore unsaved forms. Window closing and Quit check unsaved work in every workspace. Routing inside a tab still replaces its current child screen;
 retention applies while switching between working tabs, not every history entry.
 
 

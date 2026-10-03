@@ -5,6 +5,8 @@ use uuid::Uuid;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ApplicationError {
+    PlayerConflict,
+    CashConflict,
     InvalidRules,
     InvalidDraw,
     DrawConflict,
@@ -397,6 +399,15 @@ pub fn register_entries(
 }
 
 pub trait PlayerCashRepository {
+    fn settle_player_cash_checked(
+        &mut self,
+        request_id: Uuid,
+        tournament_id: Uuid,
+        player_id: Uuid,
+        entry_ids: Vec<Uuid>,
+        paid: bool,
+        expected: Vec<ExpectedCashAmount>,
+    ) -> Result<(), ApplicationError>;
     fn cash_ledger(
         &self,
         tournament_id: Uuid,
@@ -539,4 +550,78 @@ pub fn update_category_with_rules(
     }
     repository.save_configured_category(tournament_id, &category, &rules, expected_revision)?;
     repository.find(tournament_id)
+}
+
+pub trait GuardedPlayerRepository {
+    fn save_player_checked(
+        &mut self,
+        request_id: Uuid,
+        player: &librett_domain::Player,
+        expected: Option<&librett_domain::Player>,
+    ) -> Result<librett_domain::Player, ApplicationError>;
+}
+pub fn save_player_checked(
+    repository: &mut impl GuardedPlayerRepository,
+    request_id: Uuid,
+    player_id: Uuid,
+    name: &str,
+    club: &str,
+    profile: librett_domain::PlayerProfile,
+    expected: Option<librett_domain::Player>,
+) -> Result<librett_domain::Player, ApplicationError> {
+    let mut player = librett_domain::Player::new(name, club)?;
+    player.id = player_id;
+    player.profile = profile.validated()?;
+    if expected
+        .as_ref()
+        .is_some_and(|previous| previous.id != player_id)
+    {
+        return Err(ApplicationError::PlayerConflict);
+    }
+    repository.save_player_checked(request_id, &player, expected.as_ref())
+}
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct ExpectedCashAmount {
+    pub entry_id: Uuid,
+    pub amount_minor: i64,
+}
+
+pub fn create_tournament_with_cover(
+    repository: &mut impl TournamentRepository,
+    id: Uuid,
+    name: &str,
+    cover: Option<String>,
+) -> Result<Tournament, ApplicationError> {
+    if let Some(image) = &cover {
+        librett_domain::validate_jpeg(image, true)?;
+    }
+    let mut tournament = Tournament::new(name)?;
+    tournament.id = id;
+    tournament.cover = cover;
+    match repository.find(id) {
+        Ok(existing) => {
+            if existing.name != tournament.name || existing.cover != tournament.cover {
+                return Err(ApplicationError::DrawConflict);
+            }
+            return Ok(existing);
+        }
+        Err(ApplicationError::NotFound) => {}
+        Err(error) => return Err(error),
+    }
+    repository.insert(&tournament)?;
+    Ok(tournament)
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct CategoryEditorState {
+    pub category: librett_domain::Category,
+    pub configuration: CategoryConfiguration,
+    pub used: bool,
+}
+pub trait CategoryEditorRepository {
+    fn category_editor_state(
+        &self,
+        tournament_id: Uuid,
+        category_id: Uuid,
+    ) -> Result<CategoryEditorState, ApplicationError>;
 }

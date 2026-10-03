@@ -40,6 +40,10 @@ pub struct Category {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Tournament {
+    #[serde(default)]
+    pub registered_count: usize,
+    #[serde(default)]
+    pub cover: Option<String>,
     pub id: Uuid,
     pub name: String,
     pub categories: Vec<Category>,
@@ -72,6 +76,8 @@ fn validated_name(name: &str) -> Result<String, DomainError> {
 impl Tournament {
     pub fn new(name: &str) -> Result<Self, DomainError> {
         Ok(Self {
+            registered_count: 0,
+            cover: None,
             id: Uuid::new_v4(),
             name: validated_name(name)?,
             categories: Vec::new(),
@@ -149,3 +155,5 @@ mod tests {
         assert_eq!(tournament.categories.len(), 2);
     }
 }
+
+pub use players::validate_jpeg;

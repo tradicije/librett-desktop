@@ -108,12 +108,12 @@ pub fn validate_draw(
     if seeds.len() != draw.seeds.len() || !seeds.is_subset(&active) {
         return Err(DomainError::InvalidDraw);
     }
-    if draw.mode == DrawMode::Automatic
-        && (used != active
-            || (draw.format == CompetitionFormat::Knockout
-                && draw.sections[0]
-                    .chunks_exact(2)
-                    .any(|pair| pair.iter().all(Option::is_none))))
+    if (draw.mode == DrawMode::Automatic && used != active)
+        || (used == active
+            && draw.format == CompetitionFormat::Knockout
+            && draw.sections[0]
+                .chunks_exact(2)
+                .any(|pair| pair.iter().all(Option::is_none)))
     {
         return Err(DomainError::InvalidDraw);
     }

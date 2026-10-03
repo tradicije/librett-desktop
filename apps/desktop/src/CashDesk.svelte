@@ -2,7 +2,7 @@
   import { onMount, tick, untrack } from 'svelte';
   import Icon from './Icon.svelte';
   import { formatMoney } from './money';
-  import { cashLedger, listEntries, settlePlayerCash, desktopAvailable, type Tournament, type Entry, type CashLedger } from './api';
+  import { cashLedger, listEntries, settlePlayerCash, desktopAvailable, type Tournament, type Entry, type CashLedger, type ExpectedCashAmount } from './api';
   import { messages, errorKey, type Language, type MessageKey } from './i18n';
   let { active = true, tournament, language, busy = $bindable(false) }: { active?: boolean; tournament: Tournament; language: Language; busy?: boolean } = $props();
   const uid = $props.id();
@@ -16,7 +16,7 @@
   let selected = $state<Record<string, string[]>>({});
   let error = $state<MessageKey | null>(null);
   let notice = $state(false);
-  type Request = { id: string; playerId: string; entryIds: string[]; paid: boolean };
+  type Request = { id: string; playerId: string; entryIds: string[]; paid: boolean; expected: ExpectedCashAmount[] };
   let pending = $state<Request | null>(null);
   let refund = $state<{ playerId: string; name: string; accounts: { entryId: string; label: string; amount: number }[] } | null>(null);
   let dialog: HTMLDialogElement;
@@ -82,7 +82,7 @@
   async function paySelected(row: typeof rows[number]) {
     if (busy || loading || row.selectedRemaining <= 0) return;
     const entryIds = row.accounts.filter(account => account.remaining > 0 && selected[row.id]?.includes(account.entry.id)).map(account => account.entry.id);
-    pending = { id: crypto.randomUUID(), playerId: row.id, entryIds, paid: true };
+    pending = { id: crypto.randomUUID(), playerId: row.id, entryIds, paid: true, expected: row.accounts.filter(account => entryIds.includes(account.entry.id)).map(account => ({ entry_id: account.entry.id, amount_minor: account.remaining })) };
     await save();
   }
   async function refundSelected(row: typeof rows[number]) {
@@ -92,19 +92,20 @@
   }
   async function confirmRefund() {
     if (!refund || busy) return;
-    pending = { id: crypto.randomUUID(), playerId: refund.playerId, entryIds: refund.accounts.map(account => account.entryId), paid: false };
+    pending = { id: crypto.randomUUID(), playerId: refund.playerId, entryIds: refund.accounts.map(account => account.entryId), paid: false, expected: refund.accounts.map(account => ({ entry_id: account.entryId, amount_minor: account.amount })) };
     dialog.close(); await save();
   }
   async function save() {
     if (!pending || saving) return;
     busy = true; saving = true; error = null; notice = false;
     try {
-      await settlePlayerCash(pending.id,tournament.id,pending.playerId,pending.entryIds,pending.paid);
+      await settlePlayerCash(pending.id,tournament.id,pending.playerId,pending.entryIds,pending.paid,pending.expected);
       ledger = await cashLedger(tournament.id);
       selected = { ...selected, [pending.playerId]: [] };
       pending = null; busy = false; notice = true;
     } catch (cause) {
       error = errorKey(cause);
+      if (cause === 'cash_conflict') { pending = null; busy = false; await load(true); error = 'cash_conflict'; }
       if (cause === 'invalid_cash' || cause === 'not_found') { pending = null; busy = false; }
     } finally { saving = false; }
   }

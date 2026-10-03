@@ -19,13 +19,52 @@ pub struct SqliteTournamentRepository {
 }
 
 impl SqliteTournamentRepository {
+    pub fn update_tournament_details(
+        &mut self,
+        id: Uuid,
+        name: &str,
+        cover: Option<String>,
+        expected_name: &str,
+        expected_cover: Option<String>,
+    ) -> Result<Tournament, ApplicationError> {
+        let normalized = Tournament::new(name)?.name;
+        if let Some(image) = &cover {
+            librett_domain::validate_jpeg(image, true)?;
+        }
+        let tx = self
+            .connection
+            .transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)
+            .map_err(|_| ApplicationError::Storage)?;
+        let current: Option<(String, Option<String>)> = tx
+            .query_row(
+                "SELECT name, cover FROM tournaments WHERE id = ?1",
+                [id.to_string()],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .optional()
+            .map_err(|_| ApplicationError::Storage)?;
+        let (old_name, old_cover) = current.ok_or(ApplicationError::NotFound)?;
+        if old_name != normalized || old_cover != cover {
+            if old_name != expected_name || old_cover != expected_cover {
+                return Err(ApplicationError::DrawConflict);
+            }
+            tx.execute(
+                "UPDATE tournaments SET name = ?1, cover = ?2 WHERE id = ?3",
+                rusqlite::params![normalized, cover, id.to_string()],
+            )
+            .map_err(|_| ApplicationError::Storage)?;
+        }
+        tx.commit().map_err(|_| ApplicationError::Storage)?;
+        self.find(id)
+    }
+
     pub fn open(path: impl AsRef<Path>) -> Result<Self, rusqlite::Error> {
         let path = path.as_ref();
         let connection = Connection::open(path)?;
         let version: i64 = connection.query_row("PRAGMA user_version", [], |row| row.get(0))?;
-        if (1..11).contains(&version) {
+        if (1..13).contains(&version) {
             // VACUUM INTO creates a consistent SQLite snapshot before changing an existing schema.
-            let backup = path.with_extension(format!("pre-v11-{}.sqlite", Uuid::new_v4()));
+            let backup = path.with_extension(format!("pre-v13-{}.sqlite", Uuid::new_v4()));
             connection.execute("VACUUM INTO ?1", [backup.to_string_lossy().as_ref()])?;
         }
         Self::initialize(connection)
@@ -35,7 +74,7 @@ impl SqliteTournamentRepository {
         connection.busy_timeout(Duration::from_secs(5))?;
         connection.execute_batch("PRAGMA foreign_keys = ON;")?;
         let version: i64 = connection.query_row("PRAGMA user_version", [], |row| row.get(0))?;
-        if version > 11 {
+        if version > 13 {
             return Err(rusqlite::Error::InvalidQuery);
         }
         if version == 0 {
@@ -108,7 +147,33 @@ impl SqliteTournamentRepository {
             transaction.execute_batch(include_str!("../migrations/011_category_rules.sql"))?;
             transaction.commit()?;
         }
+        if version < 12 {
+            let transaction = connection.transaction()?;
+            transaction.execute_batch(include_str!("../migrations/012_guarded_writes.sql"))?;
+            transaction.commit()?;
+        }
+        if version < 13 {
+            // Some development checkouts added cover while schema 12 was live.
+            // Accept both forms without retrying an already applied ALTER TABLE.
+            let has_cover: bool = connection.query_row(
+                "SELECT EXISTS(SELECT 1 FROM pragma_table_info('tournaments') WHERE name='cover')",
+                [],
+                |row| row.get(0),
+            )?;
+            let transaction = connection.transaction()?;
+            if has_cover {
+                transaction.execute_batch("PRAGMA user_version = 13;")?;
+            } else {
+                transaction
+                    .execute_batch(include_str!("../migrations/013_tournament_covers.sql"))?;
+            }
+            transaction.commit()?;
+        }
         Ok(Self { connection })
+    }
+
+    fn registered_count(&self, tournament_id: Uuid) -> Result<usize, ApplicationError> {
+        self.connection.query_row("SELECT count(DISTINCT m.player_id) FROM entry_members m JOIN entries e ON e.id=m.entry_id JOIN categories c ON c.id=e.category_id WHERE c.tournament_id=?1 AND c.archived=0 AND e.status='registered'", [tournament_id.to_string()], |r| r.get(0)).map_err(|_| ApplicationError::Storage)
     }
 
     fn load_categories(&self, tournament_id: Uuid) -> Result<Vec<Category>, ApplicationError> {
@@ -155,17 +220,23 @@ impl TournamentRepository for SqliteTournamentRepository {
     fn list(&self) -> Result<Vec<Tournament>, ApplicationError> {
         let mut statement = self
             .connection
-            .prepare("SELECT id, name FROM tournaments ORDER BY rowid DESC")
+            .prepare("SELECT id, name, cover FROM tournaments ORDER BY rowid DESC")
             .map_err(|_| ApplicationError::Storage)?;
         let rows = statement
             .query_map([], |row| {
-                Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+                Ok((
+                    row.get::<_, String>(0)?,
+                    row.get::<_, String>(1)?,
+                    row.get::<_, Option<String>>(2)?,
+                ))
             })
             .map_err(|_| ApplicationError::Storage)?;
         rows.map(|row| {
-            let (id, name) = row.map_err(|_| ApplicationError::Storage)?;
+            let (id, name, cover) = row.map_err(|_| ApplicationError::Storage)?;
             let id = Uuid::parse_str(&id).map_err(|_| ApplicationError::Storage)?;
             Ok(Tournament {
+                registered_count: self.registered_count(id)?,
+                cover,
                 id,
                 name,
                 categories: self.load_categories(id)?,
@@ -175,17 +246,19 @@ impl TournamentRepository for SqliteTournamentRepository {
     }
 
     fn find(&self, id: Uuid) -> Result<Tournament, ApplicationError> {
-        let name = self
+        let (name, cover) = self
             .connection
             .query_row(
-                "SELECT name FROM tournaments WHERE id = ?1",
+                "SELECT name,cover FROM tournaments WHERE id = ?1",
                 [id.to_string()],
-                |row| row.get::<_, String>(0),
+                |row| Ok((row.get::<_, String>(0)?, row.get::<_, Option<String>>(1)?)),
             )
             .optional()
             .map_err(|_| ApplicationError::Storage)?
             .ok_or(ApplicationError::NotFound)?;
         Ok(Tournament {
+            registered_count: self.registered_count(id)?,
+            cover,
             id,
             name,
             categories: self.load_categories(id)?,
@@ -195,8 +268,8 @@ impl TournamentRepository for SqliteTournamentRepository {
     fn insert(&mut self, tournament: &Tournament) -> Result<(), ApplicationError> {
         self.connection
             .execute(
-                "INSERT INTO tournaments (id, name) VALUES (?1, ?2)",
-                params![tournament.id.to_string(), tournament.name],
+                "INSERT INTO tournaments (id, name, cover) VALUES (?1, ?2, ?3)",
+                params![tournament.id.to_string(), tournament.name, tournament.cover],
             )
             .map_err(|_| ApplicationError::Storage)?;
         Ok(())

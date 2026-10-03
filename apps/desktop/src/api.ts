@@ -3,7 +3,7 @@ import { invoke, isTauri } from '@tauri-apps/api/core';
 export type Discipline = 'singles' | 'doubles';
 export type CompetitionFormat = 'knockout' | 'groups_knockout';
 export interface Category { archived: boolean; fee_minor: number; id: string; name: string; discipline: Discipline; format: CompetitionFormat }
-export interface Tournament { id: string; name: string; categories: Category[] }
+export interface Tournament { cover: string | null; registered_count: number; id: string; name: string; categories: Category[] }
 export interface PlayerProfile { birth_year: number | null; city: string; country: string; email: string; phone: string; notes: string; photo: string | null }
 export interface Player extends PlayerProfile { id: string; name: string; club: string }
 export type EntryStatus = 'registered' | 'withdrawn';
@@ -11,18 +11,15 @@ export interface Entry { id: string; category_id: string; status: EntryStatus; m
 export const desktopAvailable = isTauri();
 
 export const listTournaments = () => invoke<Tournament[]>('list_tournaments');
-export const createTournament = (name: string) => invoke<Tournament>('create_tournament', { name });
 export const addCategory = (tournamentId: string, name: string, discipline: Discipline, format: CompetitionFormat, feeMinor: number) =>
   invoke<Tournament>('add_category', { tournamentId, name, discipline, format, feeMinor });
 
 export const listPlayers = () => invoke<Player[]>('list_players');
-export const createPlayer = (name: string, club: string) => invoke<Player>('create_player', { name, club });
 export const listEntries = (categoryId: string) => invoke<Entry[]>('list_entries', { categoryId });
 export const registerEntry = (tournamentId: string, categoryId: string, playerIds: string[]) =>
   invoke<Entry>('register_entry', { tournamentId, categoryId, playerIds });
 
-export const savePlayerProfile = (id: string | null, name: string, club: string, profile: PlayerProfile) =>
-  invoke<Player>('save_player_profile', { id, name, club, profile });
+export const savePlayerChecked = (requestId: string, playerId: string, name: string, club: string, profile: PlayerProfile, expected: Player | null) => invoke<Player>('save_player_checked', { requestId, playerId, name, club, profile, expected });
 
 export const getPlayer = (id: string) => invoke<Player>('get_player', { id });
 export const deletePlayer = (id: string) => invoke<void>('delete_player', { id });
@@ -43,7 +40,8 @@ export const registerEntries = (tournamentId: string, categoryId: string, player
 export interface CashAllocation { record_id: string; player_id: string; amount_minor: number }
 export interface CashLedger { records: CashRecord[]; allocations: CashAllocation[] }
 export const cashLedger = (tournamentId: string) => invoke<CashLedger>('cash_ledger', { tournamentId });
-export const settlePlayerCash = (requestId: string, tournamentId: string, playerId: string, entryIds: string[], paid: boolean) => invoke<void>('settle_player_cash', { requestId, tournamentId, playerId, entryIds, paid });
+export interface ExpectedCashAmount { entry_id: string; amount_minor: number }
+export const settlePlayerCash = (requestId: string, tournamentId: string, playerId: string, entryIds: string[], paid: boolean, expected: ExpectedCashAmount[]) => invoke<void>('settle_player_cash', { requestId, tournamentId, playerId, entryIds, paid, expected });
 
 export type DrawMode = 'automatic' | 'manual';
 export interface DrawSettings { group_count: number; qualifiers_per_group: number }
@@ -66,3 +64,9 @@ export const getCategoryRules = (tournamentId: string, categoryId: string) => in
 export const saveCategoryRules = (tournamentId: string, categoryId: string, rules: CategoryRules, expectedRevision: number) => invoke<CategoryConfiguration>('save_category_rules', { tournamentId, categoryId, rules, expectedRevision });
 
 export const updateCategoryWithRules = (tournamentId: string, categoryId: string, name: string, discipline: Discipline, format: CompetitionFormat, feeMinor: number, rules: CategoryRules, expectedRevision: number) => invoke<Tournament>('update_category_with_rules', { tournamentId, categoryId, name, discipline, format, feeMinor, rules, expectedRevision });
+
+export interface CategoryEditorState { category: Category; configuration: CategoryConfiguration; used: boolean }
+export const getCategoryEditorState = (tournamentId: string, categoryId: string) => invoke<CategoryEditorState>('get_category_editor_state', { tournamentId, categoryId });
+export const createTournamentWithCover = (id: string, name: string, cover: string | null) => invoke<Tournament>('create_tournament_with_cover', { id, name, cover });
+
+export const updateTournamentDetails = (id: string, name: string, cover: string | null, expectedName: string, expectedCover: string | null) => invoke<Tournament>('update_tournament_details', { id, name, cover, expectedName, expectedCover });

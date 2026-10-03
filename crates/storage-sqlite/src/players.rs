@@ -473,3 +473,42 @@ mod tests {
         std::fs::remove_dir(dir).unwrap();
     }
 }
+
+impl librett_application::GuardedPlayerRepository for SqliteTournamentRepository {
+    fn save_player_checked(
+        &mut self,
+        request_id: Uuid,
+        player: &Player,
+        expected: Option<&Player>,
+    ) -> Result<Player, ApplicationError> {
+        let request =
+            serde_json::to_string(&(player, expected)).map_err(|_| ApplicationError::Storage)?;
+        let tx = self
+            .connection
+            .transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)
+            .map_err(|_| ApplicationError::Storage)?;
+        let previous: Option<(String, String)> = tx
+            .query_row(
+                "SELECT request_payload,result_payload FROM player_writes WHERE id=?1",
+                [request_id.to_string()],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .optional()
+            .map_err(|_| ApplicationError::Storage)?;
+        if let Some((old, result)) = previous {
+            if old != request {
+                return Err(ApplicationError::PlayerConflict);
+            }
+            return serde_json::from_str(&result).map_err(|_| ApplicationError::Storage);
+        }
+        let current = tx.query_row("SELECT id, name, club, birth_year, city, country, email, phone, notes, photo FROM players WHERE id=?1", [player.id.to_string()], read_player).optional().map_err(|_| ApplicationError::Storage)?;
+        if current.as_ref() != expected {
+            return Err(ApplicationError::PlayerConflict);
+        }
+        tx.execute("INSERT INTO players(id,name,club,birth_year,city,country,email,phone,notes,photo) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10) ON CONFLICT(id) DO UPDATE SET name=excluded.name,club=excluded.club,birth_year=excluded.birth_year,city=excluded.city,country=excluded.country,email=excluded.email,phone=excluded.phone,notes=excluded.notes,photo=excluded.photo", params![player.id.to_string(),player.name,player.club,player.profile.birth_year,player.profile.city,player.profile.country,player.profile.email,player.profile.phone,player.profile.notes,player.profile.photo]).map_err(|_| ApplicationError::Storage)?;
+        let result = serde_json::to_string(player).map_err(|_| ApplicationError::Storage)?;
+        tx.execute("INSERT INTO player_writes(id,player_id,request_payload,result_payload) VALUES(?1,?2,?3,?4)",params![request_id.to_string(),player.id.to_string(),request,result]).map_err(|_| ApplicationError::Storage)?;
+        tx.commit().map_err(|_| ApplicationError::Storage)?;
+        Ok(player.clone())
+    }
+}

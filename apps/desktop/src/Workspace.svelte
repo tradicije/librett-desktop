@@ -1,10 +1,12 @@
 <script lang="ts">
   import Select from './Select.svelte';
+  import { confirmDiscard } from './confirmation';
   import { formatMoney } from './money';
   import { onMount, tick, untrack } from 'svelte';
   import CategoryDetail, { type CategoryTab } from './CategoryDetail.svelte';
   import CashDesk from './CashDesk.svelte';
   import CategoryEditor from './CategoryEditor.svelte';
+  import TournamentEditor from './TournamentEditor.svelte';
   import PlayerDirectory from './PlayerDirectory.svelte';
   import PlayerEditor from './PlayerEditor.svelte';
   import Icon from './Icon.svelte';
@@ -13,7 +15,7 @@
   import darkIcon from '../../../assets/img/icon-dark.png';
   import lightIcon from '../../../assets/img/icon-light.png';
   import { type ThemePreference, type ResolvedTheme } from './theme';
-  import { deleteCategory, createTournament, desktopAvailable, listTournaments, type CompetitionFormat, type Discipline, type Category, type Tournament } from './api';
+  import { deleteCategory, desktopAvailable, listTournaments, type CompetitionFormat, type Discipline, type Category, type Tournament } from './api';
   import { messages, errorKey, type Language, type MessageKey } from './i18n';
 
   import type { Route, TournamentTab, WorkspaceStatus } from './workspace';
@@ -25,13 +27,13 @@
   } = $props();
   const uid = $props.id();
   let text = $derived(messages[language]);
-  const tournamentTabs: TournamentTab[] = ['overview', 'categories', 'cash'];
+  const tournamentTabs: TournamentTab[] = ['overview', 'categories', 'cash', 'settings'];
   let history = $state<Route[]>([untrack(() => initialRoute)]);
   let historyIndex = $state(0);
   let route = $derived(history[historyIndex]);
   let childDirty = $state(false);
   let inPlayers = $derived(route.view === 'players' || route.view === 'player-create' || route.view === 'player-edit');
-  let pageLabel = $derived(route.view === 'dashboard' ? text.dashboard : inPlayers ? text.playerTab : text.tournaments);
+  let pageLabel = $derived(route.view === 'tournament-create' ? text.addTournament : route.view === 'dashboard' ? text.dashboard : inPlayers ? text.playerTab : text.tournaments);
   let mode = $derived(route.view === 'dashboard' ? 'dashboard' : 'tournaments');
   let childBusy = $state(false);
   let selectedId = $derived((['tournament', 'category', 'category-create', 'category-edit'].includes(route.view)) ? route.id : null);
@@ -43,6 +45,7 @@
       case 'overview': return text.tournamentTab_overview;
       case 'categories': return text.tournamentTab_categories;
       case 'cash': return text.tournamentTab_cash;
+      case 'settings': return language === 'sr' ? 'Podešavanja' : 'Settings';
     }
   }
   let selectedCategory = $derived(activeCategories.find(c => c.id === route.categoryId));
@@ -64,11 +67,11 @@
         items.push({ label: route.view === 'category-create' ? text.addCategory : route.view === 'category-edit' ? text.editCategory : text[route.categoryTab ?? 'registrations'], route: { ...route } });
       }
     }
+    if (route.view === 'tournament-create') items.push({ label: text.addTournament, route: { ...route } });
     return items;
   });
   let pendingCategory = $state<Category | null>(null);
   let categoryDialog: HTMLDialogElement;
-  let tournamentName = $state('');
   let busy = $state(false);
   let navigationLocked = $derived(busy || childBusy || externalLocked);
   let loading = $state(false);
@@ -76,14 +79,16 @@
   let error = $state<MessageKey | null>(null);
   let notice = $state<MessageKey | null>(null);
 
+  let loadVersion = 0;
   async function load() {
+    const version = ++loadVersion;
     loading = true;
     error = null;
-    try { tournaments = await listTournaments(); loaded = true; }
+    try { const current = await listTournaments(); if (version === loadVersion) { tournaments = current; loaded = true; } }
     catch (cause) { error = errorKey(cause); }
-    finally { loading = false; }
+    finally { if (version === loadVersion) loading = false; }
   }
-  let dirty = $derived(childDirty || !!tournamentName.trim());
+  let dirty = $derived(childDirty);
   let workspaceContext = $derived(route.view === 'category-create' ? `${selected?.name} · ${text.addCategory}` : route.view === 'category-edit' ? `${selected?.name} · ${selectedCategory?.name} · ${text.editCategory}` : route.view === 'category' && selectedCategory
     ? `${selected?.name} · ${selectedCategory.name} · ${text[route.categoryTab ?? 'registrations']}`
     : selected ? `${selected.name} · ${tournamentTabLabel(tournamentTab)}`
@@ -93,37 +98,32 @@
     : route.view === 'player-create' ? text.addPlayer : route.view === 'player-edit' ? text.editPlayer : pageLabel);
   $effect(() => { status = { title: workspaceTitle, context: workspaceContext, busy: busy || childBusy, dirty, view: route.view }; });
   onMount(() => { if (route.view !== 'dashboard' && desktopAvailable) void load(); });
+  let wasActive = untrack(() => active);
+  $effect(() => { if (active && !wasActive && route.view === 'tournaments' && desktopAvailable && !navigationLocked && !dirty) void load(); wasActive = active; });
 
-  async function create(event: SubmitEvent) {
-    event.preventDefault();
-    busy = true; error = null; notice = null;
-    try {
-      const tournament = await createTournament(tournamentName);
-      tournaments = [tournament, ...tournaments];
-      tournamentName = ''; busy = false; await tick();
-      navigate({ view: 'tournament', id: tournament.id }); notice = 'created';
-    } catch (cause) { error = errorKey(cause); }
-    finally { busy = false; }
-  }
   function resetView() { childDirty = false; error = null; notice = null; }
   export function getRoute(): Route { return { ...route }; }
   export function goHome() { navigate({ view: 'dashboard' }, true); }
   function navigate(next: Route, forceCurrent = false) {
     if (next.view === 'dashboard' && !pinned || pinned && !['dashboard', 'tournaments'].includes(next.view)) { onopen(next); return; }
     if (!forceCurrent && wantsNewTab()) { onopen(next); return; }
-    if (externalLocked) return;
+    if (navigationLocked) return;
     const current = history[historyIndex];
     if (current.view === next.view && current.id === next.id && current.categoryId === next.categoryId &&
       current.tournamentTab === next.tournamentTab && current.categoryTab === next.categoryTab) return;
-    history = [...history.slice(0, historyIndex + 1), next];
-    historyIndex = history.length - 1;
-    resetView();
-    if (next.view !== 'dashboard' && desktopAvailable && !loaded && !loading) void load();
+    const apply = () => {
+      if (navigationLocked || history[historyIndex] !== current) return;
+      history = [...history.slice(0, historyIndex + 1), next]; historyIndex = history.length - 1;
+      resetView();
+      if (next.view !== 'dashboard' && desktopAvailable && (!loaded || next.view === 'tournaments') && !loading) void load();
+    };
+    if (dirty) void confirmDiscard().then(accepted => { if (accepted) apply(); }); else apply();
   }
   export function travel(delta: number) {
     if (navigationLocked || historyIndex + delta < 0 || historyIndex + delta >= history.length) return;
-    historyIndex += delta;
-    resetView();
+    const current = history[historyIndex];
+    const apply = () => { if (navigationLocked || history[historyIndex] !== current) return; historyIndex += delta; resetView(); };
+    if (dirty) void confirmDiscard().then(accepted => { if (accepted) apply(); }); else apply();
   }
   function openTournaments() { navigate({ view: 'tournaments' }); }
   function select(id: string | null) { navigate(id ? { view: 'tournament', id } : { view: 'tournaments' }); }
@@ -218,6 +218,8 @@
         <PlayerEditor {language} playerId={route.id} bind:busy={childBusy} bind:dirty={childDirty}
           onsaved={() => { navigate({ view: 'players' }); notice = 'playerSaved'; }} oncancel={() => navigate({ view: 'players' })} />
       {/key}
+    {:else if route.view === 'tournament-create'}
+      <TournamentEditor {language} bind:busy={childBusy} bind:dirty={childDirty} onsaved={(tournament) => { tournaments = [tournament, ...tournaments.filter(current => current.id !== tournament.id)]; navigate({ view: 'tournament', id: tournament.id }); notice = 'created'; }} oncancel={openTournaments} />
     {:else if selected && (route.view === 'category-create' || route.view === 'category-edit')}
       {#if route.view === 'category-create' || selectedCategory}
         {#key `${route.view}:${route.categoryId ?? ''}`}
@@ -255,22 +257,36 @@
             </article>
           {/each}
         </section>
+      {:else if tournamentTab === 'settings'}
+        {#key selected.id}
+          <TournamentEditor tournament={selected} {language} bind:busy={childBusy} bind:dirty={childDirty} onsaved={(updated) => { tournaments = tournaments.map(t => t.id === updated.id ? updated : t); navigate({ view: 'tournament', id: updated.id }); }} oncancel={() => openTournamentTab('overview')} />
+        {/key}
       {:else if tournamentTab === 'cash'}
         {#key selected.id}<CashDesk {active} tournament={selected} {language} bind:busy={childBusy} />{/key}
       {/if}
     {:else}
-      <div class="heading"><div><p class="eyebrow">LibreTT</p><h1>{text.tournaments}</h1><p class="muted">{text.intro}</p></div></div>
-      <div class="columns">
-        <section class="panel tournament-directory">
-          <div class="section-heading"><h2>{text.tournamentList}</h2><span class="pill">{tournaments.length}</span></div>
-          {#if loading}<p class="muted" role="status">{text.loading}</p>
-          {:else if tournaments.length === 0 && (!desktopAvailable || loaded)}<div class="empty"><span class="empty-icon"><Icon name="trophy" size={28} /></span><h3>{text.empty}</h3><p>{text.emptyText}</p></div>
-          {:else}
-            {#each tournaments as tournament (tournament.id)}<button data-open-tab class="tournament" disabled={busy} onclick={() => select(tournament.id)}><span class="row-icon"><Icon name="trophy" size={18} /></span><div class="row-content"><strong>{tournament.name}</strong><small>{tournament.categories.filter(c => !c.archived).length} · {text.categories}</small></div><Icon name="arrow-right" /></button>{/each}
-          {/if}
-        </section>
-        <section class="panel form-panel"><h2 class="icon-label"><Icon name="trophy" />{text.newTournament}</h2><form onsubmit={create}><label>{text.tournamentName}<input bind:value={tournamentName} required disabled={busy || loading} /></label><button class="primary" disabled={busy || loading || !desktopAvailable || !loaded}><Icon name="plus" size={18} />{busy ? text.saving : text.create}</button></form></section>
-      </div>
+      <div class="heading"><div><h1>{text.tournaments}</h1><p class="muted">{text.intro}</p></div><button data-open-tab class="primary" disabled={navigationLocked || loading || !desktopAvailable} onclick={() => navigate({ view: 'tournament-create' })}><Icon name="plus" />{text.addTournament}</button></div>
+      {#if loading}<p class="muted" role="status">{text.loading}</p>
+      {:else if tournaments.length === 0 && (!desktopAvailable || loaded)}<div class="empty"><span class="empty-icon"><Icon name="trophy" size={28} /></span><h3>{text.empty}</h3><p>{text.emptyText}</p></div>
+      {:else}
+        <div class="tournament-grid">
+          {#each tournaments as tournament (tournament.id)}
+            <div data-open-tab class="panel tournament-card" role="link" tabindex={navigationLocked ? -1 : 0} aria-disabled={navigationLocked} aria-label={tournament.name} onclick={() => { if (!navigationLocked) select(tournament.id); }} onkeydown={(event) => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); if (!navigationLocked) select(tournament.id); } }}>
+              <span class="tournament-cover">{#if tournament.cover}<img src={tournament.cover} alt="" loading="lazy" />{:else}<Icon name="trophy" size={40} />{/if}</span>
+              <div class="tournament-card-body">
+                <h2>{tournament.name}</h2>
+                <div class="tournament-card-meta">
+                  <span><Icon name="users" size={16} />{tournament.registered_count} {text.tournamentPlayers.toLocaleLowerCase()}</span>
+                  <span><Icon name="layer-group" size={16} />{text.categories}: {tournament.categories.filter(c => !c.archived).length}</span>
+                </div>
+                <button data-open-tab class="secondary tournament-open" disabled={navigationLocked} onclick={(event) => { event.stopPropagation(); select(tournament.id); }} aria-label={`${language === 'sr' ? 'Otvori turnir' : 'Open tournament'}: ${tournament.name}`}>
+                  {language === 'sr' ? 'Otvori turnir' : 'Open tournament'}<Icon name="arrow-right" size={18} />
+                </button>
+              </div>
+            </div>
+          {/each}
+        </div>
+      {/if}
     {/if}
     </div>
     </div>

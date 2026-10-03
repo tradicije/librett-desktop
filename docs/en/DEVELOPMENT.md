@@ -41,8 +41,8 @@ The Players tab shows the shared directory. Add/Edit opens dedicated profile
 screens, including photos, and returns to the list after saving. Delete asks for
 confirmation and protects profiles with existing registrations. Tournament
 registration uses that directory. Entries can be withdrawn/restored, and player
-attendance is shared across categories in a tournament. Schema version 11 includes immutable draw drafts and versioned category rules; older on-disk databases receive a consistent
-`pre-v11-<uuid>.sqlite` backup before migration.
+attendance is shared across categories in a tournament. Schema version 13 includes immutable draw drafts and versioned category rules; older on-disk databases receive a consistent
+`pre-v13-<uuid>.sqlite` backup before migration.
 
 Back/Forward follows the active workspace’s screen history. The top Home button
 returns to the pinned mode-selection workspace. The mode chooser has no sidebar. Saves lock navigation until
@@ -204,7 +204,7 @@ to the open draw screen. Reload discards local edits and fetches current entries
 
 A changed registration list requires regeneration. Concurrent revisions reject
 a stale save. An uncertain write keeps its request UUID and blocks navigation
-until a retry confirms the outcome. Existing databases receive a pre-v11 backup.
+until a retry confirms the outcome. Existing databases receive a pre-v13 backup.
 Confirmation, match creation, scoring, standings and knockout advancement remain
 pending; saving a draft does not start the competition.
 
@@ -239,7 +239,7 @@ entries serve as a centered bridge for gestures so histories never mix across ta
 Pending writes and open modal dialogs block tab changes. Closing a tab with unsaved
 player profiles, registration queues, tournament/category forms or draw edits asks
 for confirmation. Tabs exist for the current app session; restart does not restore
-them or unsaved forms. The OS window-close button retains its native behavior.
+them or unsaved forms. Window closing and Quit require confirmation when any workspace contains unsaved work.
 
 Cash, registrations, directory and draw data refresh when returning to a tab.
 Valid selections remain; unsaved draw layouts are preserved and stale membership
@@ -297,3 +297,24 @@ use workspace navigation and support the same new-tab actions as other links. Th
 The Info button at the far right of the title bar opens a themed About dialog.
 It shows the logo, version from package metadata, author, description and full
 bundled AGPL license, available offline. Escape or Close dismisses the dialog.
+
+
+## Guarded writes and tournament covers
+
+Navigation, Back/Forward, cancellation and draw reload confirm before discarding
+local edits. Window closing and Quit inspect all workspaces. Player writes use
+stable IDs, atomic snapshot checks and idempotent request receipts; conflicts
+can be recovered through a confirmed reload. Financial actions include expected
+amounts and require a new confirmation when balances change.
+
+The tournament directory uses up to three cards per row. Add Tournament opens a
+dedicated editor with an optional centered 16:9 cover. Registered counts include
+unique active players across active categories. Groups generate pairings only
+when opened, one round at a time, with 32 pairs per page. Uploaded images are
+bounded before decoding and verified with a full backend JPEG decode.
+See [ADR 0013](../adr/0013-guarded-writes-and-bounded-images.md).
+
+Tournament Settings edits the name and optional cover. Updates compare the
+original metadata atomically, reject conflicting edits, and accept retrying an
+already-applied update. The entire tournament card supports mouse and keyboard
+navigation; its bottom button also supports opening a new workspace tab.

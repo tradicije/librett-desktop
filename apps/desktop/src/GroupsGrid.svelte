@@ -1,11 +1,15 @@
 <script lang="ts">
   import Icon from './Icon.svelte';
-  import { groupName, roundRobin } from './draw-view';
+  import RoundRobinSchedule from './RoundRobinSchedule.svelte';
+  import { groupName } from './draw-view';
   import type { CategoryDraw, Category } from './api';
   import type { Language } from './i18n';
   let { draw, category, language }: { draw: CategoryDraw | null; category: Category; language: Language } = $props();
-  function entryName(id: string | null) { return draw?.participants.find(entry => entry.id === id)?.members.map(member => member.name).join(' / ') ?? (language === 'sr' ? 'Neraspoređeno' : 'Unassigned'); }
-  function clubName(id: string | null) { return [...new Set(draw?.participants.find(entry => entry.id === id)?.members.map(member => member.club).filter(Boolean))].join(' / '); }
+  let openGroups = $state<Record<number, boolean>>({});
+  let names = $derived(new Map(draw?.participants.map(entry => [entry.id, entry.members.map(member => member.name).join(' / ')]) ?? []));
+  let clubs = $derived(new Map(draw?.participants.map(entry => [entry.id, [...new Set(entry.members.map(member => member.club).filter(Boolean))].join(' / ')]) ?? []));
+  function entryName(id: string | null) { return names.get(id ?? '') ?? (language === 'sr' ? 'Neraspoređeno' : 'Unassigned'); }
+  function clubName(id: string | null) { return clubs.get(id ?? '') ?? ''; }
 </script>
 {#if draw}
   <div class="groups-grid">
@@ -15,7 +19,7 @@
                 <ol class="group-entries">{#each group as id}<li><span class="entry-position">{#if id && draw.seeds.includes(id)}<span class="group-seed">#{draw.seeds.indexOf(id) + 1}</span>{:else}<Icon name={category.discipline === 'doubles' ? 'users' : 'user'} size={15} />{/if}</span><span class="group-player" title={entryName(id)}>{entryName(id)}{#if clubName(id)}<small>{clubName(id)}</small>{/if}</span></li>{/each}</ol>
                 <div class="group-qualifiers"><Icon name="arrow-right" size={14} />{draw.settings.qualifiers_per_group} {language === 'sr' ? 'prolaze u nokaut' : 'advance to knockout'}</div>
                 {#if group.every(id => id !== null)}
-                  <details><summary>{language === 'sr' ? 'Ko sa kim igra' : 'Round-robin pairings'}</summary><div class="round-robin">{#each roundRobin(group.filter((id): id is string => id !== null)) as round, roundIndex}<h4>{language === 'sr' ? 'Kolo' : 'Round'} {roundIndex + 1}</h4>{#each round as [a, b]}<p><span>{entryName(a)}</span><span class="versus">vs</span><span>{entryName(b)}</span></p>{/each}{/each}</div></details>
+                  <details ontoggle={event => openGroups[index] = event.currentTarget.open}><summary>{language === 'sr' ? 'Ko sa kim igra' : 'Round-robin pairings'}</summary>{#if openGroups[index]}<RoundRobinSchedule ids={group.filter((id): id is string => id !== null)} {names} {language} />{/if}</details>
                 {/if}
               </section>
     {/each}
@@ -38,10 +42,6 @@
   .group-qualifiers { display: flex; align-items: center; gap: 6px; padding: 10px 14px; color: var(--text-secondary); font-size: 10px; }
   details { border-top: 1px solid var(--border-subtle); padding: 10px 14px; font-size: 11px; }
   summary { cursor: pointer; color: var(--text-secondary); }
-  .round-robin h4 { font-size: 10px; color: var(--text-muted); margin: 14px 0 6px; }
-  .round-robin p { display: grid; grid-template-columns: minmax(0, 1fr) 16px minmax(0, 1fr); gap: 4px; font-size: 10px; }
-  .round-robin p span { overflow-wrap: anywhere; }
-  .versus { color: var(--text-muted); text-align: center; }
   .group-empty { display: grid; place-items: center; color: var(--text-muted); padding: 32px 16px; border: 1px dashed var(--border); border-radius: 8px; text-align: center; }
   @media (max-width: 1100px) { .groups-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   @media (max-width: 650px) { .groups-grid { grid-template-columns: minmax(0, 1fr); } }

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, untrack } from 'svelte';
   import Select from './Select.svelte';
+  import { confirmDiscard } from './confirmation';
   import Icon from './Icon.svelte';
   import { groupName } from './draw-view';
   import { getCategoryDraw, listEntries, previewCategoryDraw, saveCategoryDraw, desktopAvailable,
@@ -54,6 +55,9 @@
   let stale = $derived(!!draft && (category.format === 'groups_knockout' && (draft.settings.group_count !== groupCount || draft.settings.qualifiers_per_group !== qualifiers) || draft.participants.length !== entries.length || draft.participants.some(e => !entries.some(active => active.id === e.id))));
   let placed = $derived(new Set(draft?.sections.flat().filter((id): id is string => id !== null) ?? []));
   let missing = $derived((draft?.participants.length ?? 0) - placed.size);
+  let entryOptions = $derived.by(() => { const current = draft; return current?.participants.map(entry => ({ value: entry.id, label: `${current.seeds.includes(entry.id) ? `#${current.seeds.indexOf(entry.id) + 1} ` : ''}${label(entry)}` })) ?? []; });
+  let emptyOptions = $derived([{ value: '', label: t.empty }, ...entryOptions]);
+  let byeOptions = $derived([{ value: '', label: t.bye }, ...entryOptions]);
   let locked = $derived(action || loading || pending !== null || externalLocked);
   function label(entry: Entry) { return entry.members.map(member => member.name).join(' / '); }
   function entryLabel(id: string) { const entry = draft?.participants.find(e => e.id === id) ?? entries.find(e => e.id === id); return entry ? label(entry) : id; }
@@ -97,13 +101,13 @@
   }
   async function generate() {
     if (draft && !replacing) { replacing = true; return; }
-    action = true; error = null;
+    action = true; busy = true; error = null;
     try {
       draft = await previewCategoryDraw(tournament.id, category.id, mode,
         { group_count: groupCount, qualifiers_per_group: qualifiers }, seeds);
       changed();
     } catch (cause) { error = cause === 'invalid_draw' || cause === 'invalid_rules' ? 'invalid' : 'error'; }
-    finally { action = false; }
+    finally { action = false; busy = pending !== null; }
   }
   function assign(section: number, slot: number, value: string) {
     if (!draft || locked || stale) return;
@@ -127,14 +131,14 @@
       draft = result; revision = result.revision; pending = null; dirty = false; saved = true;
     } catch (cause) {
       if (cause === 'invalid_draw' || cause === 'invalid_rules' || cause === 'draw_conflict' || cause === 'not_found') {
-        error = cause === 'draw_conflict' ? 'conflict' : 'stale'; pending = null;
+        error = cause === 'draw_conflict' ? 'conflict' : cause === 'invalid_draw' ? 'invalid' : 'stale'; pending = null;
       } else error = 'uncertain';
     } finally { action = false; busy = pending !== null; }
   }
 </script>
 
 <section class="draw-workspace">
-  <div class="section-heading arrangement-heading"><div><h2>{t.title}</h2><p class="muted">{t.intro}</p></div><button class="secondary icon-label" disabled={locked} onclick={load}><Icon name="restore" size={16} />{t.load}</button></div>
+  <div class="section-heading arrangement-heading"><div><h2>{t.title}</h2><p class="muted">{t.intro}</p></div><button class="secondary icon-label" disabled={locked} onclick={async () => { if (!dirty || await confirmDiscard()) await load(); }}><Icon name="restore" size={16} />{t.load}</button></div>
   {#if !desktopAvailable}<p class="muted">{text.preview}</p>
   {:else if loading}<p role="status">{text.loading}</p>
   {:else}
@@ -174,7 +178,7 @@
               {#each section as id, slot}
                 <label class:pair-start={category.format === 'knockout' && slot % 2 === 0}>
                   <span>{category.format === 'knockout' ? `${t.pair} ${Math.floor(slot / 2) + 1} · ${t.position} ${slot % 2 + 1}` : `${t.position} ${slot + 1}`}</span>
-                  <Select label={`${category.format === 'groups_knockout' ? `${t.group} ${groupName(group)}` : text.bracket} · ${t.position} ${slot + 1}`} bind:value={() => id ?? '', value => assign(group, slot, value)} disabled={locked || stale} options={[{ value: '', label: category.format === 'knockout' && missing === 0 && section[slot ^ 1] ? t.bye : t.empty }, ...draft.participants.map(entry => ({ value: entry.id, label: `${draft?.seeds.includes(entry.id) ? `#${draft.seeds.indexOf(entry.id) + 1} ` : ''}${label(entry)}` }))]} />
+                  <Select label={`${category.format === 'groups_knockout' ? `${t.group} ${groupName(group)}` : text.bracket} · ${t.position} ${slot + 1}`} bind:value={() => id ?? '', value => assign(group, slot, value)} disabled={locked || stale} options={category.format === 'knockout' && missing === 0 && section[slot ^ 1] ? byeOptions : emptyOptions} />
                 </label>
               {/each}
             </section>

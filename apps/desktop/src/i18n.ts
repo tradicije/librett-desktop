@@ -1,4 +1,7 @@
 const sr = {
+  addTournament: 'Dodaj turnir', tournamentPlayers: 'Prijavljenih',
+  player_conflict: 'Profil je promenjen u drugom editoru. Učitaj trenutno stanje pre ponovnog čuvanja.',
+  cash_conflict: 'Iznos je promenjen. Stanje je osveženo; proveri iznos i ponovi akciju.',
   editCategory: 'Izmeni kategoriju', categoryFormatLocked: 'Disciplina i format ostaju vezani za postojeće prijave.',
   settings: 'Podešavanja', categoryRules: 'Pravila kategorije', groupCount: 'Broj grupa', qualifiersPerGroup: 'Prolaznika iz svake grupe',
   bestOf: 'Meč na najviše setova', pointsToWin: 'Poena za set', winBy: 'Potrebna razlika', rankingOrder: 'Redosled za izjednačenje',
@@ -89,6 +92,9 @@ const sr = {
 };
 type Messages = typeof sr;
 const en: Messages = {
+  addTournament: 'Add tournament', tournamentPlayers: 'Registered players',
+  player_conflict: 'This profile changed in another editor. Reload the current state before saving.',
+  cash_conflict: 'The amount changed. Balances were refreshed; review the amount and try again.',
   editCategory: 'Edit category', categoryFormatLocked: 'Discipline and format are tied to existing registrations.',
   settings: 'Settings', categoryRules: 'Category rules', groupCount: 'Number of groups', qualifiersPerGroup: 'Qualifiers per group',
   bestOf: 'Best of sets', pointsToWin: 'Points to win a set', winBy: 'Winning margin', rankingOrder: 'Tie-break order',
@@ -181,7 +187,7 @@ export type Language = 'sr' | 'en';
 export const messages = { sr, en };
 export type MessageKey = keyof Messages;
 export function errorKey(error: unknown): MessageKey {
-  return typeof error === 'string' && ['invalid_rules', 'draw_conflict', 'invalid_cash', 'player_in_use', 'invalid_profile', 'name_required', 'name_too_long', 'duplicate_category', 'not_found', 'storage', 'invalid_members', 'already_registered'].includes(error)
+  return typeof error === 'string' && ['player_conflict', 'cash_conflict', 'invalid_rules', 'draw_conflict', 'invalid_cash', 'player_in_use', 'invalid_profile', 'name_required', 'name_too_long', 'duplicate_category', 'not_found', 'storage', 'invalid_members', 'already_registered'].includes(error)
     ? error as MessageKey : 'error';
 }
 export function savedLanguage(): Language {

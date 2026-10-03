@@ -6,6 +6,18 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Changed
 
+- Tournament cards are clickable throughout, with 16:9 covers, metadata rows and
+  an explicit open button. Tournament Settings supports changing the name and
+  cover with optimistic conflict protection and safe retries.
+
+- Tournament directory now has Add Tournament and individual cards in up to three
+  columns, with optional 16:9 covers, active registered player/category counts and
+  a dedicated editor. Metadata uses separate rows and each card has an open button. Cover images are centered and cropped to 1024×576.
+- Round-robin pairings load on expansion, one round and up to 32 pairs at a time.
+  Manual arrangement dropdown options are shared across slots.
+- SQLite schema 12 adds guarded player-write receipts, expected settlement
+  amounts; schema 13 adds tournament covers, with pre-v13 backups for existing databases.
+
 - Redesigned seed and arrangement settings with numbered seed rows, icon actions,
   shared dropdowns, clear draft status and grouped generation/save controls.
   Manual group slots use up to three columns; knockout opponents appear in pairs.
@@ -76,6 +88,17 @@ Notable changes to LibreTT are recorded here in English.
   commitment to free access, community-owned data and long-term sporting history.
 
 ### Fixed
+
+- Confirm before discarding dirty forms/drafts through navigation, history, editor
+  cancellation, explicit draw reload, window closing or Quit.
+- Reject player edits against stale profile snapshots; matching request retries
+  cannot create duplicate players or replay updates. Editors can reload after conflicts.
+- Reject cash settlements whose amounts changed after display/confirmation;
+  require refreshed confirmation and prevent mixing unallocated payment/refund
+  writes with player allocations. Preserve existing financial records.
+- Reject empty-versus-empty pairs in complete manual knockout arrangements.
+- Check image dimensions before browser decoding and fully decode bounded JPEG
+  uploads in the backend, preventing oversized or malformed images being stored.
 
 - Isolate workspace scrolling below the title bar so macOS elastic overscroll
   cannot move the tabs. Preserve each workspace's scroll position using its own

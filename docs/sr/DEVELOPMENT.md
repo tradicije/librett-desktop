@@ -41,8 +41,8 @@ Tab Igrači prikazuje zajedničku listu. Dodaj/Izmeni otvara zasebne ekrane za
 profile i fotografije, a čuvanje vraća na listu. Brisanje traži potvrdu i čuva
 igrače sa postojećim prijavama. Prijave unutar turnira koriste tu bazu i mogu
 da se povuku i vrate;
-dolazak igrača važi kroz sve kategorije istog turnira. Šema verzije 11 sadrži neizmenjive nacrte žreba i verzije pravila kategorije; pre migracije starijih baza pravi se konzistentan
-`pre-v11-<uuid>.sqlite` backup.
+dolazak igrača važi kroz sve kategorije istog turnira. Šema verzije 13 sadrži neizmenjive nacrte žreba i verzije pravila kategorije; pre migracije starijih baza pravi se konzistentan
+`pre-v13-<uuid>.sqlite` backup.
 
 Nazad/Napred prati istoriju aktivnog radnog taba. Home dugme u gornjoj traci
 vraća na stalni početni ekran koji nema bočni meni. Čuvanje zaključava navigaciju do završetka.
@@ -198,7 +198,7 @@ Sačuvaj nacrt upisuje novu verziju. Ručni nacrt može biti nepotpun. Sačuvaj 
 napuštanja ekrana: nesačuvane izmene postoje samo dok je ekran žreba otvoren.
 Učitaj trenutno stanje odbacuje lokalne izmene. Promena prijava zahteva novi
 nacrt. Sukob verzija odbija zastareli upis; neizvestan upis zadržava isti UUID i
-zaključava navigaciju do potvrde ponavljanjem. Pre migracije postoji pre-v11 backup.
+zaključava navigaciju do potvrde ponavljanjem. Pre migracije postoji pre-v13 backup.
 Potvrđivanje žreba, mečevi, rezultati, rangiranje i prolazak u nokaut još nisu
 implementirani. Čuvanje nacrta ne pokreće takmičenje.
 
@@ -294,3 +294,24 @@ efekat istezanja na krajevima skrola ne pomera gornje tabove.
 Info dugme skroz desno u gornjoj traci otvara prozor O aplikaciji sa logom,
 opisom, verzijom iz metapodataka paketa, autorom i punim tekstom AGPL licence
 koji je dostupan bez interneta. Escape ili Zatvori zatvara prozor.
+
+
+## Zaštićeni upisi i naslovne slike turnira
+
+Navigacija, Back/Forward, otkazivanje editora i učitavanje nacrta traže potvrdu
+pre odbacivanja izmena. Zatvaranje prozora i Quit proveravaju sve radne tabove.
+Upisi igrača imaju stalne ID-jeve, proveru originalnog profila i potvrde zahteva
+za bezbedan ponovni pokušaj. Konflikt se rešava potvrđenim ponovnim učitavanjem.
+Finansijske akcije šalju očekivane iznose; promenjeno stanje traži novu potvrdu.
+
+Turniri se prikazuju kao kartice u najviše tri kolone. Dodaj turnir otvara poseban
+editor sa opcionom naslovnom slikom 16:9. Broj prijavljenih je broj jedinstvenih
+aktivnih igrača u aktivnim kategorijama. Parovi grupa računaju se tek pri
+otvaranju, po jednom kolu i sa 32 para po strani. Dimenzije slika proveravaju se
+pre dekodiranja, a backend u potpunosti dekodira JPEG uz ograničenje memorije.
+Vidi [ADR 0013](../adr/0013-guarded-writes-and-bounded-images.md).
+
+Podešavanja turnira omogućavaju izmenu naziva i naslovne slike. Čuvanje proverava
+izvorne podatke u transakciji i odbija konfliktne izmene; ponavljanje već
+primenjenog zahteva je bezbedno. Cela kartica otvara turnir klikom ili tastaturom,
+a dugme na dnu podržava i otvaranje novog radnog taba.

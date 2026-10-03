@@ -1,7 +1,9 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, untrack, tick } from 'svelte';
   import Icon from './Icon.svelte';
-  import { desktopAvailable, getPlayer, savePlayerProfile, type Player } from './api';
+  import { confirmDiscard } from './confirmation';
+  import { imageData } from './image-limits';
+  import { desktopAvailable, getPlayer, savePlayerChecked, type Player, type PlayerProfile } from './api';
   import { messages, errorKey, type Language, type MessageKey } from './i18n';
   let { language, playerId, busy = $bindable(false), dirty = $bindable(false), onsaved, oncancel }: {
     language: Language; playerId?: string; busy?: boolean; dirty?: boolean;
@@ -9,6 +11,11 @@
   } = $props();
   let text = $derived(messages[language]);
   let id = $derived(playerId ?? null);
+  const stableId = untrack(() => playerId ?? crypto.randomUUID());
+  let expected = $state<Player | null>(null);
+  let action = $state(false);
+  let photoLoading = $state(false);
+  let pending = $state<{ requestId: string; name: string; club: string; profile: PlayerProfile; expected: Player | null } | null>(null);
   let loaded = $state(false);
   let loading = $state(false);
   let error = $state<MessageKey | null>(null);
@@ -28,49 +35,36 @@
   }
   async function load() {
     loading = true; error = null;
-    try { if (playerId) fill(await getPlayer(playerId)); baseline = snapshot(); loaded = true; }
+    try { if (playerId) { const current = await getPlayer(playerId); fill(current); expected = current; } baseline = snapshot(); loaded = true; }
     catch (cause) { error = errorKey(cause) === 'not_found' ? 'player_not_found' : errorKey(cause); }
     finally { loading = false; }
   }
   onMount(() => { if (desktopAvailable) void load(); });
+  async function reload() { if (!busy && (!dirty || await confirmDiscard())) await load(); }
   async function readPhoto(event: Event) {
-    const file = (event.target as HTMLInputElement).files?.[0];
-    if (!file) return;
-    busy = true; error = null;
-    try {
-      if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 10 * 1024 * 1024) throw new Error();
-      const data = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result)); reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-      const image = new Image();
-      await new Promise<void>((resolve, reject) => { image.onload = () => resolve(); image.onerror = reject; image.src = data; });
-      if (!image.width || !image.height || image.width > 6000 || image.height > 6000) throw new Error();
-      const scale = Math.min(1, 512 / Math.max(image.width, image.height));
-      const canvas = document.createElement('canvas');
-      canvas.width = Math.max(1, Math.round(image.width * scale)); canvas.height = Math.max(1, Math.round(image.height * scale));
-      const context = canvas.getContext('2d'); if (!context) throw new Error();
-      context.fillStyle = '#fff'; context.fillRect(0, 0, canvas.width, canvas.height); context.drawImage(image, 0, 0, canvas.width, canvas.height);
-      const result = canvas.toDataURL('image/jpeg', 0.8);
-      if (result.length > 350000) throw new Error();
-      photo = result;
-    } catch { error = 'invalid_profile'; if (fileInput) fileInput.value = ''; }
-    finally { busy = false; }
+    const file = (event.target as HTMLInputElement).files?.[0]; if (!file || busy) return;
+    photoLoading = true; busy = true; error = null;
+    try { photo = await imageData(file); }
+    catch { error = 'invalid_profile'; if (fileInput) fileInput.value = ''; }
+    finally { photoLoading = false; busy = pending !== null; }
   }
   async function save(event: SubmitEvent) {
-    event.preventDefault(); if (!loaded) return;
-    busy = true; error = null;
+    event.preventDefault(); if (!loaded || action || photoLoading) return;
+    if (!pending) pending = { requestId: crypto.randomUUID(), name, club, profile: { birth_year: birthYear ?? null, city, country, email, phone, notes, photo }, expected: expected ? JSON.parse(JSON.stringify(expected)) : null };
+    action = true; busy = true; error = null;
     try {
-      await savePlayerProfile(id, name, club, { birth_year: birthYear ?? null, city, country, email, phone, notes, photo });
-      baseline = snapshot(); dirty = false; busy = false; onsaved();
-    } catch (cause) { error = errorKey(cause); }
-    finally { busy = false; }
+      const request = pending;
+      await savePlayerChecked(request.requestId, stableId, request.name, request.club, request.profile, request.expected);
+      pending = null; baseline = snapshot(); dirty = false; busy = false; await tick(); onsaved();
+    } catch (cause) {
+      error = errorKey(cause);
+      if (['player_conflict', 'not_found', 'name_required', 'name_too_long', 'invalid_profile'].includes(String(cause))) pending = null;
+    } finally { action = false; busy = pending !== null; }
   }
 </script>
 
 <div class="heading"><div><h1>{id ? text.editPlayer : text.addPlayer}</h1><p class="muted">{text.playerEditorIntro}</p></div></div>
-{#if error}<p class="error" role="alert">{text[error]}{#if !loaded && error !== 'player_not_found'}<button onclick={load} disabled={loading}>{text.retry}</button>{/if}</p>{/if}
+{#if error}<p class="error" role="alert">{text[error]}{#if (!loaded || error === 'player_conflict') && error !== 'player_not_found'}<button onclick={reload} disabled={loading}>{text.retry}</button>{/if}</p>{/if}
 {#if error === 'player_not_found'}<button class="secondary icon-label" onclick={oncancel}><Icon name="arrow-left" size={18} />{text.playerTab}</button>{/if}
 {#if loading}<p role="status">{text.loading}</p>{/if}
 {#if loaded || !desktopAvailable}
@@ -93,7 +87,7 @@
       <p class="muted">{text.photoHint}</p>
       {#if photo}<div class="photo-preview"><img class="player-photo" src={photo} alt={text.photo} /><button type="button" class="secondary" disabled={busy} onclick={() => { photo = null; if (fileInput) fileInput.value = ''; }}>{text.removePhoto}</button></div>{/if}
       </fieldset>
-      <div class="form-actions"><button class="primary" disabled={busy || !desktopAvailable || !loaded}><Icon name="check-circle" />{busy ? text.saving : text.savePlayer}</button>
+      <div class="form-actions"><button class="primary" disabled={action || photoLoading || !desktopAvailable || !loaded}><Icon name="check-circle" />{action ? text.saving : pending ? text.retry : text.savePlayer}</button>
       <button type="button" class="secondary icon-label" disabled={busy} onclick={oncancel}><Icon name="arrow-left" size={18} />{text.cancelEdit}</button></div>
     </form>
   </section>

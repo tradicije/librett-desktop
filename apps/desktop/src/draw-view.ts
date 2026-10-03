@@ -73,3 +73,17 @@ export function roundTitle(remaining: number, language: Language): string {
   if (remaining === 16) return language === 'sr' ? 'Osmina finala' : 'Round of 16';
   return language === 'sr' ? `Najboljih ${remaining}` : `Round of ${remaining}`;
 }
+
+// Compute a single circle-method round without building the O(n²) schedule.
+export function roundRobinRound(ids: string[], round: number): [string, string][] {
+  if (ids.length < 2) return [];
+  const size = ids.length + ids.length % 2;
+  if (round < 0 || round >= size - 1) return [];
+  const at = (index: number) => {
+    const original = index === 0 ? 0 : 1 + ((index - 1 - round) % (size - 1) + size - 1) % (size - 1);
+    return ids[original] ?? null;
+  };
+  const pairs: [string, string][] = [];
+  for (let i = 0; i < size / 2; i++) { const a = at(i), b = at(size - 1 - i); if (a && b) pairs.push(round % 2 ? [b, a] : [a, b]); }
+  return pairs;
+}

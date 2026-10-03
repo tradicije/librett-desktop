@@ -1,8 +1,13 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte';
+  import { invoke } from '@tauri-apps/api/core';
+  import { listen } from '@tauri-apps/api/event';
   import { getCurrentWindow } from '@tauri-apps/api/window';
   import Workspace from './Workspace.svelte';
   import AboutDialog from './AboutDialog.svelte';
+  import DiscardDialog from './DiscardDialog.svelte';
+  import { registerDiscardConfirmation, confirmDiscard } from './confirmation';
+  let discardDialog: DiscardDialog;
   let aboutDialog: AboutDialog;
   import Icon from './Icon.svelte';
   import { fadeOverflow } from './tab-label';
@@ -128,6 +133,23 @@
     void getCurrentWindow().startDragging().catch(() => { /* Native title bar stays usable. */ });
   }
   onMount(() => {
+    const stopConfirmation = registerDiscardConfirmation(() => discardDialog.confirm());
+    const hasUnsaved = () => homeWorkspace.status.dirty || tabs.some(tab => tab.status.dirty);
+    let stopClose: (() => void) | undefined;
+    let stopQuit: (() => void) | undefined;
+    let disposed = false;
+    if (desktopAvailable) void listen('librett-exit-request', async () => {
+      if (locked || modalOpen()) return;
+      if (!hasUnsaved() || await confirmDiscard()) await invoke('exit_application');
+    }).then(stop => { if (disposed) stop(); else stopQuit = stop; });
+    if (desktopAvailable) void getCurrentWindow().onCloseRequested(async event => {
+      if (locked || modalOpen()) { event.preventDefault(); return; }
+      if (!hasUnsaved()) return;
+      event.preventDefault();
+      if (await confirmDiscard()) await getCurrentWindow().destroy();
+    }).then(stop => { if (disposed) stop(); else stopClose = stop; });
+    function beforeUnload(event: BeforeUnloadEvent) { if (locked || hasUnsaved()) { event.preventDefault(); event.returnValue = ''; } }
+    window.addEventListener('beforeunload', beforeUnload);
     const stopTheme = watchSystemTheme(() => { if (theme === 'system') resolvedTheme = applyTheme(theme); });
     // Keep native history centered between two same-document entries. Native
     // gestures dispatch back/forward to the active workspace's own history;
@@ -180,6 +202,7 @@
     window.addEventListener('click', onClick, true);
     window.addEventListener('keydown', onKey);
     return () => {
+      disposed = true; stopClose?.(); stopQuit?.(); stopConfirmation(); window.removeEventListener('beforeunload', beforeUnload);
       stopTheme(); window.removeEventListener('contextmenu', showContext); window.removeEventListener('popstate', onHistory);
       window.removeEventListener('mousedown', onMouse); window.removeEventListener('mouseup', onMouse);
       window.removeEventListener('auxclick', onMouse); window.removeEventListener('auxclick', onMiddle, true);
@@ -219,6 +242,7 @@
       bind:status={tab.status} externalLocked={nativePending} active={tab.id === activeId} onopen={openTab} {wantsNewTab} bind:this={tab.instance} />
   </div>
 {/each}
+<DiscardDialog {language} bind:this={discardDialog} />
 <AboutDialog {language} {resolvedTheme} bind:this={aboutDialog} />
 <dialog class="confirm-dialog" bind:this={closeDialog} aria-labelledby="close-work-tab-title" onclose={() => closeId = null}>
   <h2 id="close-work-tab-title">{text.closeTab}</h2><p>{text.closeUnsavedTab}</p>

@@ -2,8 +2,9 @@
   import { onMount, untrack, tick } from 'svelte';
   import Select from './Select.svelte';
   import Icon from './Icon.svelte';
+  import { confirmDiscard } from './confirmation';
   import CategoryRulesFields from './CategoryRulesFields.svelte';
-  import { createCategoryWithRules, updateCategoryWithRules, getCategoryRules, listEntries, desktopAvailable, defaultCategoryRules, type Category, type Tournament, type Discipline, type CompetitionFormat, type CategoryRules } from './api';
+  import { createCategoryWithRules, updateCategoryWithRules, getCategoryEditorState, desktopAvailable, defaultCategoryRules, type Category, type Tournament, type Discipline, type CompetitionFormat, type CategoryRules } from './api';
   import { parseMoney } from './money';
   import { messages, errorKey, type Language, type MessageKey } from './i18n';
   let { tournament, category, language, busy = $bindable(false), dirty = $bindable(false), onsaved, oncancel }: { tournament: Tournament; category?: Category; language: Language; busy?: boolean; dirty?: boolean; onsaved: (tournament: Tournament, categoryId: string) => void; oncancel: () => void } = $props();
@@ -29,12 +30,15 @@
     if (!category) return;
     loading = true; error = null;
     try {
-      const [configuration, entries] = await Promise.all([getCategoryRules(tournament.id, category.id), listEntries(category.id)]);
-      rules = structuredClone(configuration.rules); revision = configuration.revision; used = entries.length > 0;
+      const state = await getCategoryEditorState(tournament.id, category.id);
+      name = state.category.name; fee = (state.category.fee_minor / 100).toFixed(2).replace('.', language === 'sr' ? ',' : '.');
+      discipline = state.category.discipline; format = state.category.format;
+      rules = structuredClone(state.configuration.rules); revision = state.configuration.revision; used = state.used;
       baseline = snapshot(); loaded = true;
     } catch (cause) { error = errorKey(cause); }
     finally { loading = false; }
   }
+  async function reload() { if (!busy && (!dirty || await confirmDiscard())) await load(); }
   onMount(() => { if (desktopAvailable && category) void load(); });
   async function save(event: SubmitEvent) {
     event.preventDefault(); if (action || !loaded) return;
@@ -57,7 +61,7 @@
   }
 </script>
 <div class="heading"><div><p class="eyebrow">{tournament.name}</p><h1>{category ? text.editCategory : text.addCategory}</h1></div></div>
-{#if error}<p class="error" role="alert">{text[error]}{#if !loaded}<button onclick={load}>{text.retry}</button>{/if}</p>{/if}
+{#if error}<p class="error" role="alert">{text[error]}{#if !loaded || error === 'draw_conflict'}<button disabled={busy || loading} onclick={reload}>{text.retry}</button>{/if}</p>{/if}
 {#if loading}<p>{text.loading}</p>{:else}
   <form class="panel form-panel category-editor" onsubmit={save}>
     <fieldset class="form-group"><legend>{language === 'sr' ? 'Osnovni podaci' : 'Category details'}</legend><div class="form-fields">

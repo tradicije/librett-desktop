@@ -44,9 +44,10 @@ use bound parameters. Domain/application validation protects names, player
 membership, duplicate registrations, and profile bounds. These controls do not
 constitute a security audit or protection from a compromised OS account.
 
-Photo uploads are decoded/resized in the UI and stored as bounded JPEG data
-URLs; the backend validates base64, size, and JPEG boundary signatures, not a
-full JPEG decode. External photo URLs are not accepted. Treat future file
+Image uploads have file and encoded dimension/pixel limits before browser
+decoding. Photos and covers are resized/cropped into bounded JPEG data URLs;
+the backend verifies dimensions and performs a full JPEG decode with memory
+limits. Animated PNG and extended/animated WebP are rejected. External photo URLs are not accepted. Treat future file
 imports and remote synchronization as new trust boundaries requiring validation.
 
 Before companion access or release distribution, review authentication and
@@ -54,3 +55,14 @@ permissions, dependencies, packaging/signing, untrusted imports, and disclosure
 handling. Planned capabilities are not current guarantees.
 
 [GitHub private vulnerability reporting documentation](https://docs.github.com/en/code-security/how-tos/report-and-fix-vulnerabilities/report-privately).
+
+## Dependency audit notes (2026-10-03)
+
+The npm audit returned no known vulnerabilities. The Rust dependency audit found
+[an iterator soundness issue in glib 0.18.5](https://rustsec.org/advisories/RUSTSEC-2024-0429.html),
+used by the Linux GTK dependency chain; the upstream fix requires glib 0.20 or later.
+The application does not call the affected iterator, but transitive use has not
+been ruled out. This remains an upstream limitation for Linux builds.
+[proc-macro-error 1.0.4 is unmaintained](https://rustsec.org/advisories/RUSTSEC-2024-0370.html)
+and remains a transitive build dependency. These findings are not resolved by
+the application fixes.

@@ -1,8 +1,8 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use librett_application::{
-    self as application, ApplicationError, CashRepository, CategoryRepository,
-    PlayerCashRepository, PlayerRepository, TournamentRepository,
+    self as application, ApplicationError, CashRepository, CategoryEditorRepository,
+    CategoryRepository, PlayerCashRepository, PlayerRepository, TournamentRepository,
 };
 use librett_domain::{
     CategoryDraw, CategoryRules, CompetitionFormat, Discipline, DrawMode, DrawSettings, Entry,
@@ -10,7 +10,7 @@ use librett_domain::{
 };
 use librett_storage_sqlite::SqliteTournamentRepository;
 use std::sync::Mutex;
-use tauri::Manager;
+use tauri::{Emitter, Manager};
 use uuid::Uuid;
 
 struct Database(Mutex<SqliteTournamentRepository>);
@@ -22,17 +22,6 @@ fn list_tournaments(database: tauri::State<Database>) -> Result<Vec<Tournament>,
         .lock()
         .map_err(|_| ApplicationError::Storage)?
         .list()
-}
-
-#[tauri::command]
-fn create_tournament(
-    database: tauri::State<Database>,
-    name: String,
-) -> Result<Tournament, ApplicationError> {
-    application::create_tournament(
-        &mut *database.0.lock().map_err(|_| ApplicationError::Storage)?,
-        &name,
-    )
 }
 
 #[tauri::command]
@@ -111,7 +100,7 @@ fn main() {
     #[cfg(target_os = "linux")]
     glib::set_prgname(Some(&context.config().identifier));
 
-    tauri::Builder::default()
+    let app = tauri::Builder::default()
         .setup(|app| {
             #[cfg(target_os = "macos")]
             if let Some(window) = app.get_webview_window("main") {
@@ -146,6 +135,7 @@ fn main() {
             let _ = (window, event);
         })
         .invoke_handler(tauri::generate_handler![
+            exit_application,
             update_category_with_rules,
             create_category_with_rules,
             get_category_rules,
@@ -160,20 +150,32 @@ fn main() {
             list_cash,
             record_cash,
             list_tournaments,
-            create_tournament,
+            create_tournament_with_cover,
+            update_tournament_details,
+            get_category_editor_state,
             add_category,
             list_players,
             get_player,
             delete_player,
-            create_player,
-            save_player_profile,
+            save_player_checked,
             list_entries,
             set_entry_status,
             set_player_attendance,
             register_entry
         ])
-        .run(context)
+        .build(context)
         .expect("Unable to start LibreTT");
+    app.run(|app, event| {
+        if let tauri::RunEvent::ExitRequested {
+            code: None, api, ..
+        } = event
+        {
+            if let Some(window) = app.get_webview_window("main") {
+                api.prevent_exit();
+                let _ = window.emit("librett-exit-request", ());
+            }
+        }
+    });
 }
 
 #[tauri::command]
@@ -183,19 +185,6 @@ fn list_players(database: tauri::State<Database>) -> Result<Vec<Player>, Applica
         .lock()
         .map_err(|_| ApplicationError::Storage)?
         .list_players()
-}
-
-#[tauri::command]
-fn create_player(
-    database: tauri::State<Database>,
-    name: String,
-    club: String,
-) -> Result<Player, ApplicationError> {
-    application::create_player(
-        &mut *database.0.lock().map_err(|_| ApplicationError::Storage)?,
-        &name,
-        &club,
-    )
 }
 
 #[tauri::command]
@@ -230,22 +219,23 @@ fn register_entry(
 }
 
 #[tauri::command]
-fn save_player_profile(
+fn save_player_checked(
     database: tauri::State<Database>,
-    id: Option<String>,
+    request_id: Uuid,
+    player_id: Uuid,
     name: String,
     club: String,
     profile: PlayerProfile,
+    expected: Option<Player>,
 ) -> Result<Player, ApplicationError> {
-    let id = id
-        .map(|id| Uuid::parse_str(&id).map_err(|_| ApplicationError::NotFound))
-        .transpose()?;
-    application::save_player_profile(
+    application::save_player_checked(
         &mut *database.0.lock().map_err(|_| ApplicationError::Storage)?,
-        id,
+        request_id,
+        player_id,
         &name,
         &club,
         profile,
+        expected,
     )
 }
 
@@ -364,12 +354,20 @@ fn settle_player_cash(
     player_id: Uuid,
     entry_ids: Vec<Uuid>,
     paid: bool,
+    expected: Vec<application::ExpectedCashAmount>,
 ) -> Result<(), ApplicationError> {
     database
         .0
         .lock()
         .map_err(|_| ApplicationError::Storage)?
-        .settle_player_cash(request_id, tournament_id, player_id, entry_ids, paid)
+        .settle_player_cash_checked(
+            request_id,
+            tournament_id,
+            player_id,
+            entry_ids,
+            paid,
+            expected,
+        )
 }
 
 #[tauri::command]
@@ -491,4 +489,52 @@ fn update_category_with_rules(
         rules,
         expected_revision,
     )
+}
+
+#[tauri::command]
+fn create_tournament_with_cover(
+    database: tauri::State<Database>,
+    id: Uuid,
+    name: String,
+    cover: Option<String>,
+) -> Result<Tournament, ApplicationError> {
+    application::create_tournament_with_cover(
+        &mut *database.0.lock().map_err(|_| ApplicationError::Storage)?,
+        id,
+        &name,
+        cover,
+    )
+}
+#[tauri::command]
+fn get_category_editor_state(
+    database: tauri::State<Database>,
+    tournament_id: Uuid,
+    category_id: Uuid,
+) -> Result<application::CategoryEditorState, ApplicationError> {
+    database
+        .0
+        .lock()
+        .map_err(|_| ApplicationError::Storage)?
+        .category_editor_state(tournament_id, category_id)
+}
+
+#[tauri::command]
+fn exit_application(app: tauri::AppHandle) {
+    app.exit(0);
+}
+
+#[tauri::command]
+fn update_tournament_details(
+    database: tauri::State<Database>,
+    id: Uuid,
+    name: String,
+    cover: Option<String>,
+    expected_name: String,
+    expected_cover: Option<String>,
+) -> Result<Tournament, ApplicationError> {
+    database
+        .0
+        .lock()
+        .map_err(|_| ApplicationError::Storage)?
+        .update_tournament_details(id, &name, cover, &expected_name, expected_cover)
 }

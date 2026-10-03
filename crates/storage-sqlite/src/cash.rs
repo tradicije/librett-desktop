@@ -77,6 +77,12 @@ impl CashRepository for SqliteTournamentRepository {
                 .apply(r.kind, r.amount_minor)
                 .map_err(|_| ApplicationError::Storage)?;
         }
+        if matches!(record.kind, CashKind::Payment | CashKind::Refund) {
+            let allocated: bool = tx.query_row("SELECT EXISTS(SELECT 1 FROM cash_allocations a JOIN cash_records r ON r.id=a.record_id WHERE r.entry_id=?1)", [record.entry_id.to_string()], |r| r.get(0)).map_err(|_| ApplicationError::Storage)?;
+            if allocated {
+                return Err(ApplicationError::InvalidCash);
+            }
+        }
         balance.apply(record.kind, record.amount_minor)?;
         tx.execute(
             "INSERT INTO cash_records (id,entry_id,kind,amount_minor,note) VALUES (?1,?2,?3,?4,?5)",
@@ -219,7 +225,7 @@ mod tests {
                 r.connection
                     .query_row("PRAGMA user_version", [], |r| r.get::<_, i64>(0))
                     .unwrap(),
-                11
+                13
             );
         }
         let files = std::fs::read_dir(&dir)
@@ -228,7 +234,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(files.len(), 2);
         let backup = files.iter().find(|p| **p != path).unwrap();
-        assert!(backup.to_string_lossy().contains("pre-v11"));
+        assert!(backup.to_string_lossy().contains("pre-v13"));
         let c = Connection::open(backup).unwrap();
         assert_eq!(
             c.query_row("PRAGMA user_version", [], |r| r.get::<_, i64>(0))
@@ -387,7 +393,7 @@ mod category_fee_tests {
             .collect::<Vec<_>>();
         assert_eq!(files.len(), 2);
         let backup = files.iter().find(|p| **p != path).unwrap();
-        assert!(backup.to_string_lossy().contains("pre-v11"));
+        assert!(backup.to_string_lossy().contains("pre-v13"));
         let c = Connection::open(backup).unwrap();
         assert_eq!(
             c.query_row("PRAGMA user_version", [], |r| r.get::<_, i64>(0))
@@ -443,8 +449,39 @@ impl librett_application::PlayerCashRepository for SqliteTournamentRepository {
         request_id: Uuid,
         tournament_id: Uuid,
         player_id: Uuid,
+        entry_ids: Vec<Uuid>,
+        paid: bool,
+    ) -> Result<(), ApplicationError> {
+        self.settle_cash(request_id, tournament_id, player_id, entry_ids, paid, None)
+    }
+    fn settle_player_cash_checked(
+        &mut self,
+        request_id: Uuid,
+        tournament_id: Uuid,
+        player_id: Uuid,
+        entry_ids: Vec<Uuid>,
+        paid: bool,
+        expected: Vec<librett_application::ExpectedCashAmount>,
+    ) -> Result<(), ApplicationError> {
+        self.settle_cash(
+            request_id,
+            tournament_id,
+            player_id,
+            entry_ids,
+            paid,
+            Some(expected),
+        )
+    }
+}
+impl SqliteTournamentRepository {
+    fn settle_cash(
+        &mut self,
+        request_id: Uuid,
+        tournament_id: Uuid,
+        player_id: Uuid,
         mut entry_ids: Vec<Uuid>,
         paid: bool,
+        mut expected: Option<Vec<librett_application::ExpectedCashAmount>>,
     ) -> Result<(), ApplicationError> {
         if entry_ids.is_empty() || entry_ids.len() > 1000 {
             return Err(ApplicationError::InvalidCash);
@@ -453,6 +490,23 @@ impl librett_application::PlayerCashRepository for SqliteTournamentRepository {
         if entry_ids.windows(2).any(|ids| ids[0] == ids[1]) {
             return Err(ApplicationError::InvalidCash);
         }
+        if let Some(amounts) = &mut expected {
+            amounts.sort_by_key(|a| a.entry_id);
+            if amounts.len() != entry_ids.len()
+                || amounts.iter().zip(&entry_ids).any(|(amount, id)| {
+                    amount.entry_id != *id
+                        || !(0..=librett_domain::MAX_CASH_MINOR).contains(&amount.amount_minor)
+                })
+            {
+                return Err(ApplicationError::InvalidCash);
+            }
+        }
+        let expected_payload = expected
+            .as_ref()
+            .map(serde_json::to_string)
+            .transpose()
+            .map_err(|_| ApplicationError::Storage)?
+            .unwrap_or_default();
         let keys = entry_ids
             .iter()
             .map(Uuid::to_string)
@@ -462,19 +516,20 @@ impl librett_application::PlayerCashRepository for SqliteTournamentRepository {
             .connection
             .transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)
             .map_err(|_| ApplicationError::Storage)?;
-        let old: Option<(String, String, String, bool)> = tx
+        let old: Option<(String, String, String, bool, String)> = tx
             .query_row(
-                "SELECT tournament_id,player_id,entry_keys,paid FROM cash_settlements WHERE id=?1",
+                "SELECT tournament_id,player_id,entry_keys,paid,expected_payload FROM cash_settlements WHERE id=?1",
                 [request_id.to_string()],
-                |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?)),
+                |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?, r.get(4)?)),
             )
             .optional()
             .map_err(|_| ApplicationError::Storage)?;
-        if let Some((t, p, k, state)) = old {
+        if let Some((t, p, k, state, previous_expected)) = old {
             return if t == tournament_id.to_string()
                 && p == player_id.to_string()
                 && k == keys
                 && state == paid
+                && previous_expected == expected_payload
             {
                 Ok(())
             } else {
@@ -483,7 +538,7 @@ impl librett_application::PlayerCashRepository for SqliteTournamentRepository {
         }
         let current = records(&tx, tournament_id)?;
         let allocated = allocations(&tx, tournament_id)?;
-        for entry_id in &entry_ids {
+        for (index, entry_id) in entry_ids.iter().enumerate() {
             let exists:bool=tx.query_row("SELECT EXISTS(SELECT 1 FROM entries e JOIN categories c ON c.id=e.category_id JOIN entry_members m ON m.entry_id=e.id WHERE e.id=?1 AND c.tournament_id=?2 AND m.player_id=?3)",params![entry_id.to_string(),tournament_id.to_string(),player_id.to_string()],|r|r.get(0)).map_err(|_|ApplicationError::Storage)?;
             if !exists {
                 return Err(ApplicationError::NotFound);
@@ -522,7 +577,16 @@ impl librett_application::PlayerCashRepository for SqliteTournamentRepository {
                 (position - 1) as usize,
                 count as usize,
             ) + allocated_net;
+            if net < 0 {
+                return Err(ApplicationError::InvalidCash);
+            }
             let amount = if paid { (due - net).max(0) } else { net.max(0) };
+            if expected
+                .as_ref()
+                .is_some_and(|amounts| amounts[index].amount_minor != amount)
+            {
+                return Err(ApplicationError::CashConflict);
+            }
             if amount == 0 {
                 continue;
             }
@@ -540,7 +604,7 @@ impl librett_application::PlayerCashRepository for SqliteTournamentRepository {
             )
             .map_err(|_| ApplicationError::Storage)?;
         }
-        tx.execute("INSERT INTO cash_settlements(id,tournament_id,player_id,entry_keys,paid) VALUES(?1,?2,?3,?4,?5)",params![request_id.to_string(),tournament_id.to_string(),player_id.to_string(),keys,paid]).map_err(|_|ApplicationError::Storage)?;
+        tx.execute("INSERT INTO cash_settlements(id,tournament_id,player_id,entry_keys,paid,expected_payload) VALUES(?1,?2,?3,?4,?5,?6)",params![request_id.to_string(),tournament_id.to_string(),player_id.to_string(),keys,paid,expected_payload]).map_err(|_|ApplicationError::Storage)?;
         tx.commit().map_err(|_| ApplicationError::Storage)
     }
 }

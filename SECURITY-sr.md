@@ -44,13 +44,24 @@ Domenska i aplikaciona validacija proveravaju imena, učesnike, duple prijave i
 ograničenja profila. To nije bezbednosna revizija niti zaštita od kompromitovanog
 OS naloga.
 
-Fotografije se dekodiraju i smanjuju u UI-ju i čuvaju kao ograničeni JPEG data
-URL-ovi. Backend proverava base64, veličinu i početni/završni JPEG potpis, a ne
-potpuno dekodiranje. Spoljni URL-ovi fotografija nisu dozvoljeni. Budući uvoz
-fajlova i mrežnu sinhronizaciju treba tretirati kao nove granice poverenja.
+Slike imaju ograničenje veličine fajla, dimenzija i ukupnog broja piksela pre
+browser dekodiranja. Fotografije i naslovne slike se smanjuju/kropuju u JPEG;
+backend proverava dimenzije i radi potpuno JPEG dekodiranje uz ograničenje
+memorije. Animirani PNG i prošireni/animirani WebP nisu prihvaćeni. Spoljašnji
+URL-ovi za slike nisu prihvaćeni. Budući import i sinhronizacija zahtevaju novu
+proveru granica poverenja.
 
 Pre companion pristupa ili distribucije izdanja proveriti autentikaciju,
 dozvole, zavisnosti, pakovanje/potpisivanje, nepoverljive uvoze i proces prijava.
 Planirane mogućnosti nisu postojeće garancije.
 
 [GitHub uputstvo za privatne prijave](https://docs.github.com/en/code-security/how-tos/report-and-fix-vulnerabilities/report-privately).
+
+## Nalazi provere zavisnosti (2026-10-03)
+
+Npm audit nije našao poznate ranjivosti. Rust zavisnosti uključuju
+[problem bezbednosti iteratora u glib 0.18.5](https://rustsec.org/advisories/RUSTSEC-2024-0429.html)
+u Linux GTK lancu; upstream ispravka zahteva glib 0.20 ili noviji. Aplikacija ne
+poziva taj iterator, ali posredna upotreba nije isključena. Ovo ostaje ograničenje
+Linux verzije. [proc-macro-error 1.0.4 se više ne održava](https://rustsec.org/advisories/RUSTSEC-2024-0370.html)
+i ostaje posredna zavisnost pri kompajliranju. Izmene aplikacije ne rešavaju ove nalaze.
