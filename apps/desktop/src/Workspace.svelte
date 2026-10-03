@@ -301,6 +301,7 @@
 <style>
   .sidebar { width: 208px; padding-top: 0; }
   .sidebar-brand-row { display: flex; align-items: center; gap: 16px; height: var(--workspace-toolbar-height); flex-shrink: 0; margin-bottom: 30px; }
+  .sidebar:not(.collapsed) .sidebar-brand-row { padding-inline: 12px; }
   .sidebar-brand-row .brand { margin: 0; padding: 0; width: auto; flex: 1; min-width: 0; }
   .sidebar-toggle { flex-shrink: 0; }
   .sidebar.collapsed { width: 68px; padding-left: 10px; padding-right: 10px; }

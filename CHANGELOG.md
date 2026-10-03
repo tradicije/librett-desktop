@@ -7,7 +7,8 @@ Notable changes to LibreTT are recorded here in English.
 ### Changed
 
 - Sidebar logos and collapse controls now share the toolbar's center line in
-  expanded and collapsed desktop layouts.
+  expanded and collapsed desktop layouts. Expanded branding uses the same
+  horizontal inset as sidebar navigation content.
 - Tournament Settings is the leftmost tab, matching category navigation.
 - Tournament cards are clickable throughout, with 16:9 covers, metadata rows and
   an explicit open button. Tournament Settings supports changing the name and
