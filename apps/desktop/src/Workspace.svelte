@@ -299,12 +299,12 @@
 </dialog>
 
 <style>
-  .sidebar { width: 208px; }
-  .sidebar-brand-row { display: flex; align-items: center; gap: 16px; margin-bottom: 38px; }
+  .sidebar { width: 208px; padding-top: 0; }
+  .sidebar-brand-row { display: flex; align-items: center; gap: 16px; height: var(--workspace-toolbar-height); flex-shrink: 0; margin-bottom: 30px; }
   .sidebar-brand-row .brand { margin: 0; padding: 0; width: auto; flex: 1; min-width: 0; }
   .sidebar-toggle { flex-shrink: 0; }
   .sidebar.collapsed { width: 68px; padding-left: 10px; padding-right: 10px; }
-  .collapsed .sidebar-brand-row { flex-direction: column; gap: 6px; margin-bottom: 24px; }
+  .collapsed .sidebar-brand-row { justify-content: center; gap: 6px; margin-bottom: 22px; }
   .collapsed .sidebar-brand-row .brand { flex: none; width: 36px; }
   .compact-brand { border: 0; background: transparent; height: 36px; min-height: 36px; }
   .brand-icon { width: 36px; height: 36px; object-fit: contain; }
@@ -312,9 +312,12 @@
   .collapsed .sidebar-bottom { padding-left: 0; padding-right: 0; text-align: center; }
   .collapsed .sidebar-bottom .icon-label { justify-content: center; }
   @media (max-width: 1000px) { .sidebar:not(.collapsed) { width: 184px; } }
+  @media (min-width: 651px) {
+    .shell:not(.dashboard-shell) .app-toolbar { height: var(--workspace-toolbar-height); }
+  }
   @media (max-width: 650px) {
-    .sidebar, .sidebar.collapsed { width: 100%; }
-    .sidebar-brand-row, .collapsed .sidebar-brand-row { flex-direction: row; margin: 0; }
+    .sidebar, .sidebar.collapsed { width: 100%; padding-top: 14px; }
+    .sidebar-brand-row, .collapsed .sidebar-brand-row { flex-direction: row; height: auto; margin: 0; }
     .sidebar-brand-row .brand { width: 115px; flex: none; }
   }
 </style>
