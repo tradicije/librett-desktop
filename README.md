@@ -1,5 +1,5 @@
 <p align="left">
-  <img src="assets/img/logo-dark.png" alt="LibreTT" width="256" style="max-width: 256px; width: 100%; height: auto;" />
+  <img src="assets/img/logo-dark.png" alt="LibreTT" width="256" />
 </p>
 
 [Srpski](README-sr.md)
