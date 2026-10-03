@@ -289,3 +289,8 @@ Dokument ne skroluje, a vertikalni skrol se ne prenosi na njega. Sidebar i toolb
 su izvan prostora sadržaja koji skroluje; promena taba vraća poziciju sadržaja.
 Breadcrumbs otvaraju roditeljske ekrane i podržavaju otvaranje u novom tabu. Tako macOS
 efekat istezanja na krajevima skrola ne pomera gornje tabove.
+
+
+Info dugme skroz desno u gornjoj traci otvara prozor O aplikaciji sa logom,
+opisom, verzijom iz metapodataka paketa, autorom i punim tekstom AGPL licence
+koji je dostupan bez interneta. Escape ili Zatvori zatvara prozor.

@@ -2,6 +2,8 @@
   import { onMount, tick } from 'svelte';
   import { getCurrentWindow } from '@tauri-apps/api/window';
   import Workspace from './Workspace.svelte';
+  import AboutDialog from './AboutDialog.svelte';
+  let aboutDialog: AboutDialog;
   import Icon from './Icon.svelte';
   import { fadeOverflow } from './tab-label';
   import { savedSidebarCollapsed, saveSidebarCollapsed } from './sidebar';
@@ -204,6 +206,7 @@
   </div>
   <button class="new-work-tab" disabled={locked} aria-label={text.newTab} title={text.newTab} onclick={() => openTab()}>+</button>
   <div class="window-drag-space trailing-drag" role="presentation" onmousedown={drag}></div>
+  <button class="icon-button titlebar-info" disabled={locked} aria-label={language === 'sr' ? 'O aplikaciji' : 'About LibreTT'} title={language === 'sr' ? 'O aplikaciji' : 'About LibreTT'} onclick={() => { if (!modalOpen()) { contextMenu = null; aboutDialog.open(); } }}><Icon name="info" size={18} /></button>
 </header>
 <div class="workspace-frame" id="home-workspace" hidden={activeId !== homeId}>
   <Workspace initialRoute={homeWorkspace.initialRoute} pinned bind:language bind:theme bind:sidebarCollapsed {resolvedTheme} bind:tournaments
@@ -216,6 +219,7 @@
       bind:status={tab.status} externalLocked={nativePending} active={tab.id === activeId} onopen={openTab} {wantsNewTab} bind:this={tab.instance} />
   </div>
 {/each}
+<AboutDialog {language} {resolvedTheme} bind:this={aboutDialog} />
 <dialog class="confirm-dialog" bind:this={closeDialog} aria-labelledby="close-work-tab-title" onclose={() => closeId = null}>
   <h2 id="close-work-tab-title">{text.closeTab}</h2><p>{text.closeUnsavedTab}</p>
   <div class="dialog-actions"><button class="secondary" onclick={() => closeDialog.close()}>{text.cancelDelete}</button><button onclick={() => { const id = closeId; closeDialog.close(); if (id) void closeTab(id); }}>{text.discardAndClose}</button></div>
@@ -230,6 +234,7 @@
   .work-titlebar { height: 48px; position: fixed; top: 0; left: 0; right: 0; z-index: 30; display: flex; align-items: center; gap: 6px; background: var(--background); border-bottom: 1px solid var(--border); user-select: none; }
   .window-drag-space { align-self: stretch; width: 12px; flex-shrink: 0; }
   .mac-titlebar > .window-drag-space:first-child { width: 80px; }
+  .titlebar-info { flex-shrink: 0; margin-right: 12px; }
   .trailing-drag { flex: 1; min-width: 24px; }
   .work-tabs { display: flex; overflow-x: auto; min-width: 0; max-width: calc(100% - 80px); height: 100%; align-items: center; gap: 4px; overflow-y: hidden; scrollbar-width: none; }
   .work-tabs::-webkit-scrollbar { display: none; }

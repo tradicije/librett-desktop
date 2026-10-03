@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, untrack, tick } from 'svelte';
   import Select from './Select.svelte';
+  import Icon from './Icon.svelte';
   import CategoryRulesFields from './CategoryRulesFields.svelte';
   import { createCategoryWithRules, updateCategoryWithRules, getCategoryRules, listEntries, desktopAvailable, defaultCategoryRules, type Category, type Tournament, type Discipline, type CompetitionFormat, type CategoryRules } from './api';
   import { parseMoney } from './money';
@@ -58,22 +59,20 @@
 <div class="heading"><div><p class="eyebrow">{tournament.name}</p><h1>{category ? text.editCategory : text.addCategory}</h1></div></div>
 {#if error}<p class="error" role="alert">{text[error]}{#if !loaded}<button onclick={load}>{text.retry}</button>{/if}</p>{/if}
 {#if loading}<p>{text.loading}</p>{:else}
-  <form class="panel category-editor" onsubmit={save}>
-    <div class="editor-basics">
+  <form class="panel form-panel category-editor" onsubmit={save}>
+    <fieldset class="form-group"><legend>{language === 'sr' ? 'Osnovni podaci' : 'Category details'}</legend><div class="form-fields">
       <label>{text.categoryName}<input bind:value={name} required maxlength="120" disabled={busy || !loaded} /></label>
       <label>{text.categoryFee}<input bind:value={fee} inputmode="decimal" required disabled={busy || !loaded} /></label>
       <label>{text.discipline}<Select label={text.discipline} bind:value={discipline} options={[{ value: 'singles', label: text.singles }, { value: 'doubles', label: text.doubles }]} disabled={busy || used || !loaded} /></label>
       <label>{text.format}<Select label={text.format} bind:value={format} options={[{ value: 'groups_knockout', label: text.groups_knockout }, { value: 'knockout', label: text.knockout }]} disabled={busy || used || !loaded} /></label>
     </div>
     {#if used}<p class="muted">{text.categoryFormatLocked}</p>{/if}
+    </fieldset>
     <CategoryRulesFields {language} {format} bind:rules disabled={busy || !loaded} />
-    <div class="editor-actions"><button class="primary" disabled={action || !loaded || !desktopAvailable}>{action ? text.saving : pending ? text.retry : category ? text.editCategory : text.addCategory}</button><button type="button" class="secondary" disabled={busy} onclick={oncancel}>{text.cancelEdit}</button></div>
+    <div class="form-actions"><button class="primary" disabled={action || !loaded || !desktopAvailable}><Icon name="check-circle" />{action ? text.saving : pending ? text.retry : category ? text.editCategory : text.addCategory}</button><button type="button" class="secondary" disabled={busy} onclick={oncancel}><Icon name="arrow-left" size={18} />{text.cancelEdit}</button></div>
   </form>
 {/if}
 <style>
-  .category-editor { display: grid; gap: 24px; max-width: 880px; }
-  .editor-basics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .category-editor { display: grid; gap: 24px; max-width: 850px; }
   label { display: grid; gap: 6px; min-width: 0; }
-  .editor-actions { display: flex; gap: 12px; }
-  @media (max-width: 650px) { .editor-basics { grid-template-columns: 1fr; } }
 </style>

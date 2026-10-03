@@ -1,4 +1,4 @@
-<script lang="ts" generics="T extends string">
+<script lang="ts" generics="T extends string | number">
   import { tick } from 'svelte';
   import { IconChevronDown } from '@tabler/icons-svelte';
   let { value = $bindable(), options, label, placeholder = '', disabled = false }: {

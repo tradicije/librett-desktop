@@ -6,6 +6,13 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Changed
 
+- Simplified category Settings into one panel with flat rules, participants and
+  arrangement sections. Category creation/editing now shares player editor form
+  groups, field spacing, dropdowns and action styling.
+
+- Added an Info button at the right of the title bar, opening a themed About
+  dialog with the logo, description, version, author and bundled full AGPL license.
+
 - Breadcrumbs navigate to parent screens and support opening destinations in a
   new tab. Sidebar and navigation toolbar sit outside the content scroll region
   so elastic scrolling does not move them.

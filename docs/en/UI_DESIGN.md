@@ -79,3 +79,8 @@ layout preference persists across workspaces and restarts.
 Category rows share player profile card spacing, avatar size, typography and
 responsive action layouts. Edit/Delete use the same icon-labeled secondary buttons.
 Category creation/editing has a dedicated screen; Groups has its own tab with a maximum of three card columns; Draw shows only the bracket.
+
+
+Category Settings uses one outer panel, with flat sections separated by spacing
+and dividers. Embedded registrations do not add nested panel frames. Category
+creation/editing shares the player editor form groups, fields and action styles.

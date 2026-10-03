@@ -46,26 +46,28 @@
     } finally { saving = false; }
   }
 </script>
-<div class="category-setup">
-  <section class="panel">
-    <div class="section-heading"><h2>{text.categoryRules}</h2><button class="secondary" disabled={busy || rulesDirty} onclick={load}>{language === 'sr' ? 'Učitaj pravila' : 'Reload rules'}</button></div>
+<div class="panel form-panel category-setup">
+  <section class="rules-setup">
+    <div class="rules-toolbar"><button class="secondary" disabled={busy || rulesDirty} onclick={load}>{language === 'sr' ? 'Učitaj pravila' : 'Reload rules'}</button></div>
     {#if error}<p class="error" role="alert">{text[error]}</p>{/if}
     {#if loading}<p>{text.loading}</p>
     {:else if baseline}
       <form onsubmit={save}>
         <CategoryRulesFields {language} format={category.format} bind:rules disabled={busy} />
-        <div class="rule-save"><button disabled={saving || playersBusy || drawBusy || (!pending && !rulesDirty)}>{saving ? text.saving : pending ? text.retry : language === 'sr' ? 'Sačuvaj pravila' : 'Save rules'}</button>
+        <div class="rule-save"><button class="primary" disabled={saving || playersBusy || drawBusy || (!pending && !rulesDirty)}>{saving ? text.saving : pending ? text.retry : language === 'sr' ? 'Sačuvaj pravila' : 'Save rules'}</button>
           {#if rulesDirty}<span class="muted">{language === 'sr' ? 'Sačuvaj pravila pre pravljenja rasporeda.' : 'Save rules before creating an arrangement.'}</span>{/if}</div>
       </form>
     {/if}
   </section>
   {#if baseline}
-    <fieldset class="participants-setup" disabled={saving || pending !== null || drawBusy}><h2>{language === 'sr' ? 'Učesnici kategorije' : 'Category participants'}</h2><Players {active} {tournament} {category} {language} bind:busy={playersBusy} bind:dirty={playersDirty} onentrieschange={() => refreshToken += 1} /></fieldset>
+    <fieldset class="participants-setup" disabled={saving || pending !== null || drawBusy}><legend>{language === 'sr' ? 'Učesnici kategorije' : 'Category participants'}</legend><Players embedded {active} {tournament} {category} {language} bind:busy={playersBusy} bind:dirty={playersDirty} onentrieschange={() => refreshToken += 1} /></fieldset>
     <DrawSetup {active} {tournament} {category} {language} rules={savedRules} {refreshToken} externalLocked={rulesDirty || saving || playersBusy || pending !== null} bind:busy={drawBusy} bind:dirty={drawDirty} {onview} />
   {/if}
 </div>
 <style>
   .category-setup { display: grid; gap: 28px; }
+  .rules-toolbar { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+  .participants-setup legend { font-size: 12px; font-weight: 600; padding: 0 0 16px; }
   .participants-setup { margin: 0; padding: 0; border: 0; min-width: 0; }
-  .rule-save { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
+  .rule-save { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 20px; }
 </style>

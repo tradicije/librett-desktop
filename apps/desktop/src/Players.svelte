@@ -5,7 +5,7 @@
   import { desktopAvailable, listEntries, listPlayers, registerEntries, setEntryStatus, setPlayerAttendance, type EntryStatus, type Entry, type Player, type Tournament, type Category } from './api';
   import { errorKey, messages, type Language, type MessageKey } from './i18n';
 
-  let { onentrieschange, active = true, tournament, category, language, busy = $bindable(false), dirty = $bindable(false) }: { onentrieschange?: () => void; active?: boolean; tournament: Tournament; category: Category; language: Language; busy?: boolean; dirty?: boolean } = $props();
+  let { embedded = false, onentrieschange, active = true, tournament, category, language, busy = $bindable(false), dirty = $bindable(false) }: { embedded?: boolean; onentrieschange?: () => void; active?: boolean; tournament: Tournament; category: Category; language: Language; busy?: boolean; dirty?: boolean } = $props();
   let text = $derived(messages[language]);
   let players = $state<Player[]>([]);
   let entries = $state<Entry[]>([]);
@@ -113,7 +113,7 @@
 
 </script>
 
-<section class="players-section">
+<section class="players-section" class:embedded>
   {#if error}<p class="error" role="alert">{text[error]}<button disabled={loading || busy} onclick={() => { reload += 1; void loadPlayers(); }}>{text.retry}</button></p>{/if}
   <p class="notice" role="status">{notice ? text[notice] : ''}</p>
   <div class="columns">
@@ -158,3 +158,9 @@
     </form></section>
   </div>
 </section>
+
+<style>
+  .embedded { margin: 0; padding: 0; border: 0; }
+  .embedded :global(.columns > .panel) { padding: 0; border: 0; border-radius: 0; background: transparent; }
+  .embedded :global(.entry-card) { border: 0; border-radius: 0; border-top: 1px solid var(--border-subtle); background: transparent; padding: 16px 0; }
+</style>

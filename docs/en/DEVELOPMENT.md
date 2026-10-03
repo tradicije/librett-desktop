@@ -292,3 +292,8 @@ Workspace scrolling uses a bounded container below the 48px title bar. The root
 document does not scroll, and vertical overscroll cannot chain into it. Sidebars and navigation toolbars sit outside the content scroll region; tab
 switching restores the content container scroll position. Breadcrumb buttons
 use workspace navigation and support the same new-tab actions as other links. This isolates the tab row from macOS elastic scrolling.
+
+
+The Info button at the far right of the title bar opens a themed About dialog.
+It shows the logo, version from package metadata, author, description and full
+bundled AGPL license, available offline. Escape or Close dismisses the dialog.

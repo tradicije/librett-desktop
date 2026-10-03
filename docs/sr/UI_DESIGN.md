@@ -59,3 +59,8 @@ Zajednički izbor širine pamti se kroz radne tabove i restart aplikacije.
 Kartice kategorija koriste iste razmake, veličinu ikonice, tipografiju i prilagodljivi
 raspored akcija kao kartice igrača. Izmeni/Obriši imaju iste sekundarne dugmiće
 sa ikonicama. Dodavanje/izmena ima poseban ekran; Grupe imaju poseban tab sa najviše tri kolone kartica; Žreb prikazuje samo kostur.
+
+
+Podešavanja kategorije koriste jedan spoljašnji panel, sa sekcijama odvojenim
+razmacima i linijama. Ugrađene prijave ne dodaju okvire unutar panela. Dodavanje
+i izmena kategorije koriste isti stil grupa polja i akcija kao editor igrača.

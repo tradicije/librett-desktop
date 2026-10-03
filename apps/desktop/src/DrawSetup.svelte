@@ -132,7 +132,7 @@
   }
 </script>
 
-<section class="panel draw-workspace">
+<section class="draw-workspace">
   <h2>{t.title}</h2><p class="muted">{t.intro}</p>
   {#if !desktopAvailable}<p>{text.preview}</p>
   {:else if loading}<p>{text.loading}</p>
@@ -144,7 +144,7 @@
     {#if entries.length < 2 || entries.length > 4096}<p>{t.min}</p>
     {:else}
       <fieldset disabled={locked}>
-        <legend>{text.draw}</legend>
+        <legend>{language === 'sr' ? 'Pravila raspoređivanja' : 'Arrangement options'}</legend>
         <div class="draw-options">
           <label>{text.draw}<select bind:value={mode}><option value="automatic">{t.automatic}</option><option value="manual">{t.manual}</option></select></label>
 
@@ -157,7 +157,7 @@
         </ol>
         <div class="draw-options"><label>{t.addSeed}<select bind:value={newSeed}><option value="">{t.choose}</option>{#each entries.filter(e => !seeds.includes(e.id)) as entry}<option value={entry.id}>{label(entry)}</option>{/each}</select></label><button class="secondary" disabled={!newSeed} onclick={() => { editSeeds([...seeds, newSeed]); newSeed = ''; }}>{t.addSeed}</button></div>
         {#if replacing}<p>{t.replaceHint}</p>{/if}
-        <div class="draw-options"><button onclick={generate}>{replacing ? t.replace : t.generate}</button>{#if replacing}<button class="secondary" onclick={() => replacing = false}>{t.cancel}</button>{/if}</div>
+        <div class="draw-options"><button class="primary" onclick={generate}>{replacing ? t.replace : t.generate}</button>{#if replacing}<button class="secondary" onclick={() => replacing = false}>{t.cancel}</button>{/if}</div>
       </fieldset>
     {/if}
     {#if draft}
@@ -187,16 +187,19 @@
 </section>
 
 <style>
-  .draw-workspace { display: grid; gap: 1rem; }
-  fieldset { margin: 0; padding: 1rem; border: 1px solid var(--border); border-radius: 8px; min-width: 0; }
-  legend { padding: 0 .4rem; }
+  .draw-workspace { display: grid; gap: 16px; border-top: 1px solid var(--border-subtle); padding-top: 28px; }
+  .draw-workspace > h2 { margin: 0; }
+  .draw-workspace > p { margin: 0; }
+  .draw-workspace > button { justify-self: start; }
+  fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
+  legend { padding: 0 0 12px; font-size: 12px; font-weight: 550; }
   .draw-options { display: flex; gap: .75rem; align-items: end; flex-wrap: wrap; margin: .75rem 0; }
   label { display: grid; gap: .4rem; min-width: 0; }
   select { padding: .6rem; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: inherit; max-width: 100%; }
-  .seed-list { padding-left: 1.5rem; }
-  .seed-list li { padding: .25rem 0; }
-  .seed-list span { display: inline-block; min-width: 12rem; }
-  .seed-list button { margin-left: .35rem; }
+  .seed-list { margin: 0; padding-left: 24px; }
+  .seed-list li { padding: 8px 0; border-bottom: 1px solid var(--border-subtle); }
+  .seed-list span { display: inline-block; width: min(320px, 100%); font-size: 12px; overflow-wrap: anywhere; }
+  .seed-list button { margin-left: 6px; min-height: 30px; padding: 5px 8px; }
   .draw-sections { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 1rem; }
   .draw-section { display: grid; align-content: start; gap: .75rem; }
   .pair-start { padding-top: .75rem; border-top: 1px solid var(--border); }
