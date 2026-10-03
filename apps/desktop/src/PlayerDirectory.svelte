@@ -1,4 +1,6 @@
 <script lang="ts">
+  import PlayerName from './PlayerName.svelte';
+  import { playerLabel } from './player-label';
   import { onMount, tick, untrack } from 'svelte';
   import Icon from './Icon.svelte';
   import { desktopAvailable, listPlayers, deletePlayer, type Player } from './api';
@@ -54,13 +56,13 @@
   {#if loading}<p role="status">{text.loading}</p>{:else if !filtered.length}<p class="muted">{text.noPlayers}</p>{/if}
   {#each filtered as player (player.id)}
     <article class="player-profile">
-      {#if player.photo}<img class="player-photo" src={player.photo} alt={player.name} />{:else}<span class="player-avatar" aria-hidden="true">{player.name.split(/\s+/).slice(0, 2).map(part => part[0]).join('').toLocaleUpperCase()}</span>{/if}
-      <div class="player-details"><h3>{player.name}</h3><p>{[player.club, player.birth_year, player.city, player.country].filter(Boolean).join(' · ')}</p>
+      {#if player.photo}<img class="player-photo" src={player.photo} alt={playerLabel(player)} />{:else}<span class="player-avatar" aria-hidden="true">{player.name.split(/\s+/).slice(0, 2).map(part => part[0]).join('').toLocaleUpperCase()}</span>{/if}
+      <div class="player-details"><h3><PlayerName {player} /></h3><p>{[player.club, player.birth_year, player.city, player.country].filter(Boolean).join(' · ')}</p>
         <p class="player-contact">{[player.email, player.phone].filter(Boolean).join(' · ')}</p>
       </div>
       <div class="player-actions">
-        <button class="secondary icon-label" disabled={busy} data-open-tab onclick={() => onedit(player.id)} aria-label={`${text.editPlayer}: ${player.name}`}><Icon name="edit" size={18} />{text.editPlayer}</button>
-        <button class="secondary icon-label" disabled={busy} onclick={() => confirmDelete(player)} aria-label={`${text.deletePlayer}: ${player.name}`}><Icon name="trash" size={18} />{text.deletePlayer}</button>
+        <button class="secondary icon-label" disabled={busy} data-open-tab onclick={() => onedit(player.id)} aria-label={`${text.editPlayer}: ${playerLabel(player)}`}><Icon name="edit" size={18} />{text.editPlayer}</button>
+        <button class="secondary icon-label" disabled={busy} onclick={() => confirmDelete(player)} aria-label={`${text.deletePlayer}: ${playerLabel(player)}`}><Icon name="trash" size={18} />{text.deletePlayer}</button>
       </div>
     </article>
   {/each}
@@ -68,7 +70,7 @@
 <dialog class="confirm-dialog" bind:this={dialog} aria-labelledby={`${uid}-delete-player-title`} aria-describedby={`${uid}-delete-player-description`}
   oncancel={(event) => { if (busy) event.preventDefault(); }} onclose={() => { pendingDelete = null; }}>
   <h2 id={`${uid}-delete-player-title`}>{text.deletePlayer}</h2>
-  <p id={`${uid}-delete-player-description`}>{text.deletePlayerPrompt} <strong>{pendingDelete?.name}</strong>?</p>
+  <p id={`${uid}-delete-player-description`}>{text.deletePlayerPrompt} <strong><PlayerName player={pendingDelete} /></strong>?</p>
   <div class="dialog-actions">
     <button class="secondary" disabled={busy} onclick={cancelDelete}>{text.cancelDelete}</button>
     <button class="primary" disabled={busy} onclick={remove}><Icon name="trash" size={18} />{busy ? text.saving : text.deletePlayer}</button>

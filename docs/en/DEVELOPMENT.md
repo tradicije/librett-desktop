@@ -33,16 +33,16 @@ It needs no network connection after development dependencies are installed.
 
 The current slice supports tournaments, categories, local player profiles,
 name/club search, and singles/doubles category registration.
-Singles/doubles and category formats are stored settings; match engines
-are not implemented. There is no result entry,
-export/restore UI, or installer yet. Development version `0.1.0` is not a release.
+Singles/doubles matches support set scoring, retirement and walkover. Group
+standings and group-to-knockout qualification update automatically. There is no
+export/restore UI or installer yet. Development version `0.1.0` is not a release.
 
 The Players tab shows the shared directory. Add/Edit opens dedicated profile
 screens, including photos, and returns to the list after saving. Delete asks for
 confirmation and protects profiles with existing registrations. Tournament
 registration uses that directory. Entries can be withdrawn/restored, and player
-attendance is shared across categories in a tournament. Schema version 13 includes immutable draw drafts and versioned category rules; older on-disk databases receive a consistent
-`pre-v13-<uuid>.sqlite` backup before migration.
+attendance is shared across categories in a tournament. Schema version 15 includes immutable draw drafts and versioned category rules; older on-disk databases receive a consistent
+`pre-v15-<uuid>.sqlite` backup before migration.
 
 Back/Forward follows the active workspace’s screen history. The top Home button
 returns to the pinned mode-selection workspace. The mode chooser has no sidebar. Saves lock navigation until
@@ -204,9 +204,10 @@ to the open draw screen. Reload discards local edits and fetches current entries
 
 A changed registration list requires regeneration. Concurrent revisions reject
 a stale save. An uncertain write keeps its request UUID and blocks navigation
-until a retry confirms the outcome. Existing databases receive a pre-v13 backup.
-Confirmation, match creation, scoring, standings and knockout advancement remain
-pending; saving a draft does not start the competition.
+until a retry confirms the outcome. Existing databases receive a pre-v15 backup.
+Complete current draws supply the Matches tab. Set results and knockout
+advancement, group standings and qualification are implemented; explicit
+competition lifecycle remains pending.
 
 ## Native navigation
 
@@ -282,7 +283,8 @@ points, winning margin and the tied-player mini-table/set-ratio/point-ratio orde
 Categories using groups have a separate Groups tab with round-robin pairings
 and cards in up to three columns (two or one on smaller windows). Draw shows only
 the complete horizontally scrollable knockout bracket. Group qualifiers
-remain labeled placeholders; match scoring, standings and progression are pending.
+remain labeled placeholders until their groups finish and their order is resolved.
+Knockout-only draws show saved scores, advancing winners and the champion.
 
 Schema 11 saves versioned rules and migrates existing group draft settings after
 a pre-v11 backup. See [ADR 0012](../adr/0012-category-rules-and-draw-view.md).
@@ -308,7 +310,7 @@ can be recovered through a confirmed reload. Financial actions include expected
 amounts and require a new confirmation when balances change.
 
 The tournament directory uses up to three cards per row. Add Tournament opens a
-dedicated editor with an optional centered 16:9 cover. Registered counts include
+dedicated editor with an optional user-cropped 16:9 cover. Registered counts include
 unique active players across active categories. Groups generate pairings only
 when opened, one round at a time, with 32 pairs per page. Uploaded images are
 bounded before decoding and verified with a full backend JPEG decode.
@@ -318,3 +320,24 @@ Tournament Settings edits the name and optional cover. Updates compare the
 original metadata atomically, reject conflicting edits, and accept retrying an
 already-applied update. The entire tournament card supports mouse and keyboard
 navigation; its bottom button also supports opening a new workspace tab.
+
+`ImageCropDialog.svelte` imports images through `readBoundedImage` before
+opening an interactive crop preview. Player photos export at 512×512 (1:1),
+tournament covers at 1024×576 (16:9), using identical source and output ratios.
+Dragging and position sliders share bounded crop coordinates; zoom ranges from
+1× to 4×. Apply exports a bounded JPEG; Cancel keeps the existing photo/cover.
+File inputs reset after closing so the same file can be selected again.
+
+## Group standings and qualification
+
+The Groups tab shows played/won/lost matches, set and point totals and live
+ranking. The configured tie criteria use a mini-table restricted to tied entries.
+A completed resolved group supplies its configured qualifiers to the bracket.
+Exact ties require the group Ranking action; organizers can also override any
+completed group's order or restore Automatic. New group results restore the
+automatic order. The Matches stage selector includes the resulting knockout.
+Dependent knockout results are cleared only after confirmation.
+
+Schema 15 stores guarded manual group orders. See
+[ADR 0015](../adr/0015-group-standings-and-qualification.md) for ranking
+statistics, non-played endings, qualification, correction and refresh behavior.

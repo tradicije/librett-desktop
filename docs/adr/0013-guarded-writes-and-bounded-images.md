@@ -32,8 +32,11 @@ Participant labels and dropdown options are shared instead of rebuilt per slot.
 Image files are capped at 10 MB. Encoded dimensions are inspected before browser
 decoding; dimensions must be at most 6000 per side and 16 million total pixels.
 Animated PNG and extended/animated WebP are rejected. Uploaded images are
-converted to JPEG: player photos at most 512×512, tournament covers exactly
-1024×576 with a centered 16:9 crop. Backend validation checks encoded limits,
+converted to JPEG: player photos at 512×512, tournament covers exactly
+1024×576. A shared modal lets users select the crop through drag positioning,
+zoom and keyboard-accessible position sliders, with reset and apply/cancel.
+The source rectangle always matches the output aspect ratio. Cancelling
+preserves the existing image. Backend validation checks encoded limits,
 reads dimensions and fully decodes JPEG with a bounded decoder buffer.
 
 Tournament creation carries a stable UUID, so retrying matching metadata does

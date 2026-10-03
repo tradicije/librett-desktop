@@ -1,4 +1,6 @@
 <script lang="ts">
+  import PlayerName from './PlayerName.svelte';
+  import { playerLabel } from './player-label';
   import { onMount, untrack } from 'svelte';
   import Select from './Select.svelte';
   import { confirmDiscard } from './confirmation';
@@ -59,7 +61,7 @@
   let emptyOptions = $derived([{ value: '', label: t.empty }, ...entryOptions]);
   let byeOptions = $derived([{ value: '', label: t.bye }, ...entryOptions]);
   let locked = $derived(action || loading || pending !== null || externalLocked);
-  function label(entry: Entry) { return entry.members.map(member => member.name).join(' / '); }
+  function label(entry: Entry) { return entry.members.map(playerLabel).join(' / '); }
   function entryLabel(id: string) { const entry = draft?.participants.find(e => e.id === id) ?? entries.find(e => e.id === id); return entry ? label(entry) : id; }
   function changed() { dirty = true; saved = false; replacing = false; }
   async function load() {
@@ -154,14 +156,14 @@
         {#if !seeds.length}<p class="field-hint">{language === 'sr' ? 'Dodaj nosioce redom, od najjačeg. Ostali učesnici biće raspoređeni bez statusa nosioca.' : 'Add seeds in order, strongest first. Other entries will be placed without seed status.'}</p>{/if}
         <ol class="seed-list">
           {#each seeds as id, index (id)}
-            <li><span class="seed-rank">{index + 1}</span><span class="seed-name">{entryLabel(id)}</span><div class="seed-actions">
+            <li><span class="seed-rank">{index + 1}</span><span class="seed-name"><PlayerName label={entryLabel(id)} /></span><div class="seed-actions">
               <button class="icon-button" disabled={locked || index === 0} aria-label={`${t.up}: ${entryLabel(id)}`} title={t.up} onclick={() => moveSeed(index, -1)}><Icon name="arrow-up" size={16} /></button>
               <button class="icon-button" disabled={locked || index === seeds.length - 1} aria-label={`${t.down}: ${entryLabel(id)}`} title={t.down} onclick={() => moveSeed(index, 1)}><Icon name="arrow-down" size={16} /></button>
               <button class="secondary icon-label" disabled={locked} aria-label={`${t.remove}: ${entryLabel(id)}`} onclick={() => editSeeds(seeds.filter(seed => seed !== id))}><Icon name="trash" size={16} />{t.remove}</button>
             </div></li>
           {/each}
         </ol>
-        <div class="seed-add"><label>{t.addSeed}<Select label={t.addSeed} bind:value={newSeed} options={[{ value: '', label: t.choose }, ...entries.filter(e => !seeds.includes(e.id)).map(entry => ({ value: entry.id, label: label(entry) }))]} disabled={locked} /></label><button class="secondary icon-label" disabled={locked || !newSeed} onclick={() => { editSeeds([...seeds, newSeed]); newSeed = ''; }}><Icon name="plus" size={18} />{t.addSeed}</button></div>
+        <div class="seed-add"><label>{t.addSeed}<Select playerLabels label={t.addSeed} bind:value={newSeed} options={[{ value: '', label: t.choose }, ...entries.filter(e => !seeds.includes(e.id)).map(entry => ({ value: entry.id, label: label(entry) }))]} disabled={locked} /></label><button class="secondary icon-label" disabled={locked || !newSeed} onclick={() => { editSeeds([...seeds, newSeed]); newSeed = ''; }}><Icon name="plus" size={18} />{t.addSeed}</button></div>
         {#if replacing}<p class="banner">{t.replaceHint}</p>{/if}
         <div class="form-actions"><button class="primary" disabled={locked} onclick={generate}><Icon name="layer-group" size={18} />{replacing ? t.replace : t.generate}</button>{#if replacing}<button class="secondary" disabled={locked} onclick={() => replacing = false}>{t.cancel}</button>{/if}</div>
       </fieldset>
@@ -178,7 +180,7 @@
               {#each section as id, slot}
                 <label class:pair-start={category.format === 'knockout' && slot % 2 === 0}>
                   <span>{category.format === 'knockout' ? `${t.pair} ${Math.floor(slot / 2) + 1} · ${t.position} ${slot % 2 + 1}` : `${t.position} ${slot + 1}`}</span>
-                  <Select label={`${category.format === 'groups_knockout' ? `${t.group} ${groupName(group)}` : text.bracket} · ${t.position} ${slot + 1}`} bind:value={() => id ?? '', value => assign(group, slot, value)} disabled={locked || stale} options={category.format === 'knockout' && missing === 0 && section[slot ^ 1] ? byeOptions : emptyOptions} />
+                  <Select playerLabels label={`${category.format === 'groups_knockout' ? `${t.group} ${groupName(group)}` : text.bracket} · ${t.position} ${slot + 1}`} bind:value={() => id ?? '', value => assign(group, slot, value)} disabled={locked || stale} options={category.format === 'knockout' && missing === 0 && section[slot ^ 1] ? byeOptions : emptyOptions} />
                 </label>
               {/each}
             </section>

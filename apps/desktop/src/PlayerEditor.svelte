@@ -2,7 +2,8 @@
   import { onMount, untrack, tick } from 'svelte';
   import Icon from './Icon.svelte';
   import { confirmDiscard } from './confirmation';
-  import { imageData } from './image-limits';
+  import ImageCropDialog from './ImageCropDialog.svelte';
+  let cropDialog: ImageCropDialog;
   import { desktopAvailable, getPlayer, savePlayerChecked, type Player, type PlayerProfile } from './api';
   import { messages, errorKey, type Language, type MessageKey } from './i18n';
   let { language, playerId, busy = $bindable(false), dirty = $bindable(false), onsaved, oncancel }: {
@@ -44,9 +45,9 @@
   async function readPhoto(event: Event) {
     const file = (event.target as HTMLInputElement).files?.[0]; if (!file || busy) return;
     photoLoading = true; busy = true; error = null;
-    try { photo = await imageData(file); }
+    try { const result = await cropDialog.crop(file); if (result !== null) photo = result; }
     catch { error = 'invalid_profile'; if (fileInput) fileInput.value = ''; }
-    finally { photoLoading = false; busy = pending !== null; }
+    finally { if (fileInput) fileInput.value = ''; photoLoading = false; busy = pending !== null; }
   }
   async function save(event: SubmitEvent) {
     event.preventDefault(); if (!loaded || action || photoLoading) return;
@@ -62,6 +63,7 @@
     } finally { action = false; busy = pending !== null; }
   }
 </script>
+<ImageCropDialog {language} bind:this={cropDialog} />
 
 <div class="heading"><div><h1>{id ? text.editPlayer : text.addPlayer}</h1><p class="muted">{text.playerEditorIntro}</p></div></div>
 {#if error}<p class="error" role="alert">{text[error]}{#if (!loaded || error === 'player_conflict') && error !== 'player_not_found'}<button onclick={reload} disabled={loading}>{text.retry}</button>{/if}</p>{/if}

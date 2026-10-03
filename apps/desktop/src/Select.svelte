@@ -1,9 +1,10 @@
 <script lang="ts" generics="T extends string | number">
+  import PlayerName from './PlayerName.svelte';
   import { tick } from 'svelte';
   import { IconChevronDown } from '@tabler/icons-svelte';
-  let { value = $bindable(), options, label, placeholder = '', disabled = false }: {
+  let { value = $bindable(), options, label, placeholder = '', disabled = false, playerLabels = false }: {
     value: T; options: { value: T; label: string }[]; label: string;
-    placeholder?: string; disabled?: boolean;
+    placeholder?: string; disabled?: boolean; playerLabels?: boolean;
   } = $props();
   const id = $props.id();
   let root: HTMLDivElement;
@@ -55,14 +56,14 @@
     aria-label={label} aria-expanded={open} aria-haspopup="listbox" aria-controls={id}
     aria-activedescendant={open ? `${id}-${active}` : undefined}
     disabled={disabled || !options.length} onkeydown={keydown} onclick={() => open ? open = false : show()}>
-    <span>{selected?.label ?? placeholder}</span><IconChevronDown size={18} stroke={1.75} aria-hidden="true" />
+    <span>{#if playerLabels}<PlayerName label={selected?.label ?? placeholder} />{:else}{selected?.label ?? placeholder}{/if}</span><IconChevronDown size={18} stroke={1.75} aria-hidden="true" />
   </button>
   {#if open}
     <div class="select-menu" id={id} role="listbox" aria-label={label} tabindex="-1">
       {#each options as option, index (option.value)}
         <button type="button" id={`${id}-${index}`} role="option" tabindex="-1"
           aria-selected={option.value === value} class:highlighted={index === active}
-          onpointerdown={(event) => event.preventDefault()} onclick={() => choose(index)}>{option.label}</button>
+          onpointerdown={(event) => event.preventDefault()} onclick={() => choose(index)}>{#if playerLabels}<PlayerName label={option.label} />{:else}{option.label}{/if}</button>
       {/each}
     </div>
   {/if}

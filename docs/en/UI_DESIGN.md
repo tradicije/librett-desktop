@@ -40,7 +40,7 @@ counts and financial figures always come from current data.
 
 Mode selection, tournament-level tabs, category tabs, the player directory,
 player create/edit screens and the cash desk share this system. Tournament tabs
-keep Overview, Categories, Registrations and Cash desk available in the tournament
+keep Settings, Overview, Categories and Cash desk available in the tournament
 context. Draw, Matches and Results live inside each category; unfinished competition
 sections state their development status.
 The backend model and existing application workflows are unchanged by this redesign.
@@ -90,3 +90,26 @@ Seed and arrangement settings use numbered seed rows with move/remove actions,
 shared dropdowns and separate generation/save action rows. Draft status sits
 above the manual slots. Group slots use up to three columns; knockout opponents
 are paired side by side, stacking on narrow windows.
+
+## Match scoring and player identity
+
+The Matches tab filters by group and round, with up to 32 matches per page.
+Cards show both entrants, set scores and explicit completion/retirement/walkover
+status. A single dialog handles set entry and corrections, with separate
+confirmation when changing a knockout winner clears downstream results.
+Completed sets have an icon and the running set total updates during input.
+
+Player labels append the first three club letters/digits, uppercased, in
+parentheses. `PlayerName.svelte` renders that suffix in smaller muted type.
+Lists, registration/attendance, seeds/selectors, groups/pairings, brackets,
+match dialogs and cash confirmations use the same display. Stored names and
+profile name inputs remain plain; players without clubs have no suffix.
+
+Group tables include live ranking and a manual/automatic Ranking dialog.
+Knockout round selectors use competition names rather than group round numbers.
+
+The bracket scroll region has no enclosing panel. Match cards and connecting
+lines provide structure; player club codes appear only beside names.
+
+The Draw toolbar uses a short rules summary, icon-only Refresh and Edit.
+A brief pending-qualifier notice replaces duplicate headings and explanatory copy.

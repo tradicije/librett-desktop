@@ -6,6 +6,37 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Changed
 
+- Simplified draw copy and toolbar actions; removed the duplicate bracket heading
+  and shortened the pending-qualification notice.
+
+- Removed duplicate club subtitles and the outer frame from the knockout bracket;
+  match cards are more compact and winning rows have a subtle highlight.
+
+- Group tables now rebuild wins, sets and points after results, using the tied-player
+  mini-table and configured ratios. Completed groups fill the knockout bracket;
+  organizers can override the final order or restore automatic ranking.
+- Group result/ranking corrections require confirmation before clearing affected
+  knockout results. Exact unresolved ties keep qualification pending.
+- SQLite schema 15 adds guarded manual group orders with pre-v15 backups.
+- Knockout rounds use competition names instead of numbered group rounds.
+
+- Matches now support validated set scores, retirement, walkover and result
+  corrections. Knockout winners advance through byes and saved results; changing
+  a winner requires confirmation before clearing dependent results. Group
+  matches are paged by round.
+- SQLite schema 14 preserves immutable result revisions and idempotent write
+  receipts, with backups before upgrades.
+- Player names show a three-character club suffix in smaller muted type across
+  lists, selectors, registrations, attendance, groups, seeds, draws and cash.
+- Fixed score field updates and live set totals; completed sets have an indicator
+  and save calculates the winner directly from submitted points.
+- The sidebar's local-work label stays on one line.
+
+- Added a shared image crop dialog for player photos (1:1) and tournament covers
+  (16:9), with drag positioning, zoom, keyboard-accessible position sliders,
+  reset and explicit apply/cancel. Crop export preserves image proportions and
+  fixes cover distortion caused by the previous crop height calculation.
+
 - Sidebar logos and collapse controls now share the toolbar's center line in
   expanded and collapsed desktop layouts. Expanded branding uses the same
   horizontal inset as sidebar navigation content.
@@ -16,7 +47,7 @@ Notable changes to LibreTT are recorded here in English.
 
 - Tournament directory now has Add Tournament and individual cards in up to three
   columns, with optional 16:9 covers, active registered player/category counts and
-  a dedicated editor. Metadata uses separate rows and each card has an open button. Cover images are centered and cropped to 1024×576.
+  a dedicated editor. Metadata uses separate rows and each card has an open button. Cover images use a user-selected crop exported at 1024×576.
 - Round-robin pairings load on expansion, one round and up to 32 pairs at a time.
   Manual arrangement dropdown options are shared across slots.
 - SQLite schema 12 adds guarded player-write receipts, expected settlement

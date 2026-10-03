@@ -46,19 +46,3 @@ export async function readBoundedImage(file: File): Promise<HTMLImageElement> {
     return image;
   } finally { URL.revokeObjectURL(url); }
 }
-export async function imageData(file: File, cover = false): Promise<string> {
-  const image = await readBoundedImage(file);
-  const canvas = document.createElement('canvas');
-  const scale = Math.min(1, 512 / Math.max(image.width, image.height));
-  canvas.width = cover ? 1024 : Math.max(1, Math.round(image.width * scale));
-  canvas.height = cover ? 576 : Math.max(1, Math.round(image.height * scale));
-  const context = canvas.getContext('2d'); if (!context) throw new Error('Canvas unavailable');
-  context.fillStyle = '#fff'; context.fillRect(0, 0, canvas.width, canvas.height);
-  if (cover) {
-    const cropWidth = Math.min(image.width, image.height * 16 / 9), cropHeight = cropWidth * 3 / 4;
-    context.drawImage(image, (image.width - cropWidth) / 2, (image.height - cropHeight) / 2, cropWidth, cropHeight, 0, 0, canvas.width, canvas.height);
-  } else context.drawImage(image, 0, 0, canvas.width, canvas.height);
-  const result = canvas.toDataURL('image/jpeg', 0.8);
-  if (result.length > (cover ? 1_000_000 : 350_000)) throw new Error('Encoded image limit');
-  return result;
-}

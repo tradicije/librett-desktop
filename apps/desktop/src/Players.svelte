@@ -1,4 +1,6 @@
 <script lang="ts">
+  import PlayerName from './PlayerName.svelte';
+  import { playerLabel } from './player-label';
   import Select from './Select.svelte';
   import { onMount, untrack } from 'svelte';
   import Icon from './Icon.svelte';
@@ -126,11 +128,11 @@
       {:else if !visibleEntries.length}<p class="muted">{entries.length ? text.noFilteredEntries : text.noEntries}</p>{/if}
       {#each visibleEntries as entry (entry.id)}
         <article class="entry-card" class:entry-withdrawn={entry.status === 'withdrawn'}>
-          <div class="entry-heading"><h3>{entry.members.map(p => p.name).join(' / ')}</h3><span class="pill" class:status-active={entry.status !== 'withdrawn'}>{entry.status === 'withdrawn' ? text.withdrawnRegistrations : text.activeRegistrations}</span></div>
+          <div class="entry-heading"><h3><PlayerName label={entry.members.map(playerLabel).join(' / ')} /></h3><span class="pill" class:status-active={entry.status !== 'withdrawn'}>{entry.status === 'withdrawn' ? text.withdrawnRegistrations : text.activeRegistrations}</span></div>
           <p class="muted">{entry.members.map(p => p.club).filter(Boolean).join(' / ')}</p>
           {#each entry.members as member (member.id)}
-            <div class="attendance-row"><span>{member.name} · {member.checked_in ? text.arrived : text.notArrived}</span>
-              <button class="secondary icon-label" disabled={busy || !desktopAvailable} aria-label={`${member.checked_in ? text.markAbsent : text.markArrived}: ${member.name}`} onclick={() => changeAttendance(member)}><Icon name={member.checked_in ? 'restore' : 'check-circle'} size={18} />{member.checked_in ? text.markAbsent : text.markArrived}</button>
+            <div class="attendance-row"><span><PlayerName player={member} /> · {member.checked_in ? text.arrived : text.notArrived}</span>
+              <button class="secondary icon-label" disabled={busy || !desktopAvailable} aria-label={`${member.checked_in ? text.markAbsent : text.markArrived}: ${playerLabel(member)}`} onclick={() => changeAttendance(member)}><Icon name={member.checked_in ? 'restore' : 'check-circle'} size={18} />{member.checked_in ? text.markAbsent : text.markArrived}</button>
             </div>
           {/each}
           <button class="secondary icon-label" disabled={busy || !desktopAvailable} onclick={() => changeStatus(entry)}><Icon name={entry.status === 'withdrawn' ? 'restore' : 'withdraw'} size={18} />{entry.status === 'withdrawn' ? text.restoreEntry : text.withdrawEntry}</button>
@@ -144,14 +146,14 @@
         {#each filtered as player (player.id)}
           {@const registered = entries.some(e => e.members.some(m => m.id === player.id))}
           {@const inPair = queued.includes(player.id)}
-          <label class="picker-row"><input type="checkbox" checked={registered || inPair || checked.includes(player.id)} onchange={() => toggle(player.id)} disabled={busy || !entriesLoaded || registered || inPair || (category.discipline === 'doubles' && checked.length >= 2 && !checked.includes(player.id))} /><span><strong>{player.name}</strong><small>{player.club}</small></span>{#if registered}<span class="pill">{text.alreadyInCategory}</span>{/if}</label>
+          <label class="picker-row"><input type="checkbox" checked={registered || inPair || checked.includes(player.id)} onchange={() => toggle(player.id)} disabled={busy || !entriesLoaded || registered || inPair || (category.discipline === 'doubles' && checked.length >= 2 && !checked.includes(player.id))} /><span><strong><PlayerName {player} /></strong><small>{player.club}</small></span>{#if registered}<span class="pill">{text.alreadyInCategory}</span>{/if}</label>
         {/each}
         {#if !filtered.length}<p class="muted">{text.noPlayers}</p>{/if}
       </div>
       {#if category.discipline === 'doubles'}
         <button type="button" class="secondary icon-label" onclick={addPair} disabled={busy || checked.length !== 2}><Icon name="users" size={16} />{text.addPair}</button>
         {#each pairs as pair, index}
-          <div class="pair-row"><span>{pair.map(id => players.find(p => p.id === id)?.name).join(' / ')}</span><button type="button" class="icon-button" aria-label={`${text.removePair}: ${index + 1}`} disabled={busy} onclick={() => { pairs = pairs.filter((_, i) => i !== index); }}><Icon name="trash" size={16} /></button></div>
+          <div class="pair-row"><span><PlayerName label={pair.map(id => playerLabel(players.find(p => p.id === id))).join(' / ')} /></span><button type="button" class="icon-button" aria-label={`${text.removePair}: ${index + 1}`} disabled={busy} onclick={() => { pairs = pairs.filter((_, i) => i !== index); }}><Icon name="trash" size={16} /></button></div>
         {/each}
       {/if}
       <button class="primary" disabled={busy || !desktopAvailable || !playersLoaded || !entriesLoaded || !groups.length}><Icon name="check-circle" size={18} />{busy ? text.saving : text.registerSelected} ({groups.length})</button>

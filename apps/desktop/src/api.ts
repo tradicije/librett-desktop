@@ -70,3 +70,20 @@ export const getCategoryEditorState = (tournamentId: string, categoryId: string)
 export const createTournamentWithCover = (id: string, name: string, cover: string | null) => invoke<Tournament>('create_tournament_with_cover', { id, name, cover });
 
 export const updateTournamentDetails = (id: string, name: string, cover: string | null, expectedName: string, expectedCover: string | null) => invoke<Tournament>('update_tournament_details', { id, name, cover, expectedName, expectedCover });
+
+export type MatchOutcome = 'played' | 'retired' | 'walkover';
+export interface SetScore { first: number; second: number }
+export interface MatchResult { first: string; second: string; winner: string; outcome: MatchOutcome; sets: SetScore[]; rules: CategoryRules }
+export interface ScheduledMatch { key: string; round: number; position: number; first: string | null; second: string | null; bye: boolean; result: MatchResult | null; revision: number }
+export interface MatchPage { draw: CategoryDraw | null; rules: CategoryRules; rules_revision: number; stale: boolean; round_count: number; total: number; matches: ScheduledMatch[] }
+export interface SaveMatchRequest { request_id: string; tournament_id: string; category_id: string; draw_id: string; rules_revision: number; key: string; expected_revision: number; result: MatchResult; invalidate_downstream: boolean }
+export const getMatchPage = (tournamentId: string, categoryId: string, group: number, round: number, page: number, knockout = false) => invoke<MatchPage>('get_match_page', { tournamentId, categoryId, group, round, page, knockout });
+export const saveMatchResult = (request: SaveMatchRequest) => invoke<ScheduledMatch>('save_match_result', { request });
+
+export interface StandingRow { entry_id: string; played: number; wins: number; losses: number; sets_for: number; sets_against: number; points_for: number; points_against: number; tied: boolean }
+export interface GroupStanding { group: number; rows: StandingRow[]; completed: number; total: number; complete: boolean; resolved: boolean; manual: boolean }
+export interface QualificationSlot { entry_id: string | null; group: number | null; place: number | null; bye: boolean }
+export interface CompetitionState { draw_id: string | null; stale: boolean; groups: GroupStanding[]; slots: QualificationSlot[]; matches: ScheduledMatch[]; order_revisions: number[]; result_versions: number[] }
+export interface GroupOrderRequest { request_id: string; tournament_id: string; category_id: string; draw_id: string; group: number; expected_revision: number; expected_result_version: number; order: string[] | null; invalidate_downstream: boolean }
+export const getCompetitionState = (tournamentId: string, categoryId: string) => invoke<CompetitionState>('get_competition_state', { tournamentId, categoryId });
+export const saveGroupOrder = (request: GroupOrderRequest) => invoke<CompetitionState>('save_group_order', { request });

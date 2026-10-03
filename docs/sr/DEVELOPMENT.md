@@ -33,16 +33,16 @@ Posle instalacije razvojnih zavisnosti lokalne operacije ne zahtevaju internet.
 
 Trenutno podržavamo turnire, kategorije, lokalne igrače, pretragu po imenu/klubu
 i prijavljivanje singl/dubl učesnika.
-Singl/dubl i formati se čuvaju kao podešavanja. Nacrti žreba su dostupni; mečevi još nisu
-implementirani. Još nema rezultata, interfejsa za izvoz/oporavak
-ili instalera. Razvojna verzija `0.1.0` nije objavljeno izdanje.
+Singl/dubl mečevi podržavaju rezultate po setovima, predaju i nedolazak.
+Tabele grupa i kvalifikacije za nokaut se ažuriraju automatski. Još nema interfejsa za
+izvoz/oporavak ili instalera. Razvojna verzija `0.1.0` nije objavljeno izdanje.
 
 Tab Igrači prikazuje zajedničku listu. Dodaj/Izmeni otvara zasebne ekrane za
 profile i fotografije, a čuvanje vraća na listu. Brisanje traži potvrdu i čuva
 igrače sa postojećim prijavama. Prijave unutar turnira koriste tu bazu i mogu
 da se povuku i vrate;
-dolazak igrača važi kroz sve kategorije istog turnira. Šema verzije 13 sadrži neizmenjive nacrte žreba i verzije pravila kategorije; pre migracije starijih baza pravi se konzistentan
-`pre-v13-<uuid>.sqlite` backup.
+dolazak igrača važi kroz sve kategorije istog turnira. Šema verzije 15 sadrži neizmenjive nacrte žreba i verzije pravila kategorije; pre migracije starijih baza pravi se konzistentan
+`pre-v15-<uuid>.sqlite` backup.
 
 Nazad/Napred prati istoriju aktivnog radnog taba. Home dugme u gornjoj traci
 vraća na stalni početni ekran koji nema bočni meni. Čuvanje zaključava navigaciju do završetka.
@@ -166,7 +166,7 @@ Klik na kategoriju otvara tab Prijave. Za singl čekiraj više igrača i prijavi
 zajedno. Za dubl označi dva igrača, dodaj par i ponovi za sledeći par pre zajedničke
 prijave. Već prijavljeni ostaju označeni i nisu dostupni za ponovnu prijavu.
 Upis svih prijava i zaduženja je jedna transakcija. Žreb omogućava nacrte grupa
-ili nokaut kostura; Mečevi i Rezultati su u pripremi.
+ili nokaut kostura. Mečevi podržavaju unos; konačan plasman je u pripremi.
 
 Brisanje traži potvrdu: prazna kategorija briše se trajno, a kategorija sa prijavama
 arhivira se i ostaje vidljiva u blagajni. Istorija navigacije objašnjava ako kategorija
@@ -179,7 +179,7 @@ Otvaranje turnira prikazuje stalne kartice Pregled, Kategorije, Prijave, Blagajn
 Kategorije sadrže aktivne kategorije i obrazac za novu kategoriju. Prijave vode do
 radnog prostora izabrane kategorije, gde se uređuju učesnici, dolasci i status
 prijave. Svaka kategorija ima svoje kartice Prijave, Žreb, Mečevi i Rezultati;
-Mečevi i Rezultati su za sada označeni kao delovi u pripremi. Blagajna prikazuje
+Mečevi podržavaju unos rezultata; Rezultati su za sada u pripremi. Blagajna prikazuje
 postojeći pregled uplata po igraču. Pregled je početni ekran turnira. Prelazak
 između kartica ulazi u istoriju Nazad/Napred, kao i otvaranje kategorije.
 
@@ -198,9 +198,10 @@ Sačuvaj nacrt upisuje novu verziju. Ručni nacrt može biti nepotpun. Sačuvaj 
 napuštanja ekrana: nesačuvane izmene postoje samo dok je ekran žreba otvoren.
 Učitaj trenutno stanje odbacuje lokalne izmene. Promena prijava zahteva novi
 nacrt. Sukob verzija odbija zastareli upis; neizvestan upis zadržava isti UUID i
-zaključava navigaciju do potvrde ponavljanjem. Pre migracije postoji pre-v13 backup.
-Potvrđivanje žreba, mečevi, rezultati, rangiranje i prolazak u nokaut još nisu
-implementirani. Čuvanje nacrta ne pokreće takmičenje.
+zaključava navigaciju do potvrde ponavljanjem. Pre migracije postoji pre-v15 backup.
+Potpun i važeći žreb određuje mečeve u tabu Mečevi. Unos rezultata i nokaut
+napredovanje, tabele grupa i kvalifikacije su dostupni; životni ciklus
+takmičenja ostaje u pripremi.
 
 ## Navigacija mišem i trackpadom
 
@@ -277,8 +278,9 @@ ručni raspored. Pravila uključuju broj grupa, broj prolaznika, broj setova, po
 razliku za pobedu i redosled kriterijuma: mini-tabela izjednačenih, odnos setova i
 odnos poena. Kategorije sa grupama imaju poseban tab Grupe sa round-robin parovima i
 karticama u najviše tri kolone (dve ili jedna na užem prozoru). Žreb prikazuje
-samo ceo nokaut kostur sa horizontalnim skrolom. Prolaznici grupa su označena buduća mesta; obračun
-rezultata, rangiranje i napredovanje čekaju implementaciju mečeva.
+ceo nokaut kostur sa horizontalnim skrolom. Nokaut kategorije prikazuju rezultate,
+napredovanje pobednika i šampiona. Prolaznici grupa ostaju označena buduća mesta
+dok se grupe ne završe i ne razreše izjednačenja.
 
 SQLite šema 11 čuva verzije pravila i preuzima postojeća podešavanja grupa uz
 pre-v11 backup. Vidi [ADR 0012](../adr/0012-category-rules-and-draw-view.md).
@@ -315,3 +317,24 @@ Podešavanja turnira omogućavaju izmenu naziva i naslovne slike. Čuvanje prove
 izvorne podatke u transakciji i odbija konfliktne izmene; ponavljanje već
 primenjenog zahteva je bezbedno. Cela kartica otvara turnir klikom ili tastaturom,
 a dugme na dnu podržava i otvaranje novog radnog taba.
+
+`ImageCropDialog.svelte` prvo proverava sliku preko `readBoundedImage`, pa
+otvara pregled za kropovanje. Fotografije igrača se čuvaju kao 512×512 (1:1),
+a naslovne slike turnira kao 1024×576 (16:9), bez promene proporcija. Kadar
+se pomera mišem, dodirom ili klizačima dostupnim tastaturom, uz zum 1×–4×.
+Primeni čuva JPEG; Otkaži zadržava postojeću sliku. Nakon zatvaranja je moguće
+ponovo izabrati istu datoteku.
+
+## Tabele grupa i kvalifikacije
+
+Tab Grupe prikazuje odigrane mečeve, pobede/poraze, setove, poene i plasman.
+Izjednačenja se računaju preko mini-tabele i kriterijuma kategorije. Završena
+i razrešena grupa popunjava svoja mesta u nokaut kosturu. Dugme Plasman nudi
+ručni redosled i povratak na automatski obračun; novi rezultat grupe vraća
+automatski redosled. Tab Mečevi omogućava izbor grupne ili nokaut faze.
+Ispravke koje menjaju učesnike odigranih nokaut mečeva traže potvrdu pre
+poništavanja tih rezultata. Nokaut kola nose nazive faza, umesto brojeva.
+
+Šema 15 čuva ručni plasman grupa. Obračun statistike predaje/nedolaska,
+zaštita upisa i osvežavanje prikaza opisani su u
+[ADR 0015](../adr/0015-group-standings-and-qualification.md).

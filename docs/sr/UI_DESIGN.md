@@ -21,7 +21,7 @@ za miran raspored, čitljive liste i jasne akcije. LibreTT koristi svoj vizuelni
 identitet i raspored za turnirski rad. Reference i detalji su u
 [engleskim smernicama](../en/UI_DESIGN.md).
 
-Radni prostor turnira koristi stalne kartice Pregled, Kategorije, Prijave i
+Radni prostor turnira koristi stalne kartice Podešavanja, Pregled, Kategorije i
 Blagajna. Kartice Žreb, Mečevi i Rezultati nalaze se unutar kategorije.
 Delovi koji još nisu implementirani jasno prikazuju da su u pripremi. Brojači
 prikazuju stvarne podatke, a probni podaci za proveru interfejsa ostaju van
@@ -70,3 +70,25 @@ Nosioci i raspored koriste numerisane redove nosilaca, ikonice za pomeranje i
 uklanjanje, zajedničke dropdown kontrole i odvojene akcije pravljenja i čuvanja.
 Status nacrta je iznad ručnih pozicija. Grupe koriste najviše tri kolone, a
 nokaut protivnici stoje u paru jedan pored drugog, odnosno vertikalno na užem prozoru.
+
+## Mečevi i prikaz igrača
+
+Mečevi se filtriraju po grupi i kolu, uz najviše 32 po stranici. Kartica prikazuje
+učesnike, rezultat setova i status. Dijalog podržava unos po setovima, predaju,
+nedolazak i ispravke; promena nokaut pobednika traži posebnu potvrdu ako
+poništava naredne rezultate. Završeni setovi imaju oznaku, a zbir se menja tokom unosa.
+
+Ime igrača prati oznaka kluba u zagradi: prva tri slova/cifre, velikim slovima.
+Oznaka koristi manji font i sivu boju. Zajednički `PlayerName.svelte` koristi se
+u listama, prijavama, dolascima, nosiocima, padajućim menijima, grupama,
+parovima, žrebu, mečevima i blagajni. Ime u bazi i polje za uređivanje imena
+ostaju bez oznake. Igrači bez kluba nemaju sufiks.
+
+Tabele grupa imaju uživo plasman i dijalog za ručni/automatski redosled.
+Nokaut kola koriste nazive faza, a grupna kola brojeve.
+
+Kostur nema spoljašnji okvir: strukturu daju kartice mečeva i vezne linije.
+Klub se prikazuje samo kao oznaka pored imena, bez ponovljenog podnaslova.
+
+Žreb ima kratak sažetak pravila, ikonicu za osvežavanje i dugme Uredi.
+Kratka poruka o prolaznicima zamenjuje duplirane naslove i duga objašnjenja.

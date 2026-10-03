@@ -7,6 +7,9 @@ const sr = {
   bestOf: 'Meč na najviše setova', pointsToWin: 'Poena za set', winBy: 'Potrebna razlika', rankingOrder: 'Redosled za izjednačenje',
   head_to_head: 'Međusobni meč / mini-tabela', set_ratio: 'Odnos dobijenih i izgubljenih setova', point_ratio: 'Odnos osvojenih i izgubljenih poena',
   rulesHint: 'Svaka grupa igra round robin — svako sa svakim. Za tri ili više izjednačenih koristi se mini-tabela samo među njima.',
+  invalid_result: 'Proveri poene, redosled setova i pobednika. Set mora da se završi čim su ispunjeni uslovi, a meč nakon potrebnog broja osvojenih setova.',
+  match_conflict: 'Meč, žreb ili pravila su promenjeni. Učitaj najnovije podatke pre novog unosa.',
+  result_impact: 'Ispravka utiče na naredne rezultate i zahteva potvrdu.',
   invalid_rules: 'Proveri grupe, prolaznike, neparan broj setova i tri različita kriterijuma rangiranja.',
   draw_conflict: 'Podaci su promenjeni u drugom radnom prostoru. Učitaj trenutno stanje.',
 
@@ -59,7 +62,7 @@ const sr = {
   registrationDirectoryHint: 'Izaberi igrače iz baze. Nove profile dodaj u tabu Igrači.',
   birthYear: 'Godište (opciono)', city: 'Grad (opciono)', country: 'Država (opciono)',
   email: 'E-pošta (opciono)', phone: 'Telefon (opciono)', notes: 'Beleške (opciono)',
-  photo: 'Fotografija (opciono)', photoHint: 'JPEG, PNG ili WebP, do 10 MB. Fotografija se čuva lokalno u profilu.',
+  photo: 'Fotografija (opciono)', photoHint: 'JPEG, PNG ili WebP, do 10 MB. Izaberi kvadratni kadar pomeranjem i zumiranjem. Fotografija se čuva lokalno u profilu.',
   removePhoto: 'Ukloni fotografiju', editPlayer: 'Izmeni profil', savePlayer: 'Sačuvaj igrača', cancelEdit: 'Otkaži izmenu',
   invalid_profile: 'Proveri godište i detalje profila. Fotografija mora biti ispravna slika u podržanom formatu.',
 
@@ -100,6 +103,9 @@ const en: Messages = {
   bestOf: 'Best of sets', pointsToWin: 'Points to win a set', winBy: 'Winning margin', rankingOrder: 'Tie-break order',
   head_to_head: 'Head-to-head / mini-table', set_ratio: 'Won/lost set ratio', point_ratio: 'Won/lost point ratio',
   rulesHint: 'Groups use round robin: everyone plays everyone. For three or more tied entries, the mini-table includes only those entries.',
+  invalid_result: 'Check points, set order and winner. Sets must end as soon as their winning conditions are met; matches end once a player wins the required sets.',
+  match_conflict: 'The match, draw or rules changed. Reload the latest data before entering a result.',
+  result_impact: 'The correction affects later results and needs confirmation.',
   invalid_rules: 'Check groups, qualifiers, odd best-of sets and three distinct ranking criteria.',
   draw_conflict: 'Data changed in another workspace. Reload the current state.',
 
@@ -152,7 +158,7 @@ const en: Messages = {
   registrationDirectoryHint: 'Select players from the directory. Add new profiles in the Players tab.',
   birthYear: 'Birth year (optional)', city: 'City (optional)', country: 'Country (optional)',
   email: 'Email (optional)', phone: 'Phone (optional)', notes: 'Notes (optional)',
-  photo: 'Photo (optional)', photoHint: 'JPEG, PNG or WebP, up to 10 MB. Photos are stored locally in the profile.',
+  photo: 'Photo (optional)', photoHint: 'JPEG, PNG or WebP, up to 10 MB. Move and zoom to choose a square crop. Photos are stored locally in the profile.',
   removePhoto: 'Remove photo', editPlayer: 'Edit profile', savePlayer: 'Save player', cancelEdit: 'Cancel editing',
   invalid_profile: 'Check the birth year and profile details. The photo must be a valid image in a supported format.',
 
@@ -187,7 +193,7 @@ export type Language = 'sr' | 'en';
 export const messages = { sr, en };
 export type MessageKey = keyof Messages;
 export function errorKey(error: unknown): MessageKey {
-  return typeof error === 'string' && ['player_conflict', 'cash_conflict', 'invalid_rules', 'draw_conflict', 'invalid_cash', 'player_in_use', 'invalid_profile', 'name_required', 'name_too_long', 'duplicate_category', 'not_found', 'storage', 'invalid_members', 'already_registered'].includes(error)
+  return typeof error === 'string' && ['invalid_result', 'match_conflict', 'result_impact', 'player_conflict', 'cash_conflict', 'invalid_rules', 'draw_conflict', 'invalid_cash', 'player_in_use', 'invalid_profile', 'name_required', 'name_too_long', 'duplicate_category', 'not_found', 'storage', 'invalid_members', 'already_registered'].includes(error)
     ? error as MessageKey : 'error';
 }
 export function savedLanguage(): Language {

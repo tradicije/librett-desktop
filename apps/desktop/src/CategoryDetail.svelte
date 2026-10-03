@@ -1,5 +1,6 @@
 <script lang="ts">
   import Icon from './Icon.svelte';
+  import Matches from './Matches.svelte';
   import Players from './Players.svelte';
   import Draw from './Draw.svelte';
   import CategorySetup from './CategorySetup.svelte';
@@ -28,6 +29,8 @@
   {#key category.id}<Draw view="groups" {active} {tournament} {category} {language} bind:busy bind:dirty onsettings={() => ontab('settings')} />{/key}
 {:else if tab === 'draw' || tab === 'groups'}
   {#key category.id}<Draw {active} {tournament} {category} {language} bind:busy bind:dirty onsettings={() => ontab('settings')} />{/key}
+{:else if tab === 'matches'}
+  {#key category.id}<Matches {active} {tournament} {category} {language} bind:busy bind:dirty onsettings={() => ontab('settings')} />{/key}
 {:else}
-  <section class="panel stage-placeholder"><Icon name={tab === 'matches' ? 'list' : tab === 'results' ? 'trophy' : 'layer-group'} size={26} /><h2>{text[tab]}</h2><p class="muted">{text.stageNotReady}</p><button data-open-tab class="secondary" onclick={() => ontab('registrations')}>{text.registrations}</button></section>
+  <section class="panel stage-placeholder"><Icon name="trophy" size={26} /><h2>{text[tab]}</h2><p class="muted">{text.stageNotReady}</p><button data-open-tab class="secondary" onclick={() => ontab('registrations')}>{text.registrations}</button></section>
 {/if}

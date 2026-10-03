@@ -2,7 +2,8 @@
   import { tick, untrack } from 'svelte';
   import Icon from './Icon.svelte';
   import { createTournamentWithCover, updateTournamentDetails, desktopAvailable, type Tournament } from './api';
-  import { imageData } from './image-limits';
+  import ImageCropDialog from './ImageCropDialog.svelte';
+  let cropDialog: ImageCropDialog;
   import { messages, errorKey, type Language, type MessageKey } from './i18n';
   let { tournament, language, busy = $bindable(false), dirty = $bindable(false), onsaved, oncancel }: { tournament?: Tournament; language: Language; busy?: boolean; dirty?: boolean; onsaved: (tournament: Tournament) => void; oncancel: () => void } = $props();
   let text = $derived(messages[language]);
@@ -17,9 +18,9 @@
   async function readCover(event: Event) {
     const file = (event.target as HTMLInputElement).files?.[0]; if (!file || busy) return;
     reading = true; busy = true; error = null;
-    try { cover = await imageData(file, true); }
+    try { const result = await cropDialog.crop(file, true); if (result !== null) cover = result; }
     catch { error = 'invalid_profile'; fileInput.value = ''; }
-    finally { reading = false; busy = pending !== null; }
+    finally { if (fileInput) fileInput.value = ''; reading = false; busy = pending !== null; }
   }
   async function save(event: SubmitEvent) {
     event.preventDefault(); if (action || reading) return;
@@ -34,6 +35,7 @@
     } finally { action = false; busy = pending !== null; }
   }
 </script>
+<ImageCropDialog {language} bind:this={cropDialog} />
 <div class="heading"><div><h1>{original ? (language === 'sr' ? 'Podešavanja turnira' : 'Tournament settings') : text.addTournament}</h1><p class="muted">{language === 'sr' ? 'Unesi naziv i po želji dodaj naslovnu sliku turnira.' : 'Enter a name and optionally add a tournament cover image.'}</p></div></div>
 {#if error}<p class="error" role="alert">{text[error]}</p>{/if}
 <form class="panel form-panel tournament-editor" onsubmit={save}>
@@ -41,7 +43,7 @@
   <fieldset class="form-group" disabled={busy}><legend>{language === 'sr' ? 'Naslovna slika' : 'Cover image'}</legend>
     <div class="cover-preview">{#if cover}<img src={cover} alt={name || text.tournaments} />{:else}<Icon name="trophy" size={40} />{/if}</div>
     <label>{language === 'sr' ? 'Izaberi sliku' : 'Choose an image'}<input type="file" accept="image/jpeg,image/png,image/webp" bind:this={fileInput} onchange={readCover} /></label>
-    <p class="muted">{language === 'sr' ? 'Slika se centrira i kropuje u odnos 16:9. JPEG, PNG ili statični WebP, do 10 MB.' : 'The image is centered and cropped to 16:9. JPEG, PNG or static WebP, up to 10 MB.'}</p>
+    <p class="muted">{language === 'sr' ? 'Izaberi kadar u odnosu 16:9 pomeranjem i zumiranjem slike. JPEG, PNG ili statični WebP, do 10 MB.' : 'Choose a 16:9 crop by moving and zooming the image. JPEG, PNG or static WebP, up to 10 MB.'}</p>
     {#if cover}<button type="button" class="secondary icon-label" onclick={() => { cover = null; fileInput.value = ''; }}><Icon name="trash" size={16} />{language === 'sr' ? 'Ukloni sliku' : 'Remove image'}</button>{/if}
   </fieldset>
   <div class="form-actions"><button class="primary" disabled={action || reading || !desktopAvailable}><Icon name="check-circle" />{action ? text.saving : pending ? text.retry : original ? (language === 'sr' ? 'Sačuvaj izmene' : 'Save changes') : text.addTournament}</button><button type="button" class="secondary icon-label" disabled={busy} onclick={oncancel}><Icon name="arrow-left" size={18} />{text.cancelEdit}</button></div>

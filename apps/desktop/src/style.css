@@ -68,6 +68,7 @@ nav { display: grid; gap: 3px; }
 .nav-item.active .icon { color: var(--primary); }
 .sidebar-bottom { margin-top: auto; padding: 24px 12px 0; font-size: 11px; color: var(--text-secondary); }
 .sidebar-bottom .icon { color: var(--primary); }
+.sidebar-bottom .icon-label { white-space: nowrap; }
 .sidebar-bottom small { display: block; margin-top: 12px; font-size: 9px; color: var(--text-muted); }
 main { display: flex; flex-direction: column; flex: 1; min-width: 0; min-height: 0; overflow: hidden; }
 .workspace-scroll { flex: 1; min-height: 0; overflow: auto; overscroll-behavior-y: contain; }

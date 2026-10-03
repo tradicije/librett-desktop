@@ -5,6 +5,9 @@ use uuid::Uuid;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ApplicationError {
+    InvalidResult,
+    MatchConflict,
+    ResultImpact,
     PlayerConflict,
     CashConflict,
     InvalidRules,
@@ -25,6 +28,7 @@ pub enum ApplicationError {
 impl From<DomainError> for ApplicationError {
     fn from(error: DomainError) -> Self {
         match error {
+            DomainError::InvalidResult => Self::InvalidResult,
             DomainError::InvalidRules => Self::InvalidRules,
             DomainError::InvalidDraw => Self::InvalidDraw,
             DomainError::InvalidCash => Self::InvalidCash,
@@ -624,4 +628,50 @@ pub trait CategoryEditorRepository {
         tournament_id: Uuid,
         category_id: Uuid,
     ) -> Result<CategoryEditorState, ApplicationError>;
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct MatchPage {
+    pub draw: Option<librett_domain::CategoryDraw>,
+    pub rules: librett_domain::CategoryRules,
+    pub rules_revision: u32,
+    pub stale: bool,
+    pub round_count: usize,
+    pub total: usize,
+    pub matches: Vec<librett_domain::ScheduledMatch>,
+}
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct SaveMatchRequest {
+    pub request_id: Uuid,
+    pub tournament_id: Uuid,
+    pub category_id: Uuid,
+    pub draw_id: Uuid,
+    pub rules_revision: u32,
+    pub key: String,
+    pub expected_revision: u32,
+    pub result: librett_domain::MatchResult,
+    pub invalidate_downstream: bool,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct CompetitionState {
+    pub draw_id: Option<Uuid>,
+    pub stale: bool,
+    pub groups: Vec<librett_domain::GroupStanding>,
+    pub slots: Vec<librett_domain::QualificationSlot>,
+    pub matches: Vec<librett_domain::ScheduledMatch>,
+    pub order_revisions: Vec<u32>,
+    pub result_versions: Vec<u64>,
+}
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct GroupOrderRequest {
+    pub request_id: Uuid,
+    pub tournament_id: Uuid,
+    pub category_id: Uuid,
+    pub draw_id: Uuid,
+    pub group: usize,
+    pub expected_revision: u32,
+    pub expected_result_version: u64,
+    pub order: Option<Vec<Uuid>>,
+    pub invalidate_downstream: bool,
 }

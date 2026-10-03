@@ -1,12 +1,17 @@
 <script lang="ts">
+  import PlayerName from './PlayerName.svelte';
   import Icon from './Icon.svelte';
   import { bracketRounds, roundTitle, type BracketSlot } from './draw-view';
+  import type { ScheduledMatch, MatchResult } from './api';
   import type { Language } from './i18n';
-  let { slots, language }: { slots: BracketSlot[]; language: Language } = $props();
-  let rounds = $derived(bracketRounds(slots, language));
+  let { slots, language, progress = [] }: { slots: BracketSlot[]; language: Language; progress?: ScheduledMatch[] } = $props();
+  let rounds = $derived(bracketRounds(slots, language, progress));
   let width = $derived(rounds.length * 252 + 200);
   let height = $derived(Math.max(180, slots.length / 2 * 100 + 60));
   let finalCenter = $derived(slots.length / 4 * 100 + 44);
+  let finalMatch = $derived(rounds.at(-1)?.[0]);
+  let champion = $derived(finalMatch?.result ? (finalMatch.result.winner === finalMatch.left.id ? finalMatch.left : finalMatch.right) : null);
+  function setsWon(result: MatchResult, side: number) { return result.sets.filter(set => Math.max(set.first, set.second) >= result.rules.points_to_win && Math.abs(set.first - set.second) >= result.rules.win_by && (side === 0 ? set.first > set.second : set.second > set.first)).length; }
 </script>
 {#if rounds.length}
   <!-- svelte-ignore a11y_no_noninteractive_tabindex (Labeled scroll region supports native keyboard scrolling.) -->
@@ -25,39 +30,42 @@
       {#each rounds as round, column}
         <h3 class="round-title" style:left={`${column * 252}px`}>{roundTitle(slots.length / 2 ** column, language)}</h3>
         {#each round as match}
-          <div class="bracket-match" style:left={`${column * 252}px`} style:top={`${44 + match.center - 38}px`}>
+          <div class="bracket-match" style:left={`${column * 252}px`} style:top={`${44 + match.center - 34}px`}>
             <span class="match-number">#{match.number}</span>
-            {#each [match.left, match.right] as entry}
-              <div class="bracket-entry" class:unresolved={entry.kind !== 'entry'} class:bye={entry.kind === 'bye'} title={[entry.label, entry.club].filter(Boolean).join(' · ')}>
+            {#each [match.left, match.right] as entry, side}
+              <div class="bracket-entry" class:winner={!!entry.id && match.result?.winner === entry.id} class:unresolved={entry.kind !== 'entry'} class:bye={entry.kind === 'bye'} title={entry.label}>
                 {#if entry.seed}<span class="seed-number">{entry.seed}</span>{/if}
-                <span class="entry-name">{entry.label}{#if entry.club}<small>{entry.club}</small>{/if}</span>
+                <span class="entry-name"><PlayerName label={entry.label} /></span>
+                {#if match.result}<b class="bracket-score">{setsWon(match.result, side)}</b>{/if}
               </div>
             {/each}
           </div>
         {/each}
       {/each}
-      <div class="champion" style:left={`${rounds.length * 252}px`} style:top={`${finalCenter - 38}px`}><Icon name="trophy" size={22} /><span>{language === 'sr' ? 'Pobednik' : 'Champion'}<small>{language === 'sr' ? 'Čeka se finale' : 'Awaiting the final'}</small></span></div>
+      <div class="champion" style:left={`${rounds.length * 252}px`} style:top={`${finalCenter - 34}px`}><Icon name="trophy" size={22} /><span>{language === 'sr' ? 'Pobednik' : 'Champion'}<small><PlayerName label={champion?.label ?? (language === 'sr' ? 'Čeka se finale' : 'Awaiting the final')} /></small></span></div>
     </div>
   </div>
 {:else}<div class="bracket-empty"><Icon name="layer-group" size={28} /><p>{language === 'sr' ? 'Pripremi raspored u podešavanjima kategorije.' : 'Prepare an arrangement in category settings.'}</p></div>{/if}
 <style>
-  .bracket-scroll { overflow: auto; max-height: 72vh; min-width: 0; padding: 20px; border: 1px solid var(--border-subtle); border-radius: 8px; background: var(--background); }
+  .bracket-scroll { overflow: auto; max-height: 72vh; min-width: 0; padding: 16px 0 20px; }
   .bracket-scroll:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
   .bracket-canvas { position: relative; }
   .bracket-lines { position: absolute; inset: 0; pointer-events: none; }
   path { fill: none; stroke: var(--border); stroke-width: 1.5; }
   .round-title { position: absolute; top: 0; width: 220px; margin: 0; font-size: 12px; font-weight: 600; color: var(--text-secondary); }
-  .bracket-match { position: absolute; width: 220px; height: 76px; border: 1px solid var(--border); border-radius: 7px; background: var(--surface); }
+  .bracket-match { position: absolute; width: 220px; height: 68px; border: 1px solid var(--border); border-radius: 7px; background: var(--surface); }
   .match-number { position: absolute; top: -14px; right: 2px; font-size: 9px; color: var(--text-muted); }
-  .bracket-entry { height: 37px; display: flex; align-items: center; gap: 8px; padding: 5px 12px; }
+  .bracket-entry { height: 33px; display: flex; align-items: center; gap: 8px; padding: 5px 12px; }
   .bracket-entry + .bracket-entry { border-top: 1px solid var(--border-subtle); }
   .entry-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 550; }
   small { display: block; font-size: 10px; font-weight: 400; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; }
+  .winner { color: var(--primary); background: var(--primary-subtle); }
+  .bracket-score { margin-left: auto; font-size: 12px; }
   .seed-number { flex-shrink: 0; color: var(--primary); font-size: 10px; font-weight: 650; }
   .unresolved { color: var(--text-secondary); }
   .bye { color: var(--text-muted); font-size: 10px; }
-  .champion { position: absolute; width: 176px; height: 76px; display: flex; align-items: center; gap: 12px; padding: 16px; border: 1px solid var(--border); border-radius: 7px; background: var(--surface); }
+  .champion { position: absolute; width: 176px; height: 68px; display: flex; align-items: center; gap: 12px; padding: 16px; border: 1px solid var(--border); border-radius: 7px; background: var(--surface); }
   .champion :global(.icon) { color: var(--primary); }
   .champion span { font-weight: 600; }
-  .bracket-empty { display: grid; place-items: center; padding: 64px 24px; color: var(--text-muted); border: 1px dashed var(--border); border-radius: 8px; text-align: center; }
+  .bracket-empty { display: grid; place-items: center; padding: 64px 24px; color: var(--text-muted);  text-align: center; }
 </style>

@@ -9,6 +9,15 @@ mod players;
 pub use players::{Entry, EntryMember, EntryStatus, Player, PlayerProfile};
 mod category_rules;
 pub use category_rules::{CategoryRules, RankingCriterion};
+mod standings;
+pub use standings::{
+    group_standings, qualification_slots, GroupStanding, QualificationSlot, StandingRow,
+};
+mod matches;
+pub use matches::{
+    group_round_matches, knockout_from_slots, knockout_matches, MatchOutcome, MatchResult,
+    ScheduledMatch, SetScore, StoredMatchResult,
+};
 mod draw;
 pub use draw::{create_draw, validate_draw, CategoryDraw, DrawMode, DrawSettings};
 
@@ -52,6 +61,7 @@ pub struct Tournament {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum DomainError {
+    InvalidResult,
     InvalidRules,
     InvalidDraw,
     InvalidCash,

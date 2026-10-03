@@ -152,6 +152,10 @@ fn main() {
             list_tournaments,
             create_tournament_with_cover,
             update_tournament_details,
+            get_match_page,
+            get_competition_state,
+            save_group_order,
+            save_match_result,
             get_category_editor_state,
             add_category,
             list_players,
@@ -537,4 +541,56 @@ fn update_tournament_details(
         .lock()
         .map_err(|_| ApplicationError::Storage)?
         .update_tournament_details(id, &name, cover, &expected_name, expected_cover)
+}
+
+#[tauri::command]
+fn get_match_page(
+    database: tauri::State<Database>,
+    tournament_id: Uuid,
+    category_id: Uuid,
+    group: usize,
+    round: usize,
+    page: usize,
+    knockout: bool,
+) -> Result<application::MatchPage, ApplicationError> {
+    database
+        .0
+        .lock()
+        .map_err(|_| ApplicationError::Storage)?
+        .match_page(tournament_id, category_id, group, round, page, knockout)
+}
+#[tauri::command]
+fn save_match_result(
+    database: tauri::State<Database>,
+    request: application::SaveMatchRequest,
+) -> Result<librett_domain::ScheduledMatch, ApplicationError> {
+    database
+        .0
+        .lock()
+        .map_err(|_| ApplicationError::Storage)?
+        .save_match_result(request)
+}
+
+#[tauri::command]
+fn get_competition_state(
+    database: tauri::State<Database>,
+    tournament_id: Uuid,
+    category_id: Uuid,
+) -> Result<application::CompetitionState, ApplicationError> {
+    database
+        .0
+        .lock()
+        .map_err(|_| ApplicationError::Storage)?
+        .competition_state(tournament_id, category_id)
+}
+#[tauri::command]
+fn save_group_order(
+    database: tauri::State<Database>,
+    request: application::GroupOrderRequest,
+) -> Result<application::CompetitionState, ApplicationError> {
+    database
+        .0
+        .lock()
+        .map_err(|_| ApplicationError::Storage)?
+        .save_group_order(request)
 }
