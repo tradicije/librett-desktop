@@ -1,5 +1,5 @@
-<p align="left">
-  <img src="assets/img/logo-dark.png" alt="LibreTT" width="256" />
+<p align="center">
+  <img src="assets/img/logo-dark.png" alt="LibreTT" width="360" />
 </p>
 
 # LibreTT

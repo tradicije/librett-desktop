@@ -7,8 +7,8 @@ Notable changes to LibreTT are recorded here in English.
 ### Changed
 
 - README headers include the LibreTT title, a short description and badges for
-  the AGPL license, Tauri 2, Svelte 5 and offline support. Logos remain left-aligned
-  and limited to 256px width in both languages.
+  the AGPL license, Tauri 2, Svelte 5 and offline support. Logos are centered
+  and set to 360px width in both languages.
 
 - Draw now shows only the knockout bracket. Categories using groups have a
   separate Groups tab with participant cards and round-robin pairings arranged
