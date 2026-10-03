@@ -276,7 +276,7 @@ Edit and Delete actions matching the player directory. Add/Edit open a dedicated
 editor; category rows open their Registrations page. Used categories cannot change
 discipline or format, and fee edits affect only future registrations.
 
-Category Settings combines saved rules, participants, ordered seeds and automatic
+Category Settings combines saved rules and ordered seeds and automatic
 or manual arrangements. Rules include group count, qualifiers, best-of sets,
 points, winning margin and the tied-player mini-table/set-ratio/point-ratio order.
 Categories using groups have a separate Groups tab with round-robin pairings

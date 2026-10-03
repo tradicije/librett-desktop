@@ -124,8 +124,7 @@ companion adapteri koriste iste slučajeve korišćenja. Potvrđeni rezultati su
 izvor istine; tabele mogu ponovo da se izračunaju.
 
 Postojeći LibreTT WordPress projekat i DimiPress Rally služe kao reference.
-Ovaj repozitorijum opisuje novu samostalnu aplikaciju. Autor planira da
-postojeći WordPress projekat preimenuje u `librett-wordpress`.
+Ovaj repozitorijum sadrži samostalnu desktop aplikaciju.
 
 ## Dokumentacija i doprinosi
 

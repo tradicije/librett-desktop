@@ -14,7 +14,7 @@ margin and ranking order. Defaults rank tied participants by their mini-table,
 then set ratio and point ratio. These are configuration values; actual scoring,
 rankings and progression will be implemented with the match engine.
 
-Category Settings contains rules, registrations, ordered seeds and the existing
+Category Settings contains rules, ordered seeds and the existing
 automatic/manual arrangement editor. Organizers save rules before generating a
 new layout. Automatic knockout placement awards byes to the strongest seeds;
 manual positioning remains available. Saved draw revisions remain immutable.

@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount, untrack } from 'svelte';
-  import Players from './Players.svelte';
   import DrawSetup from './DrawSetup.svelte';
   import CategoryRulesFields from './CategoryRulesFields.svelte';
   import { getCategoryRules, saveCategoryRules, defaultCategoryRules, desktopAvailable, type CategoryRules, type Tournament, type Category } from './api';
@@ -15,11 +14,10 @@
   let saving = $state(false);
   let pending = $state<{ rules: CategoryRules; revision: number } | null>(null);
   let error = $state<MessageKey | null>(null);
-  let playersBusy = $state(false); let drawBusy = $state(false);
-  let playersDirty = $state(false); let drawDirty = $state(false);
-  let refreshToken = $state(0);
+  let drawBusy = $state(false);
+  let drawDirty = $state(false);
   let rulesDirty = $derived(baseline !== '' && JSON.stringify(rules) !== baseline);
-  $effect(() => { busy = saving || pending !== null || playersBusy || drawBusy; dirty = rulesDirty || playersDirty || drawDirty; });
+  $effect(() => { busy = saving || pending !== null || drawBusy; dirty = rulesDirty || drawDirty; });
   async function load() {
     loading = true; error = null;
     try {
@@ -54,20 +52,17 @@
     {:else if baseline}
       <form onsubmit={save}>
         <CategoryRulesFields {language} format={category.format} bind:rules disabled={busy} />
-        <div class="rule-save"><button class="primary" disabled={saving || playersBusy || drawBusy || (!pending && !rulesDirty)}>{saving ? text.saving : pending ? text.retry : language === 'sr' ? 'Sačuvaj pravila' : 'Save rules'}</button>
+        <div class="rule-save"><button class="primary" disabled={saving || drawBusy || (!pending && !rulesDirty)}>{saving ? text.saving : pending ? text.retry : language === 'sr' ? 'Sačuvaj pravila' : 'Save rules'}</button>
           {#if rulesDirty}<span class="muted">{language === 'sr' ? 'Sačuvaj pravila pre pravljenja rasporeda.' : 'Save rules before creating an arrangement.'}</span>{/if}</div>
       </form>
     {/if}
   </section>
   {#if baseline}
-    <fieldset class="participants-setup" disabled={saving || pending !== null || drawBusy}><legend>{language === 'sr' ? 'Učesnici kategorije' : 'Category participants'}</legend><Players embedded {active} {tournament} {category} {language} bind:busy={playersBusy} bind:dirty={playersDirty} onentrieschange={() => refreshToken += 1} /></fieldset>
-    <DrawSetup {active} {tournament} {category} {language} rules={savedRules} {refreshToken} externalLocked={rulesDirty || saving || playersBusy || pending !== null} bind:busy={drawBusy} bind:dirty={drawDirty} {onview} />
+    <DrawSetup {active} {tournament} {category} {language} rules={savedRules} externalLocked={rulesDirty || saving || pending !== null} bind:busy={drawBusy} bind:dirty={drawDirty} {onview} />
   {/if}
 </div>
 <style>
   .category-setup { display: grid; gap: 28px; }
   .rules-toolbar { display: flex; justify-content: flex-end; margin-bottom: 12px; }
-  .participants-setup legend { font-size: 12px; font-weight: 600; padding: 0 0 16px; }
-  .participants-setup { margin: 0; padding: 0; border: 0; min-width: 0; }
   .rule-save { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 20px; }
 </style>

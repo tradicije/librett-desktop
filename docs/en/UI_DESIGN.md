@@ -82,5 +82,5 @@ Category creation/editing has a dedicated screen; Groups has its own tab with a 
 
 
 Category Settings uses one outer panel, with flat sections separated by spacing
-and dividers. Embedded registrations do not add nested panel frames. Category
+and dividers. Participant lists and registration forms belong only to Registrations. Category
 creation/editing shares the player editor form groups, fields and action styles.

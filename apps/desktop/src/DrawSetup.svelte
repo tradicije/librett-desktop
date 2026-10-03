@@ -3,8 +3,8 @@
   import { getCategoryDraw, listEntries, previewCategoryDraw, saveCategoryDraw, desktopAvailable,
     type CategoryRules, type CategoryDraw, type Category, type Tournament, type Entry, type DrawMode } from './api';
   import { messages, type Language } from './i18n';
-  let { rules, refreshToken = 0, externalLocked = false, onview, active = true, tournament, category, language, busy = $bindable(false), dirty = $bindable(false) }: {
-    rules: CategoryRules; refreshToken?: number; externalLocked?: boolean; onview: () => void; active?: boolean; tournament: Tournament; category: Category; language: Language; busy?: boolean; dirty?: boolean;
+  let { rules, externalLocked = false, onview, active = true, tournament, category, language, busy = $bindable(false), dirty = $bindable(false) }: {
+    rules: CategoryRules; externalLocked?: boolean; onview: () => void; active?: boolean; tournament: Tournament; category: Category; language: Language; busy?: boolean; dirty?: boolean;
   } = $props();
   const labels = {
     sr: {
@@ -63,7 +63,7 @@
       seeds = stored?.seeds.filter(id => entries.some(e => e.id === id)) ?? [];
       mode = stored?.mode ?? 'automatic'; dirty = false; saved = false; replacing = false;
     } catch { error = 'error'; }
-    finally { loading = false; initialized = true; }
+    finally { loading = false; }
   }
   onMount(() => { if (desktopAvailable) void load(); else loading = false; });
   let wasActive = untrack(() => active);
@@ -84,8 +84,6 @@
     } catch { error = 'error'; }
     finally { loading = false; }
   }
-  let initialized = $state(false);
-  $effect(() => { void refreshToken; if (initialized) untrack(() => { if (!busy) void refresh(); }); });
   function editSeeds(next: string[]) {
     seeds = next;
     if (draft) { draft.seeds = [...next]; draft.mode = 'manual'; }

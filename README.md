@@ -127,8 +127,7 @@ future companion adapters invoke the same application use cases. Confirmed
 results are the source of truth; standings are rebuildable projections.
 
 LibreTT's existing WordPress project and DimiPress Rally inform the design.
-This repository describes a new standalone application. The author intends to
-rename the existing WordPress project to `librett-wordpress`.
+This repository contains the standalone desktop application.
 
 ## Documentation and contributions
 

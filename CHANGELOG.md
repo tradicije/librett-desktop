@@ -6,7 +6,11 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Changed
 
-- Simplified category Settings into one panel with flat rules, participants and
+- Category Settings now contains only rules, seeds and arrangement options;
+  participant lists and registration forms remain in the Registrations tab.
+- Removed the outdated planned WordPress repository rename from both README files.
+
+- Simplified category Settings into one panel with flat rules and
   arrangement sections. Category creation/editing now shares player editor form
   groups, field spacing, dropdowns and action styling.
 
@@ -29,7 +33,7 @@ Notable changes to LibreTT are recorded here in English.
   Category cards and Edit/Delete actions share the player directory's layout, styles and icons.
   Registrations are accessed inside each category rather than at tournament root.
 - Category rules configure groups, qualifiers, match length, scoring targets and
-  tied-player mini-table/set-ratio/point-ratio order. Settings contains participants,
+  tied-player mini-table/set-ratio/point-ratio order. Settings contains rules and
   ordered seeds and automatic/manual arrangements; Groups shows round-robin
   pairings, while Draw shows a complete horizontally scrollable knockout bracket.
   Group qualifiers remain placeholders until match results are implemented.

@@ -62,5 +62,5 @@ sa ikonicama. Dodavanje/izmena ima poseban ekran; Grupe imaju poseban tab sa naj
 
 
 Podešavanja kategorije koriste jedan spoljašnji panel, sa sekcijama odvojenim
-razmacima i linijama. Ugrađene prijave ne dodaju okvire unutar panela. Dodavanje
+razmacima i linijama. Lista učesnika i prijavljivanje ostaju samo u tabu Prijave. Dodavanje
 i izmena kategorije koriste isti stil grupa polja i akcija kao editor igrača.

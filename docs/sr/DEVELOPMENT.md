@@ -272,7 +272,7 @@ Izmeni i Obriši u istom stilu kao lista igrača. Dodavanje i izmena otvaraju po
 ekran; klik na kategoriju otvara njene Prijave. Kategoriji sa prijavama nije moguće
 menjati disciplinu ili format. Promena kotizacije važi za buduće prijave.
 
-Podešavanja kategorije sadrže pravila, učesnike, redosled nosilaca i automatski ili
+Podešavanja kategorije sadrže pravila, redosled nosilaca i automatski ili
 ručni raspored. Pravila uključuju broj grupa, broj prolaznika, broj setova, poene,
 razliku za pobedu i redosled kriterijuma: mini-tabela izjednačenih, odnos setova i
 odnos poena. Kategorije sa grupama imaju poseban tab Grupe sa round-robin parovima i
