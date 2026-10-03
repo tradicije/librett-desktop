@@ -6,6 +6,7 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Changed
 
+- Tournament Settings is the leftmost tab, matching category navigation.
 - Tournament cards are clickable throughout, with 16:9 covers, metadata rows and
   an explicit open button. Tournament Settings supports changing the name and
   cover with optimistic conflict protection and safe retries.

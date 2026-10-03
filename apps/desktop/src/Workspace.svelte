@@ -27,7 +27,7 @@
   } = $props();
   const uid = $props.id();
   let text = $derived(messages[language]);
-  const tournamentTabs: TournamentTab[] = ['overview', 'categories', 'cash', 'settings'];
+  const tournamentTabs: TournamentTab[] = ['settings', 'overview', 'categories', 'cash'];
   let history = $state<Route[]>([untrack(() => initialRoute)]);
   let historyIndex = $state(0);
   let route = $derived(history[historyIndex]);
