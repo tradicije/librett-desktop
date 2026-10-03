@@ -64,3 +64,9 @@ sa ikonicama. Dodavanje/izmena ima poseban ekran; Grupe imaju poseban tab sa naj
 Podešavanja kategorije koriste jedan spoljašnji panel, sa sekcijama odvojenim
 razmacima i linijama. Lista učesnika i prijavljivanje ostaju samo u tabu Prijave. Dodavanje
 i izmena kategorije koriste isti stil grupa polja i akcija kao editor igrača.
+
+
+Nosioci i raspored koriste numerisane redove nosilaca, ikonice za pomeranje i
+uklanjanje, zajedničke dropdown kontrole i odvojene akcije pravljenja i čuvanja.
+Status nacrta je iznad ručnih pozicija. Grupe koriste najviše tri kolone, a
+nokaut protivnici stoje u paru jedan pored drugog, odnosno vertikalno na užem prozoru.

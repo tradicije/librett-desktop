@@ -6,6 +6,10 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Changed
 
+- Redesigned seed and arrangement settings with numbered seed rows, icon actions,
+  shared dropdowns, clear draft status and grouped generation/save controls.
+  Manual group slots use up to three columns; knockout opponents appear in pairs.
+
 - Category Settings now contains only rules, seeds and arrangement options;
   participant lists and registration forms remain in the Registrations tab.
 - Removed the outdated planned WordPress repository rename from both README files.

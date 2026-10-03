@@ -84,3 +84,9 @@ Category creation/editing has a dedicated screen; Groups has its own tab with a 
 Category Settings uses one outer panel, with flat sections separated by spacing
 and dividers. Participant lists and registration forms belong only to Registrations. Category
 creation/editing shares the player editor form groups, fields and action styles.
+
+
+Seed and arrangement settings use numbered seed rows with move/remove actions,
+shared dropdowns and separate generation/save action rows. Draft status sits
+above the manual slots. Group slots use up to three columns; knockout opponents
+are paired side by side, stacking on narrow windows.

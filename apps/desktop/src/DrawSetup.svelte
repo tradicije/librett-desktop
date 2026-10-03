@@ -1,5 +1,8 @@
 <script lang="ts">
   import { onMount, untrack } from 'svelte';
+  import Select from './Select.svelte';
+  import Icon from './Icon.svelte';
+  import { groupName } from './draw-view';
   import { getCategoryDraw, listEntries, previewCategoryDraw, saveCategoryDraw, desktopAvailable,
     type CategoryRules, type CategoryDraw, type Category, type Tournament, type Entry, type DrawMode } from './api';
   import { messages, type Language } from './i18n';
@@ -131,74 +134,89 @@
 </script>
 
 <section class="draw-workspace">
-  <h2>{t.title}</h2><p class="muted">{t.intro}</p>
-  {#if !desktopAvailable}<p>{text.preview}</p>
-  {:else if loading}<p>{text.loading}</p>
+  <div class="section-heading arrangement-heading"><div><h2>{t.title}</h2><p class="muted">{t.intro}</p></div><button class="secondary icon-label" disabled={locked} onclick={load}><Icon name="restore" size={16} />{t.load}</button></div>
+  {#if !desktopAvailable}<p class="muted">{text.preview}</p>
+  {:else if loading}<p role="status">{text.loading}</p>
   {:else}
-    {#if error}<p role="alert">{error === 'error' ? text.error : t[error]}</p>{/if}
-    {#if saved}<p role="status">{t.saved}</p>{/if}
-    {#if stale}<p role="alert">{t.stale}</p>{/if}
-    <button class="secondary" disabled={locked} onclick={load}>{t.load}</button>
-    {#if entries.length < 2 || entries.length > 4096}<p>{t.min}</p>
+    {#if error}<p class="error" role="alert">{error === 'error' ? text.error : t[error]}</p>{/if}
+    {#if saved}<p class="notice" role="status">{t.saved}</p>{/if}
+    {#if stale}<p class="banner" role="alert">{t.stale}</p>{/if}
+    {#if entries.length < 2 || entries.length > 4096}<p class="muted">{t.min}</p>
     {:else}
-      <fieldset disabled={locked}>
-        <legend>{language === 'sr' ? 'Pravila raspoređivanja' : 'Arrangement options'}</legend>
-        <div class="draw-options">
-          <label>{text.draw}<select bind:value={mode}><option value="automatic">{t.automatic}</option><option value="manual">{t.manual}</option></select></label>
-
-        </div>
-        <h3>{t.seeds}</h3>
+      <fieldset class="arrangement-options" disabled={locked}>
+        <legend>{language === 'sr' ? 'Način raspoređivanja' : 'Arrangement method'}</legend>
+        <div class="method-field"><Select label={language === 'sr' ? 'Način raspoređivanja' : 'Arrangement method'} bind:value={mode} options={[{ value: 'automatic', label: t.automatic }, { value: 'manual', label: t.manual }]} disabled={locked} /></div>
+        <div class="seed-heading"><h3>{t.seeds}</h3><span class="pill">{seeds.length}</span></div>
+        {#if !seeds.length}<p class="field-hint">{language === 'sr' ? 'Dodaj nosioce redom, od najjačeg. Ostali učesnici biće raspoređeni bez statusa nosioca.' : 'Add seeds in order, strongest first. Other entries will be placed without seed status.'}</p>{/if}
         <ol class="seed-list">
           {#each seeds as id, index (id)}
-            <li><span>{entryLabel(id)}</span><button class="secondary" disabled={index === 0} aria-label={`${t.up}: ${entryLabel(id)}`} onclick={() => moveSeed(index, -1)}>↑</button><button class="secondary" disabled={index === seeds.length - 1} aria-label={`${t.down}: ${entryLabel(id)}`} onclick={() => moveSeed(index, 1)}>↓</button><button class="secondary" onclick={() => editSeeds(seeds.filter(seed => seed !== id))}>{t.remove}</button></li>
+            <li><span class="seed-rank">{index + 1}</span><span class="seed-name">{entryLabel(id)}</span><div class="seed-actions">
+              <button class="icon-button" disabled={locked || index === 0} aria-label={`${t.up}: ${entryLabel(id)}`} title={t.up} onclick={() => moveSeed(index, -1)}><Icon name="arrow-up" size={16} /></button>
+              <button class="icon-button" disabled={locked || index === seeds.length - 1} aria-label={`${t.down}: ${entryLabel(id)}`} title={t.down} onclick={() => moveSeed(index, 1)}><Icon name="arrow-down" size={16} /></button>
+              <button class="secondary icon-label" disabled={locked} aria-label={`${t.remove}: ${entryLabel(id)}`} onclick={() => editSeeds(seeds.filter(seed => seed !== id))}><Icon name="trash" size={16} />{t.remove}</button>
+            </div></li>
           {/each}
         </ol>
-        <div class="draw-options"><label>{t.addSeed}<select bind:value={newSeed}><option value="">{t.choose}</option>{#each entries.filter(e => !seeds.includes(e.id)) as entry}<option value={entry.id}>{label(entry)}</option>{/each}</select></label><button class="secondary" disabled={!newSeed} onclick={() => { editSeeds([...seeds, newSeed]); newSeed = ''; }}>{t.addSeed}</button></div>
-        {#if replacing}<p>{t.replaceHint}</p>{/if}
-        <div class="draw-options"><button class="primary" onclick={generate}>{replacing ? t.replace : t.generate}</button>{#if replacing}<button class="secondary" onclick={() => replacing = false}>{t.cancel}</button>{/if}</div>
+        <div class="seed-add"><label>{t.addSeed}<Select label={t.addSeed} bind:value={newSeed} options={[{ value: '', label: t.choose }, ...entries.filter(e => !seeds.includes(e.id)).map(entry => ({ value: entry.id, label: label(entry) }))]} disabled={locked} /></label><button class="secondary icon-label" disabled={locked || !newSeed} onclick={() => { editSeeds([...seeds, newSeed]); newSeed = ''; }}><Icon name="plus" size={18} />{t.addSeed}</button></div>
+        {#if replacing}<p class="banner">{t.replaceHint}</p>{/if}
+        <div class="form-actions"><button class="primary" disabled={locked} onclick={generate}><Icon name="layer-group" size={18} />{replacing ? t.replace : t.generate}</button>{#if replacing}<button class="secondary" disabled={locked} onclick={() => replacing = false}>{t.cancel}</button>{/if}</div>
       </fieldset>
     {/if}
     {#if draft}
-      <p class="muted">{t.revision}: {revision} · {dirty ? t.unsaved : t.saved} · {t.missing}: {missing}</p>
-      {#if draft.format === 'groups_knockout'}<p class="muted">{t.groupCount}: {draft.settings.group_count} · {t.qualifiers}: {draft.settings.qualifiers_per_group}</p>{/if}
-      <p class="muted">{t.hint}</p>
-      <div class="draw-sections">
-        {#each draft.sections as section, group}
-          <section class="draw-section">
-            <h3>{category.format === 'groups_knockout' ? `${t.group} ${group + 1}` : text.bracket}</h3>
-            {#each section as id, slot}
-              <label class:pair-start={category.format === 'knockout' && slot % 2 === 0}>
-                {category.format === 'knockout' ? `${t.pair} ${Math.floor(slot / 2) + 1} · ${t.position} ${slot % 2 + 1}` : `${t.position} ${slot + 1}`}
-                <select value={id ?? ''} disabled={locked || stale} onchange={event => assign(group, slot, event.currentTarget.value)}>
-                  <option value="">{category.format === 'knockout' && missing === 0 && section[slot ^ 1] ? t.bye : t.empty}</option>
-                  {#each draft.participants as entry}<option value={entry.id}>{draft.seeds.includes(entry.id) ? `#${draft.seeds.indexOf(entry.id) + 1} ` : ''}{label(entry)}</option>{/each}
-                </select>
-              </label>
-            {/each}
-          </section>
-        {/each}
-      </div>
-      <button class="secondary" disabled={busy || dirty} onclick={onview}>{text.draw}</button>
-      <button disabled={externalLocked || action || loading || (!pending && (stale || !dirty))} onclick={save}>{action ? text.saving : pending ? t.retry : t.save}</button>
+      <section class="layout-editor">
+        <div class="section-heading layout-heading"><h3>{language === 'sr' ? 'Raspored učesnika' : 'Entry arrangement'}</h3><div class="layout-status"><span class="pill">{t.revision}: {revision}</span><span class="pill">{dirty ? t.unsaved : t.saved}</span><span class="pill">{t.missing}: {missing}</span></div></div>
+        {#if draft.format === 'groups_knockout'}<p class="field-hint">{t.groupCount}: {draft.settings.group_count} · {t.qualifiers}: {draft.settings.qualifiers_per_group}</p>{/if}
+        <p class="field-hint">{t.hint}</p>
+        <div class="draw-sections" class:knockout-layout={category.format === 'knockout'}>
+          {#each draft.sections as section, group}
+            <section class="draw-section">
+              <h3>{category.format === 'groups_knockout' ? `${t.group} ${groupName(group)}` : text.bracket}</h3>
+              {#each section as id, slot}
+                <label class:pair-start={category.format === 'knockout' && slot % 2 === 0}>
+                  <span>{category.format === 'knockout' ? `${t.pair} ${Math.floor(slot / 2) + 1} · ${t.position} ${slot % 2 + 1}` : `${t.position} ${slot + 1}`}</span>
+                  <Select label={`${category.format === 'groups_knockout' ? `${t.group} ${groupName(group)}` : text.bracket} · ${t.position} ${slot + 1}`} bind:value={() => id ?? '', value => assign(group, slot, value)} disabled={locked || stale} options={[{ value: '', label: category.format === 'knockout' && missing === 0 && section[slot ^ 1] ? t.bye : t.empty }, ...draft.participants.map(entry => ({ value: entry.id, label: `${draft?.seeds.includes(entry.id) ? `#${draft.seeds.indexOf(entry.id) + 1} ` : ''}${label(entry)}` }))]} />
+                </label>
+              {/each}
+            </section>
+          {/each}
+        </div>
+        <div class="form-actions layout-actions"><button class="primary" disabled={externalLocked || action || loading || (!pending && (stale || !dirty))} onclick={save}><Icon name="check-circle" size={18} />{action ? text.saving : pending ? t.retry : t.save}</button><button class="secondary icon-label" disabled={busy || dirty} onclick={onview}><Icon name="arrow-right" size={18} />{text.draw}</button></div>
+      </section>
     {/if}
   {/if}
 </section>
 
 <style>
-  .draw-workspace { display: grid; gap: 16px; border-top: 1px solid var(--border-subtle); padding-top: 28px; }
-  .draw-workspace > h2 { margin: 0; }
-  .draw-workspace > p { margin: 0; }
-  .draw-workspace > button { justify-self: start; }
+  .draw-workspace { display: grid; gap: 24px; border-top: 1px solid var(--border-subtle); padding-top: 28px; }
+  .arrangement-heading { margin: 0; align-items: flex-start; }
+  .arrangement-heading p { margin: 8px 0 0; }
+  .arrangement-heading button { flex-shrink: 0; }
   fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
   legend { padding: 0 0 12px; font-size: 12px; font-weight: 550; }
-  .draw-options { display: flex; gap: .75rem; align-items: end; flex-wrap: wrap; margin: .75rem 0; }
-  label { display: grid; gap: .4rem; min-width: 0; }
-  select { padding: .6rem; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: inherit; max-width: 100%; }
-  .seed-list { margin: 0; padding-left: 24px; }
-  .seed-list li { padding: 8px 0; border-bottom: 1px solid var(--border-subtle); }
-  .seed-list span { display: inline-block; width: min(320px, 100%); font-size: 12px; overflow-wrap: anywhere; }
-  .seed-list button { margin-left: 6px; min-height: 30px; padding: 5px 8px; }
-  .draw-sections { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 1rem; }
-  .draw-section { display: grid; align-content: start; gap: .75rem; }
-  .pair-start { padding-top: .75rem; border-top: 1px solid var(--border); }
+  .method-field { max-width: 320px; margin-bottom: 24px; }
+  .seed-heading { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  h3 { margin: 0; font-size: 12px; }
+  label { display: grid; gap: 6px; min-width: 0; }
+  .field-hint { font-size: 11px; line-height: 1.7; color: var(--text-muted); margin: 0 0 16px; }
+  .seed-list { list-style: none; margin: 0; padding: 0; }
+  .seed-list li { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border-subtle); }
+  .seed-rank { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border-radius: 5px; background: var(--background); color: var(--primary); font-size: 11px; font-weight: 600; }
+  .seed-name { flex: 1; min-width: 0; font-size: 12px; overflow-wrap: anywhere; }
+  .seed-actions { display: flex; align-items: center; gap: 4px; }
+  .seed-actions .secondary { border-color: transparent; min-height: 30px; padding: 5px 8px; color: var(--text-secondary); }
+  .seed-add { display: flex; gap: 12px; align-items: end; margin: 20px 0 24px; }
+  .seed-add label { flex: 1; max-width: 480px; }
+  .layout-editor { min-width: 0; border-top: 1px solid var(--border-subtle); padding-top: 24px; }
+  .layout-heading { align-items: flex-start; flex-wrap: wrap; }
+  .layout-status { display: flex; gap: 6px; flex-wrap: wrap; }
+  .draw-sections { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+  .draw-section { display: grid; align-content: start; gap: 14px; min-width: 0; }
+  .knockout-layout { grid-template-columns: 1fr; }
+  .knockout-layout .draw-section { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .knockout-layout .draw-section h3 { grid-column: 1 / -1; }
+  .draw-section label > span { color: var(--text-secondary); font-size: 11px; }
+  .pair-start { padding-top: 14px; border-top: 1px solid var(--border-subtle); }
+  .layout-actions { margin-top: 24px; }
+  @media (max-width: 1100px) { .draw-sections { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 650px) { .arrangement-heading, .seed-add { flex-direction: column; align-items: stretch; } .draw-sections, .knockout-layout .draw-section { grid-template-columns: 1fr; } .seed-add label { max-width: none; } .seed-list li { flex-wrap: wrap; } .seed-actions { margin-left: 40px; } }
 </style>
