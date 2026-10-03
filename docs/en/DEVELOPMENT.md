@@ -286,3 +286,9 @@ remain labeled placeholders; match scoring, standings and progression are pendin
 
 Schema 11 saves versioned rules and migrates existing group draft settings after
 a pre-v11 backup. See [ADR 0012](../adr/0012-category-rules-and-draw-view.md).
+
+
+Workspace scrolling uses a bounded container below the 48px title bar. The root
+document does not scroll, and vertical overscroll cannot chain into it. Sticky
+sidebars and toolbars use the container origin; tab switching restores the
+container scroll position. This isolates the tab row from macOS elastic scrolling.

@@ -60,8 +60,14 @@
     try { localStorage.setItem('librett.language', language); } catch { /* Optional preference. */ }
   });
   $effect(() => { resolvedTheme = saveTheme(theme); });
+  function workspaceScroller() {
+    return document.getElementById(activeId === homeId ? 'home-workspace' : `work-panel-${activeId}`);
+  }
+  function restoreScroll(position: number) {
+    workspaceScroller()?.scrollTo({ top: position, left: 0, behavior: 'instant' });
+  }
   function remember() {
-    activeTab.scroll = window.scrollY;
+    activeTab.scroll = workspaceScroller()?.scrollTop ?? 0;
     const focused = document.activeElement;
     if (focused instanceof HTMLElement && focused.closest('.workspace-frame')) activeTab.focus = focused;
   }
@@ -69,7 +75,7 @@
     if (locked || modalOpen() || id === activeId) return;
     contextMenu = null; remember(); activeId = id;
     await tick();
-    window.scrollTo(0, activeTab.scroll);
+    restoreScroll(activeTab.scroll);
     if (activeTab.focus?.isConnected) activeTab.focus.focus({ preventScroll: true });
     else document.getElementById(`work-tab-${id}`)?.focus({ preventScroll: true });
     document.getElementById(`work-tab-${id}`)?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
@@ -78,7 +84,7 @@
     if (locked || modalOpen()) return;
     if (route.view === 'dashboard') { await activate(homeId); homeWorkspace.instance?.goHome(); return; }
     contextMenu = null; remember(); const tab = makeTab(route); tabs.push(tab); activeId = tab.id;
-    await tick(); window.scrollTo(0, 0);
+    await tick(); restoreScroll(0);
     document.getElementById(`work-tab-${tab.id}`)?.focus({ preventScroll: true });
     document.getElementById(`work-tab-${tab.id}`)?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   }
@@ -100,7 +106,7 @@
       if (id === activeId) activeId = tabs[index + 1]?.id ?? tabs[index - 1].id;
       tabs = tabs.filter(tab => tab.id !== id);
     }
-    await tick(); window.scrollTo(0, activeTab.scroll);
+    await tick(); restoreScroll(activeTab.scroll);
     document.getElementById(`work-tab-${activeId}`)?.focus({ preventScroll: true });
   }
   function travel(delta: number) {
@@ -239,10 +245,10 @@
   .titlebar-home.active { background: var(--surface); }
   .titlebar-home { border: 0; background: transparent; width: 32px; flex-shrink: 0; padding: 6px; }
   .new-work-tab { border: 0; background: transparent; font-size: 20px; width: 32px; flex-shrink: 0; }
-  .workspace-frame { padding-top: 48px; }
+  .workspace-frame { position: fixed; inset: 48px 0 0; overflow: auto; overscroll-behavior-y: contain; }
   .workspace-frame[hidden] { display: none; }
   .workspace-frame :global(.shell) { min-height: calc(100dvh - 48px); }
-  .workspace-frame :global(aside) { top: 48px; height: calc(100dvh - 48px); }
-  .workspace-frame :global(.app-toolbar) { top: 48px; }
+  .workspace-frame :global(aside) { top: 0; height: calc(100dvh - 48px); }
+  .workspace-frame :global(.app-toolbar) { top: 0; }
   @media (max-width: 650px) { .workspace-frame :global(aside) { height: auto; } }
 </style>

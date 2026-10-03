@@ -49,3 +49,9 @@ its state. IDs for repeated dialogs are instance-specific. Tabs are session-loca
 and restart does not restore unsaved forms. Native window closing retains its
 existing behavior. Routing inside a tab still replaces its current child screen;
 retention applies while switching between working tabs, not every history entry.
+
+
+Workspace scrolling uses a bounded container below the 48px title bar. The root
+document does not scroll, and vertical overscroll cannot chain into it. Sticky
+sidebars and toolbars use the container origin; tab switching restores the
+container scroll position. This isolates the tab row from macOS elastic scrolling.

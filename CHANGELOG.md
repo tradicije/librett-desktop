@@ -58,6 +58,10 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Fixed
 
+- Isolate workspace scrolling below the title bar so macOS elastic overscroll
+  cannot move the tabs. Preserve each workspace's scroll position using its own
+  scroll container instead of document scrolling.
+
 - Keep the workspace tab bar fixed to the viewport through the end of long
   pages and subtract its height from workspace/sidebar height to avoid an
   unnecessary vertical scrollbar on short pages.

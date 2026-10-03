@@ -42,6 +42,7 @@
   --radius: 6px;
 }
 * { box-sizing: border-box; }
+html, body { height: 100%; overflow: hidden; overscroll-behavior-y: none; }
 body { margin: 0; }
 button, input, textarea, select { font: inherit; }
 button { cursor: pointer; }
