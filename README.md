@@ -2,6 +2,16 @@
   <img src="assets/img/logo-dark.png" alt="LibreTT" width="256" />
 </p>
 
+# LibreTT
+
+Free and open-source desktop software for organizing table-tennis tournaments,
+with local data and offline operation.
+
+![License: AGPL-3.0-or-later](https://img.shields.io/badge/License-AGPL--3.0--or--later-3da639.svg)
+![Tauri 2](https://img.shields.io/badge/Tauri-2-24c8db.svg)
+![Svelte 5](https://img.shields.io/badge/Svelte-5-ff3e00.svg)
+![Offline](https://img.shields.io/badge/Offline-supported-3da639.svg)
+
 [Srpski](README-sr.md)
 
 LibreTT is a free and open-source application in development for organizing
