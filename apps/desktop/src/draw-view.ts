@@ -37,15 +37,15 @@ export function bracketSlots(draw: CategoryDraw | null, rules: CategoryRules, fo
     const entrants = new Map(draw.participants.map(e => [e.id,e]));
     return qualification.map(slot => {
       const entry = slot.entry_id ? entrants.get(slot.entry_id) : undefined;
-      if (entry) return { id: entry.id, kind: 'entry', label: entry.members.map(playerLabel).join(' / '), club: [...new Set(entry.members.map(m => m.club).filter(Boolean))].join(' / ') };
+      if (entry) return { id: entry.id, kind: 'entry', group: slot.group ?? undefined, place: slot.place ?? undefined, label: entry.members.map(playerLabel).join(' / '), club: [...new Set(entry.members.map(m => m.club).filter(Boolean))].join(' / ') };
       if (slot.bye) return empty('bye');
-      return { kind:'qualifier',group:slot.group ?? undefined,place:slot.place ?? undefined,label:language==='sr' ? `${slot.place}. iz grupe ${groupName(slot.group ?? 0)}` : `${groupName(slot.group ?? 0)} · place ${slot.place}` };
+      return { kind:'qualifier',group:slot.group ?? undefined,place:slot.place ?? undefined,label:language==='sr' ? 'Čeka prolaznika' : 'Awaiting qualifier' };
     });
   }
   const count = rules.group_count * rules.qualifiers_per_group;
   if (count < 2 || count > 4096) return [];
   const qualified: BracketSlot[] = [];
-  for (let place = 1; place <= rules.qualifiers_per_group; place++) for (let group = 0; group < rules.group_count; group++) qualified.push({ kind: 'qualifier', group, place, label: language === 'sr' ? `${place}. iz grupe ${groupName(group)}` : `${groupName(group)} · place ${place}` });
+  for (let place = 1; place <= rules.qualifiers_per_group; place++) for (let group = 0; group < rules.group_count; group++) qualified.push({ kind: 'qualifier', group, place, label: language === 'sr' ? 'Čeka prolaznika' : 'Awaiting qualifier' });
   const size = 2 ** Math.ceil(Math.log2(count));
   const slots = seedPositions(size).map(rank => qualified[rank - 1] ?? empty('bye'));
   // Separate qualifiers from the same group in the opening round where possible.

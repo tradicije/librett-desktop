@@ -9,6 +9,7 @@ sa lokalnim podacima i radom bez interneta.
 
 ![License: AGPL-3.0-or-later](https://img.shields.io/badge/License-AGPL--3.0--or--later-3da639.svg)
 ![Tauri 2](https://img.shields.io/badge/Tauri-2-24c8db.svg)
+![Rust](https://img.shields.io/badge/Rust-000000.svg?logo=rust&logoColor=white)
 ![Svelte 5](https://img.shields.io/badge/Svelte-5-ff3e00.svg)
 ![Offline](https://img.shields.io/badge/Offline-supported-3da639.svg)
 

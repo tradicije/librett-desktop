@@ -1,7 +1,7 @@
 <script lang="ts">
   import PlayerName from './PlayerName.svelte';
   import Icon from './Icon.svelte';
-  import { bracketRounds, roundTitle, type BracketSlot } from './draw-view';
+  import { bracketRounds, roundTitle, groupName, type BracketSlot } from './draw-view';
   import type { ScheduledMatch, MatchResult } from './api';
   import type { Language } from './i18n';
   let { slots, language, progress = [] }: { slots: BracketSlot[]; language: Language; progress?: ScheduledMatch[] } = $props();
@@ -33,8 +33,8 @@
           <div class="bracket-match" style:left={`${column * 252}px`} style:top={`${44 + match.center - 34}px`}>
             <span class="match-number">#{match.number}</span>
             {#each [match.left, match.right] as entry, side}
-              <div class="bracket-entry" class:winner={!!entry.id && match.result?.winner === entry.id} class:unresolved={entry.kind !== 'entry'} class:bye={entry.kind === 'bye'} title={entry.label}>
-                {#if entry.seed}<span class="seed-number">{entry.seed}</span>{/if}
+              <div class="bracket-entry" class:winner={!!entry.id && match.result?.winner === entry.id} class:unresolved={entry.kind !== 'entry'} class:bye={entry.kind === 'bye'} title={`${entry.group !== undefined && entry.place !== undefined ? `${groupName(entry.group)}${entry.place} ` : ''}${entry.label}`}>
+                {#if entry.group !== undefined && entry.place !== undefined}<span class="qualification-code">{groupName(entry.group)}{entry.place}</span>{:else if entry.seed}<span class="seed-number">{entry.seed}</span>{/if}
                 <span class="entry-name"><PlayerName label={entry.label} /></span>
                 {#if match.result}<b class="bracket-score">{setsWon(match.result, side)}</b>{/if}
               </div>
@@ -62,6 +62,7 @@
   .winner { color: var(--primary); background: var(--primary-subtle); }
   .bracket-score { margin-left: auto; font-size: 12px; }
   .seed-number { flex-shrink: 0; color: var(--primary); font-size: 10px; font-weight: 650; }
+  .qualification-code { flex-shrink: 0; color: var(--text-secondary); font-size: 10px; font-weight: 600; font-variant-numeric: tabular-nums; }
   .unresolved { color: var(--text-secondary); }
   .bye { color: var(--text-muted); font-size: 10px; }
   .champion { position: absolute; width: 176px; height: 68px; display: flex; align-items: center; gap: 12px; padding: 16px; border: 1px solid var(--border); border-radius: 7px; background: var(--surface); }

@@ -1,5 +1,9 @@
 # Desktop interface direction
 
+Group qualifiers display their origin before their name in the knockout bracket
+(A1, B2, etc.). The prefix follows the entrant through later rounds; unresolved
+places show the same prefix with a short awaiting-qualifier label.
+
 LibreTT is an organizer's working tool. Its interface should help a person find
 an entry, confirm attendance or record a payment quickly during a busy tournament.
 The visual hierarchy follows those tasks rather than promotional content.

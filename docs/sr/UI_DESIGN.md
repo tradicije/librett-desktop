@@ -1,5 +1,9 @@
 # Smernice za desktop interfejs
 
+Prolaznici grupa u kosturu imaju oznaku grupe i plasmana ispred imena (A1, B2
+i slično). Oznaka prati igrača kroz naredne runde; nerazrešena mesta prikazuju
+istu oznaku uz kratko „Čeka prolaznika”.
+
 LibreTT je radni alat organizatora. Tokom turnira najvažnije je brzo pronaći
 prijavu, potvrditi dolazak ili evidentirati uplatu. Hijerarhija prati te zadatke.
 
