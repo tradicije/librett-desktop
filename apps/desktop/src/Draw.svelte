@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, untrack } from 'svelte';
   import { getCategoryDraw, listEntries, previewCategoryDraw, saveCategoryDraw, desktopAvailable,
     type CategoryDraw, type Category, type Tournament, type Entry, type DrawMode } from './api';
   import { messages, type Language } from './i18n';
-  let { tournament, category, language, busy = $bindable(false) }: {
-    tournament: Tournament; category: Category; language: Language; busy?: boolean;
+  let { active = true, tournament, category, language, busy = $bindable(false), dirty = $bindable(false) }: {
+    active?: boolean; tournament: Tournament; category: Category; language: Language; busy?: boolean; dirty?: boolean;
   } = $props();
   const labels = {
     sr: {
@@ -42,7 +42,6 @@
   let groupCount = $state(2);
   let qualifiers = $state(2);
   let mode = $state<DrawMode>('automatic');
-  let dirty = $state(false);
   let replacing = $state(false);
   let saved = $state(false);
   let loading = $state(true);
@@ -69,6 +68,23 @@
     finally { loading = false; }
   }
   onMount(() => { if (desktopAvailable) void load(); else loading = false; });
+  let wasActive = untrack(() => active);
+  $effect(() => {
+    if (active && !wasActive && desktopAvailable && !busy) void refresh();
+    wasActive = active;
+  });
+  async function refresh() {
+    loading = true;
+    try {
+      const [all, stored] = await Promise.all([listEntries(category.id), getCategoryDraw(tournament.id, category.id)]);
+      entries = all.filter(entry => entry.status === 'registered');
+      if (!dirty && stored && stored.revision !== revision) {
+        draft = stored; revision = stored.revision; seeds = [...stored.seeds];
+        groupCount = stored.settings.group_count; qualifiers = stored.settings.qualifiers_per_group; mode = stored.mode;
+      }
+    } catch { error = 'error'; }
+    finally { loading = false; }
+  }
   function editSeeds(next: string[]) {
     seeds = next;
     if (draft) { draft.seeds = [...next]; draft.mode = 'manual'; }

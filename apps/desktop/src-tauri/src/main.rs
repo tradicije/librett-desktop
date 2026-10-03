@@ -55,6 +55,55 @@ fn add_category(
     )
 }
 
+#[cfg(target_os = "macos")]
+fn center_window_controls(window: &tauri::WebviewWindow) -> tauri::Result<()> {
+    window.with_webview(|webview| {
+        // SAFETY: Tauri executes with_webview on the main thread and provides
+        // a live WKWebView. No native references escape this callback.
+        let native = unsafe { &*webview.inner().cast::<objc2_web_kit::WKWebView>() };
+        let Some(window) = native.window() else {
+            return;
+        };
+        let bounds = native.bounds();
+        // Keep in sync with the 48 CSS-pixel workspace title bar. AppKit uses
+        // logical points as well; convert coordinates rather than assuming
+        // a fixed traffic-light size or title-bar inset on each macOS release.
+        let desired = bounds.origin.y
+            + if native.isFlipped() {
+                24.0
+            } else {
+                bounds.size.height - 24.0
+            };
+        for kind in [
+            objc2_app_kit::NSWindowButton::CloseButton,
+            objc2_app_kit::NSWindowButton::MiniaturizeButton,
+            objc2_app_kit::NSWindowButton::ZoomButton,
+        ] {
+            let Some(button) = window.standardWindowButton(kind) else {
+                continue;
+            };
+            // SAFETY: this standard AppKit button is live and accessed on the
+            // main thread; its parent is retained for this callback only.
+            let Some(parent) = (unsafe { button.superview() }) else {
+                continue;
+            };
+            let frame = button.frame();
+            let mut center = frame.origin;
+            center.x += frame.size.width / 2.0;
+            center.y += frame.size.height / 2.0;
+            let actual = parent.convertPoint_toView(center, Some(native));
+            let mut origin = frame.origin;
+            let delta = desired - actual.y;
+            origin.y += if parent.isFlipped() == native.isFlipped() {
+                delta
+            } else {
+                -delta
+            };
+            button.setFrameOrigin(origin);
+        }
+    })
+}
+
 fn main() {
     let context = tauri::generate_context!();
     // GDK's Wayland app_id defaults to the GLib program name. Set it before
@@ -66,6 +115,7 @@ fn main() {
         .setup(|app| {
             #[cfg(target_os = "macos")]
             if let Some(window) = app.get_webview_window("main") {
+                center_window_controls(&window)?;
                 window.with_webview(|webview| {
                     // SAFETY: Tauri supplies a live WKWebView and executes this
                     // callback on the main thread. The pointer is not retained.
@@ -80,6 +130,20 @@ fn main() {
             let repository = SqliteTournamentRepository::open(directory.join("librett.sqlite"))?;
             app.manage(Database(Mutex::new(repository)));
             Ok(())
+        })
+        .on_window_event(|window, event| {
+            #[cfg(target_os = "macos")]
+            if matches!(
+                event,
+                tauri::WindowEvent::Resized(_) | tauri::WindowEvent::Focused(true)
+            ) && !window.is_fullscreen().unwrap_or(false)
+            {
+                if let Some(webview) = window.get_webview_window("main") {
+                    let _ = center_window_controls(&webview);
+                }
+            }
+            #[cfg(not(target_os = "macos"))]
+            let _ = (window, event);
         })
         .invoke_handler(tauri::generate_handler![
             get_category_draw,

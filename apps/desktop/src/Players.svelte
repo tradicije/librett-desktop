@@ -1,11 +1,11 @@
 <script lang="ts">
   import Select from './Select.svelte';
-  import { onMount } from 'svelte';
+  import { onMount, untrack } from 'svelte';
   import Icon from './Icon.svelte';
   import { desktopAvailable, listEntries, listPlayers, registerEntries, setEntryStatus, setPlayerAttendance, type EntryStatus, type Entry, type Player, type Tournament, type Category } from './api';
   import { errorKey, messages, type Language, type MessageKey } from './i18n';
 
-  let { tournament, category, language, busy = $bindable(false) }: { tournament: Tournament; category: Category; language: Language; busy?: boolean } = $props();
+  let { active = true, tournament, category, language, busy = $bindable(false), dirty = $bindable(false) }: { active?: boolean; tournament: Tournament; category: Category; language: Language; busy?: boolean; dirty?: boolean } = $props();
   let text = $derived(messages[language]);
   let players = $state<Player[]>([]);
   let entries = $state<Entry[]>([]);
@@ -18,6 +18,7 @@
   let checked = $state<string[]>([]);
   let pairs = $state<string[][]>([]);
   let queued = $derived(pairs.flat());
+  $effect(() => { dirty = checked.length > 0 || pairs.length > 0; });
   let groups = $derived(category.discipline === 'singles' ? checked.map(id => [id]) : pairs);
   let loading = $state(false);
   let playersLoaded = $state(false);
@@ -35,6 +36,25 @@
   }
   onMount(() => { if (desktopAvailable) void loadPlayers(); });
   let requestVersion = 0;
+  let wasActive = untrack(() => active);
+  $effect(() => {
+    if (active && !wasActive && desktopAvailable && !busy) void refresh();
+    wasActive = active;
+  });
+  async function refresh() {
+    const version = ++requestVersion;
+    loading = true;
+    try {
+      const [current, directory] = await Promise.all([listEntries(categoryId), listPlayers()]);
+      if (version !== requestVersion) return;
+      entries = current; players = directory;
+      const claimed = new Set(current.filter(entry => entry.status === 'registered').flatMap(entry => entry.members.map(member => member.id)));
+      checked = checked.filter(id => !claimed.has(id));
+      pairs = pairs.filter(pair => pair.every(id => !claimed.has(id)));
+      entriesLoaded = true; playersLoaded = true;
+    } catch (cause) { error = errorKey(cause); }
+    finally { loading = false; }
+  }
   $effect(() => {
     void reload;
     const id = categoryId;

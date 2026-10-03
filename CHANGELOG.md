@@ -37,6 +37,12 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Fixed
 
+- Keep the workspace tab bar fixed to the viewport through the end of long
+  pages and subtract its height from workspace/sidebar height to avoid an
+  unnecessary vertical scrollbar on short pages.
+- Overlay the macOS title bar, retain native window controls and center their
+  actual AppKit frames on the tab row, including after resize/focus changes.
+
 - Connect screen navigation to webview history, including mouse back/forward
   buttons. Enable native macOS trackpad navigation gestures and restore the
   current screen when native navigation occurs during a pending write.
@@ -48,6 +54,24 @@ Notable changes to LibreTT are recorded here in English.
 - Removed the pending leagues tab from navigation during tournament development.
 
 ### Added
+
+- Collapsible sidebar shared across working tabs and saved as a local preference.
+  The compact 68px menu shows navigation icons with labels/tooltips and uses the
+  supplied dark/light square brand icons; expanded mode keeps the full logo with
+  the collapse control beside it with additional spacing. Clicking the compact brand icon expands the
+  menu; brand images do not navigate to Home.
+
+- Independent workspace tabs that retain screen state, searches, selections,
+  draft edits, focus, scroll position and their own Back/Forward history.
+- A fixed top bar with a pinned Home button, uniformly 180px-wide tabs, short page
+  labels that fade at the right only when overflowing, and full-context
+  tooltips, tab closing and right-click Open in new tab. Cmd/Ctrl-click and
+  middle-click also open navigation destinations in new tabs; Cmd/Ctrl+T
+  opens Home to choose a workspace, Cmd/Ctrl+W closes the active working tab,
+  and Ctrl+Tab cycles Home and working tabs.
+- Confirmation before discarding unsaved tab edits and protection against
+  switching/closing tabs during pending writes. Read-only data refreshes when
+  returning to a workspace while retaining valid selections and dirty drafts.
 
 - Editable category draw drafts for singles and doubles: ordered manual seeds,
   automatic/manual group allocation, organizer-selected group counts and

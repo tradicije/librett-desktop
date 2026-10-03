@@ -1,11 +1,12 @@
 <script lang="ts">
-  import { onMount, tick } from 'svelte';
+  import { onMount, tick, untrack } from 'svelte';
   import Icon from './Icon.svelte';
   import { desktopAvailable, listPlayers, deletePlayer, type Player } from './api';
   import { messages, errorKey, type Language, type MessageKey } from './i18n';
-  let { language, busy = $bindable(false), onadd, onedit, ondeletebegin }: {
-    language: Language; busy?: boolean; onadd: () => void; onedit: (id: string) => void; ondeletebegin?: () => void;
+  let { active = true, language, busy = $bindable(false), onadd, onedit, ondeletebegin }: {
+    active?: boolean; language: Language; busy?: boolean; onadd: () => void; onedit: (id: string) => void; ondeletebegin?: () => void;
   } = $props();
+  const uid = $props.id();
   let text = $derived(messages[language]);
   let players = $state<Player[]>([]);
   let loading = $state(false);
@@ -22,6 +23,8 @@
     finally { loading = false; }
   }
   onMount(() => { if (desktopAvailable) void load(); });
+  let wasActive = untrack(() => active);
+  $effect(() => { if (active && !wasActive && desktopAvailable && !busy) void load(); wasActive = active; });
   async function confirmDelete(player: Player) {
     ondeletebegin?.();
     pendingDelete = player; error = null; notice = false;
@@ -41,7 +44,7 @@
 </script>
 
 <div class="heading"><div><h1>{text.playerTab}</h1><p class="muted">{text.playerDirectoryIntro}</p></div>
-  <button class="primary" disabled={busy || !desktopAvailable} onclick={onadd}><Icon name="user-plus" />{text.addPlayer}</button>
+  <button class="primary" disabled={busy || !desktopAvailable} data-open-tab onclick={onadd}><Icon name="user-plus" />{text.addPlayer}</button>
 </div>
 {#if error}<p class="error" role="alert">{text[error]}{#if error !== 'player_in_use'}<button onclick={load} disabled={loading || busy}>{text.retry}</button>{/if}</p>{/if}
 <p role="status" class="notice">{notice ? text.playerDeleted : ''}</p>
@@ -56,16 +59,16 @@
         <p class="player-contact">{[player.email, player.phone].filter(Boolean).join(' · ')}</p>
       </div>
       <div class="player-actions">
-        <button class="secondary icon-label" disabled={busy} onclick={() => onedit(player.id)} aria-label={`${text.editPlayer}: ${player.name}`}><Icon name="edit" size={18} />{text.editPlayer}</button>
+        <button class="secondary icon-label" disabled={busy} data-open-tab onclick={() => onedit(player.id)} aria-label={`${text.editPlayer}: ${player.name}`}><Icon name="edit" size={18} />{text.editPlayer}</button>
         <button class="secondary icon-label" disabled={busy} onclick={() => confirmDelete(player)} aria-label={`${text.deletePlayer}: ${player.name}`}><Icon name="trash" size={18} />{text.deletePlayer}</button>
       </div>
     </article>
   {/each}
 </section>
-<dialog class="confirm-dialog" bind:this={dialog} aria-labelledby="delete-player-title" aria-describedby="delete-player-description"
+<dialog class="confirm-dialog" bind:this={dialog} aria-labelledby={`${uid}-delete-player-title`} aria-describedby={`${uid}-delete-player-description`}
   oncancel={(event) => { if (busy) event.preventDefault(); }} onclose={() => { pendingDelete = null; }}>
-  <h2 id="delete-player-title">{text.deletePlayer}</h2>
-  <p id="delete-player-description">{text.deletePlayerPrompt} <strong>{pendingDelete?.name}</strong>?</p>
+  <h2 id={`${uid}-delete-player-title`}>{text.deletePlayer}</h2>
+  <p id={`${uid}-delete-player-description`}>{text.deletePlayerPrompt} <strong>{pendingDelete?.name}</strong>?</p>
   <div class="dialog-actions">
     <button class="secondary" disabled={busy} onclick={cancelDelete}>{text.cancelDelete}</button>
     <button class="primary" disabled={busy} onclick={remove}><Icon name="trash" size={18} />{busy ? text.saving : text.deletePlayer}</button>

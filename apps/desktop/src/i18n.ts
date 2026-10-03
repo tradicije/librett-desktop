@@ -1,4 +1,8 @@
 const sr = {
+  collapseSidebar: 'Suzi levi meni', expandSidebar: 'Proširi levi meni',
+  openInNewTab: 'Otvori u novom tabu', workTabs: 'Radni tabovi', newTab: 'Novi tab', closeTab: 'Zatvori tab', unsavedChanges: 'Nesačuvane izmene',
+  closeUnsavedTab: 'Ovaj tab ima nesačuvane izmene. Zatvaranjem će biti odbačene.', discardAndClose: 'Odbaci i zatvori',
+
   playerCashIntro: 'Izaberi kategorije koje igrač plaća i klikni Naplati. Za vraćanje novca izaberi kategorije i klikni Povraćaj. Dubl kotizacija deli se na dva igrača.',
   notRegisteredCategory: 'Nije prijavljen u ovu kategoriju',
   cashActions: 'Naplata', pay: 'Naplati', registeredPlayers: 'Prijavljeno', paid: 'Plaćeno', partner: 'Partner', searchCashPlayers: 'Pretraži igrača, klub ili kategoriju',
@@ -77,6 +81,10 @@ const sr = {
 };
 type Messages = typeof sr;
 const en: Messages = {
+  collapseSidebar: 'Collapse sidebar', expandSidebar: 'Expand sidebar',
+  openInNewTab: 'Open in new tab', workTabs: 'Workspace tabs', newTab: 'New tab', closeTab: 'Close tab', unsavedChanges: 'Unsaved changes',
+  closeUnsavedTab: 'This tab has unsaved changes. Closing it will discard them.', discardAndClose: 'Discard and close',
+
   playerCashIntro: 'Select the categories the player is paying for and click Collect. To return money, select categories and click Refund. Doubles fees are split between both players.',
   notRegisteredCategory: 'Not registered in this category',
   cashActions: 'Payment', pay: 'Collect', registeredPlayers: 'Registered', paid: 'Paid', partner: 'Partner', searchCashPlayers: 'Search player, club or category',

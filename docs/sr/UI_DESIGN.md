@@ -33,3 +33,24 @@ repozitorijuma.
 Istorija ekrana i kartica koristi History API webview-a. Strelice i bočna dugmad
 miša dele istoriju; na macOS-u je uključena i navigacija trackpadom. Tokom upisa
 sistemska navigacija vraća trenutnu poziciju istorije pre promene ekrana.
+
+
+## Red radnih tabova
+
+Fiksna traka od 48px počinje stalnim Home dugmetom, pa nezavisnim radnim tabovima
+sa kratkim nazivom strane i punim kontekstom na zadržavanje miša. Nazad/Napred
+ostaju u traci ispod. Home nije običan tab. macOS sistemski dugmići dele isti red
+i centriraju se AppKit koordinatama. Ostali sistemi zadržavaju naslovnu traku.
+Visina sadržaja uzima ovu traku u obzir; skrol postoji tek kada sadržaj ne staje.
+Sakriveni radni prostori čuvaju lokalno stanje.
+
+Radni tabovi imaju fiksnu širinu 180px bez obzira na dužinu naziva. Tekst bledi sa
+desne strane samo kada zaista ne staje; ne koristi tri tačke. Pun naziv/kontekst
+je dostupan na zadržavanje miša, a lista tabova se skroluje horizontalno.
+
+
+Levi meni ima proširen i sužen režim od 68px. U proširenom režimu dugme za
+sužavanje je desno od punog logotipa sa razmakom od 16px; u suženom se koristi kvadratna ikonica
+brenda prema temi kao dugme za proširenje i navigacija samo ikonicama, sa
+pristupačnim nazivima/opisima. Slike brenda ne vode na Home.
+Zajednički izbor širine pamti se kroz radne tabove i restart aplikacije.

@@ -44,8 +44,8 @@ registration uses that directory. Entries can be withdrawn/restored, and player
 attendance is shared across categories in a tournament. Schema version 10 adds immutable category draw drafts; older on-disk databases receive a consistent
 `pre-v10-<uuid>.sqlite` backup before migration.
 
-Back/Forward follows screen history. Home returns to the selected module overview,
-then mode selection. The mode chooser has no sidebar. Saves lock navigation until
+Back/Forward follows the active workspace’s screen history. The top Home button
+returns to the pinned mode-selection workspace. The mode chooser has no sidebar. Saves lock navigation until
 completion. Local administration currently has no login or enforced user roles.
 
 ## Themes and icons
@@ -215,3 +215,55 @@ history, including tabs. macOS enables WKWebView horizontal trackpad navigation
 (the system’s swipe-between-pages preference must permit it). Normal horizontal
 scrolling remains native. Pending writes prevent screen changes even when
 navigation is triggered outside the toolbar. History is reset on application reload.
+
+
+## Workspace tabs
+
+Home is pinned behind the top-left Home button and never appears in the tab list.
+Choosing a tournament from Home opens a working tab. The tab label shows only the
+current page (e.g. Registrations or Cash desk); its tooltip contains the full context.
+Home preserves open working tabs. The + button and Cmd/Ctrl+T open Home to choose
+another workspace; they do not create an empty Home tab.
+
+Click normally to navigate inside the current working tab. Cmd/Ctrl-click,
+middle-click, or right-click → Open in new tab opens a destination separately.
+Right-clicking a working tab opens its current destination in another tab; it does
+not copy unsaved form contents. Close with ×, middle-click, or Cmd/Ctrl+W. Home
+cannot be closed. Ctrl+Tab / Ctrl+Shift+Tab cycle Home and working tabs. Arrow keys,
+Home and End navigate the focused working-tab list.
+
+Inactive workspace components remain mounted and hidden, retaining current forms,
+searches, selections, draft edits, focus and scroll. Each owns its route history;
+mouse buttons and macOS gestures act on the active workspace. Native History API
+entries serve as a centered bridge for gestures so histories never mix across tabs.
+Pending writes and open modal dialogs block tab changes. Closing a tab with unsaved
+player profiles, registration queues, tournament/category forms or draw edits asks
+for confirmation. Tabs exist for the current app session; restart does not restore
+them or unsaved forms. The OS window-close button retains its native behavior.
+
+Cash, registrations, directory and draw data refresh when returning to a tab.
+Valid selections remain; unsaved draw layouts are preserved and stale membership
+or revisions are rejected by the existing save validation.
+
+The 48px top bar is fixed to the viewport. Workspace and sidebar heights subtract
+that row, so short pages do not gain a scrollbar. On macOS, Overlay title-bar style
+and hiddenTitle put the native window buttons beside Home/tabs; AppKit coordinates
+center the actual button frames on the row after startup, resize and focus. Window
+chrome changes require restarting the desktop process. Other systems retain their
+native title bar above the workspace row. Blank row areas support native dragging.
+
+Working tabs are a fixed 180px wide regardless of label length. Labels fade at the
+right only when their measured text overflows; they do not use an ellipsis. The
+full page/context is available in the tooltip, and the tab strip scrolls horizontally.
+
+
+## Collapsible sidebar
+
+Use the button beside the logo to collapse the sidebar to 68px; the expanded menu
+uses 208px (184px in smaller desktop layouts). Compact mode shows only navigation
+icons with accessible labels and tooltips, plus `icon-dark.png` in dark UI or
+`icon-light.png` in light UI. Click the compact brand icon to expand; there is no
+separate expansion icon. Neither the full logo nor the compact icon navigates to Home. The preference
+is shared by Home and every working tab and saved under `librett.sidebarCollapsed`
+in local storage, including across application restarts. Theme changes also switch
+the compact brand icon. Collapse/expand changes layout without replacing screen state.

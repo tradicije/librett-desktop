@@ -1,10 +1,11 @@
 <script lang="ts">
-  import { onMount, tick } from 'svelte';
+  import { onMount, tick, untrack } from 'svelte';
   import Icon from './Icon.svelte';
   import { formatMoney } from './money';
   import { cashLedger, listEntries, settlePlayerCash, desktopAvailable, type Tournament, type Entry, type CashLedger } from './api';
   import { messages, errorKey, type Language, type MessageKey } from './i18n';
-  let { tournament, language, busy = $bindable(false) }: { tournament: Tournament; language: Language; busy?: boolean } = $props();
+  let { active = true, tournament, language, busy = $bindable(false) }: { active?: boolean; tournament: Tournament; language: Language; busy?: boolean } = $props();
+  const uid = $props.id();
   let text = $derived(messages[language]);
   let entries = $state<Entry[]>([]);
   let ledger = $state<CashLedger>({ records: [], allocations: [] });
@@ -56,16 +57,22 @@
   let outstanding = $derived(entries.reduce((sum,e) => sum+entryBalance(e).remaining,0));
   let netReceived = $derived(ledger.records.reduce((sum,r) => sum+(r.kind === 'payment' ? r.amount_minor : r.kind === 'refund' ? -r.amount_minor : 0),0));
   let registered = $derived(new Set(entries.filter(e => e.status !== 'withdrawn' && !tournament.categories.find(c => c.id === e.category_id)?.archived).flatMap(e => e.members.map(m => m.id))).size);
-  async function load() {
+  async function load(preserveSelection = false) {
     loading = true; error = null;
     try {
       const [cash, groups] = await Promise.all([cashLedger(tournament.id), Promise.all(tournament.categories.map(c => listEntries(c.id)))]);
       ledger = cash; entries = groups.flat();
-      selected = {}; loaded = true;
+      selected = preserveSelection ? Object.fromEntries(Object.entries(selected).map(([player, ids]) => [player, ids.filter(id => entries.some(entry => entry.id === id))])) : {};
+      loaded = true;
     } catch (cause) { error = errorKey(cause); }
     finally { loading = false; }
   }
   onMount(() => { if (desktopAvailable) void load(); });
+  let wasActive = untrack(() => active);
+  $effect(() => {
+    if (active && !wasActive && desktopAvailable && !busy) void load(true);
+    wasActive = active;
+  });
   function toggleCategory(playerId: string, entryId: string) {
     if (busy) return;
     const choices = selected[playerId] ?? [];
@@ -73,13 +80,13 @@
     notice = false;
   }
   async function paySelected(row: typeof rows[number]) {
-    if (busy || row.selectedRemaining <= 0) return;
+    if (busy || loading || row.selectedRemaining <= 0) return;
     const entryIds = row.accounts.filter(account => account.remaining > 0 && selected[row.id]?.includes(account.entry.id)).map(account => account.entry.id);
     pending = { id: crypto.randomUUID(), playerId: row.id, entryIds, paid: true };
     await save();
   }
   async function refundSelected(row: typeof rows[number]) {
-    if (busy || row.selectedNet <= 0) return;
+    if (busy || loading || row.selectedNet <= 0) return;
     refund = { playerId: row.id, name: row.name, accounts: row.accounts.filter(account => account.net > 0 && selected[row.id]?.includes(account.entry.id)).map(account => ({ entryId: account.entry.id, label: categoryLabel(account.entry), amount: account.net })) };
     await tick(); dialog.showModal();
   }
@@ -108,11 +115,11 @@
 {#if pending && !saving}<p class="banner">{text.cashRetryHint} <button class="secondary" onclick={save}>{text.retry}</button></p>{/if}
 {#if notice}<p class="notice" role="status">{text.cashSaved}</p>{/if}
 {#if loading}<p role="status">{text.loading}</p>{/if}
-{#if !loaded && desktopAvailable && !loading}<button onclick={load}>{text.retry}</button>{/if}
+{#if !loaded && desktopAvailable && !loading}<button onclick={() => load()}>{text.retry}</button>{/if}
 {#if loaded}
   <div class="cash-totals"><section class="panel"><h2>{text.outstanding}</h2><strong>{money(outstanding)}</strong></section><section class="panel"><h2>{text.netReceived}</h2><strong>{money(netReceived)}</strong></section><section class="panel"><h2>{text.registeredPlayers}</h2><strong>{registered}</strong></section></div>
   <section class="panel player-cash-list">
-    <div class="directory-toolbar"><label class="search-field"><Icon name="search" size={17} /><input type="search" aria-label={text.searchCashPlayers} placeholder={text.searchCashPlayers} bind:value={search} disabled={busy} /></label><span class="muted">{filtered.length} / {rows.length}</span></div>
+    <div class="directory-toolbar"><label class="search-field"><Icon name="search" size={17} /><input type="search" aria-label={text.searchCashPlayers} placeholder={text.searchCashPlayers} bind:value={search} disabled={busy || loading} /></label><span class="muted">{filtered.length} / {rows.length}</span></div>
     <!-- svelte-ignore a11y_no_noninteractive_tabindex (Keyboard users need a focusable container to scroll the category matrix horizontally.) -->
     <div class="cash-table-scroll" role="region" aria-label={text.cashDesk} tabindex="0">
       <table class="cash-player-table" style:min-width={`${380 + cashCategories.length * 170}px`}>
@@ -125,14 +132,14 @@
                 {@const account = row.accounts.find(a => a.entry.category_id === category.id)}
                 <td>
                   {#if account}
-                    <label class="cash-category-choice"><input type="checkbox" checked={selected[row.id]?.includes(account.entry.id)} onchange={() => toggleCategory(row.id,account.entry.id)} disabled={busy || (account.remaining === 0 && account.net <= 0)} aria-label={`${text.selectCashCategory}: ${row.name} · ${categoryLabel(account.entry)}`} /><span class="cash-category-amount">{account.remaining === 0 ? text.paid : money(account.remaining)}</span></label>
+                    <label class="cash-category-choice"><input type="checkbox" checked={selected[row.id]?.includes(account.entry.id)} onchange={() => toggleCategory(row.id,account.entry.id)} disabled={busy || loading || (account.remaining === 0 && account.net <= 0)} aria-label={`${text.selectCashCategory}: ${row.name} · ${categoryLabel(account.entry)}`} /><span class="cash-category-amount">{account.remaining === 0 ? text.paid : money(account.remaining)}</span></label>
                     {#if account.entry.members.length === 2}<small class="cash-cell-detail">{account.entry.members.find(m => m.id !== row.id)?.name}</small>{/if}
                     {#if account.entry.status === 'withdrawn'}<small class="cash-cell-detail">{text.withdrawnRegistrations}</small>{/if}
                   {:else}<span class="cash-cell-empty" aria-label={text.notRegisteredCategory}>—</span>{/if}
                 </td>
               {/each}
               <td class="cash-player-total"><strong>{money(row.remaining)}</strong>{#if row.selectedRemaining !== row.remaining}<small>{text.selectedCashAmount}: {money(row.selectedRemaining)}</small>{/if}</td>
-              <td><div class="cash-row-actions"><button class="primary cash-pay-button" onclick={() => paySelected(row)} disabled={busy || row.selectedRemaining <= 0} aria-label={`${text.pay}: ${row.name}`}>{text.pay}</button><button class="secondary" onclick={() => refundSelected(row)} disabled={busy || row.selectedNet <= 0} aria-label={`${text.refund}: ${row.name}`}>{text.refund}</button></div></td>
+              <td><div class="cash-row-actions"><button class="primary cash-pay-button" onclick={() => paySelected(row)} disabled={busy || loading || row.selectedRemaining <= 0} aria-label={`${text.pay}: ${row.name}`}>{text.pay}</button><button class="secondary" onclick={() => refundSelected(row)} disabled={busy || loading || row.selectedNet <= 0} aria-label={`${text.refund}: ${row.name}`}>{text.refund}</button></div></td>
             </tr>
           {/each}
         </tbody>
@@ -141,8 +148,8 @@
     {#if !filtered.length}<p class="muted">{rows.length ? text.noPlayers : text.cashNoEntries}</p>{/if}
   </section>
 {/if}
-<dialog class="confirm-dialog" bind:this={dialog} aria-labelledby="cash-refund-title" onclose={() => { refund = null; }}>
-  <h2 id="cash-refund-title">{text.confirmCashRefund}</h2><p>{refund?.name}</p>
+<dialog class="confirm-dialog" bind:this={dialog} aria-labelledby={`${uid}-cash-refund-title`} onclose={() => { refund = null; }}>
+  <h2 id={`${uid}-cash-refund-title`}>{text.confirmCashRefund}</h2><p>{refund?.name}</p>
   <ul class="cash-refund-items">{#each refund?.accounts ?? [] as account (account.entryId)}<li><span>{account.label}</span><strong>{money(account.amount)}</strong></li>{/each}</ul>
   <p><strong>{text.refund}: {money(refund?.accounts.reduce((sum,account) => sum+account.amount,0) ?? 0)}</strong></p>
   <p>{text.cashRefundHint}</p><div class="dialog-actions"><button class="secondary" onclick={() => dialog.close()}>{text.cancelDelete}</button><button class="primary" onclick={confirmRefund}>{text.refund}</button></div>

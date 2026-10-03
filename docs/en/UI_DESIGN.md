@@ -53,3 +53,24 @@ screens contain no seeded demonstration records.
 Screen and tab history uses the webview History API. Toolbar arrows and mouse
 back/forward buttons share it; macOS also enables native trackpad navigation.
 Pending writes restore the current history position before changing the screen.
+
+
+## Workspace row
+
+The fixed 48px row starts with pinned Home, followed by independent working tabs
+with short page labels and full-context tooltips. Back/Forward stays in the toolbar
+below. Home never appears as an ordinary tab. macOS native window controls share
+the row and are centered using AppKit coordinates. Other platforms retain their
+native title bar. Content heights account for this row, with overflow only when
+content exceeds the viewport. Hidden workspaces preserve their local state.
+
+Working tabs are a fixed 180px wide regardless of label length. Labels fade at the
+right only when their measured text overflows; they do not use an ellipsis. The
+full page/context is available in the tooltip, and the tab strip scrolls horizontally.
+
+
+The sidebar supports expanded and 68px compact modes. Expanded mode places the
+collapse control beside the full logo with a 16px gap; compact mode uses the theme-specific square
+brand icon as the expansion button and icon-only navigation with accessible
+names/tooltips. Brand images do not navigate to Home. The shared
+layout preference persists across workspaces and restarts.

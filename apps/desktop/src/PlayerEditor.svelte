@@ -3,8 +3,8 @@
   import Icon from './Icon.svelte';
   import { desktopAvailable, getPlayer, savePlayerProfile, type Player } from './api';
   import { messages, errorKey, type Language, type MessageKey } from './i18n';
-  let { language, playerId, busy = $bindable(false), onsaved, oncancel }: {
-    language: Language; playerId?: string; busy?: boolean;
+  let { language, playerId, busy = $bindable(false), dirty = $bindable(false), onsaved, oncancel }: {
+    language: Language; playerId?: string; busy?: boolean; dirty?: boolean;
     onsaved: () => void; oncancel: () => void;
   } = $props();
   let text = $derived(messages[language]);
@@ -17,6 +17,9 @@
   let city = $state(''); let country = $state(''); let email = $state(''); let phone = $state(''); let notes = $state('');
   let photo = $state<string | null>(null);
   let fileInput = $state<HTMLInputElement>();
+  const snapshot = () => JSON.stringify([name, club, birthYear, city, country, email, phone, notes, photo]);
+  let baseline = $state(snapshot());
+  $effect(() => { dirty = loaded && snapshot() !== baseline; });
   const currentYear = new Date().getFullYear();
   function fill(player: Player) {
     name = player.name; club = player.club; birthYear = player.birth_year ?? undefined;
@@ -25,7 +28,7 @@
   }
   async function load() {
     loading = true; error = null;
-    try { if (playerId) fill(await getPlayer(playerId)); loaded = true; }
+    try { if (playerId) fill(await getPlayer(playerId)); baseline = snapshot(); loaded = true; }
     catch (cause) { error = errorKey(cause) === 'not_found' ? 'player_not_found' : errorKey(cause); }
     finally { loading = false; }
   }
@@ -60,7 +63,7 @@
     busy = true; error = null;
     try {
       await savePlayerProfile(id, name, club, { birth_year: birthYear ?? null, city, country, email, phone, notes, photo });
-      busy = false; onsaved();
+      baseline = snapshot(); dirty = false; busy = false; onsaved();
     } catch (cause) { error = errorKey(cause); }
     finally { busy = false; }
   }

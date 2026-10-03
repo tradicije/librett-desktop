@@ -56,6 +56,8 @@ history must be part of the results workflow, rather than an afterthought.
 
 ## What works today
 
+- Independent working tabs with pinned Home, retained drafts and selections,
+  per-tab navigation history and mouse/keyboard tab controls.
 - Multiple tournaments and singles/doubles categories with independently selected
   competition formats.
 - A shared local player directory with profiles, photos, and search.

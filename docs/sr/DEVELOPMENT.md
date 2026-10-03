@@ -44,8 +44,8 @@ da se povuku i vrate;
 dolazak igrača važi kroz sve kategorije istog turnira. Šema verzije 10 dodaje neizmenjive verzije nacrta žreba; pre migracije starijih baza pravi se konzistentan
 `pre-v10-<uuid>.sqlite` backup.
 
-Nazad/Napred prati istoriju ekrana. Home vraća na pregled izabranog modula, zatim
-na izbor modula koji nema bočni meni. Čuvanje zaključava navigaciju do završetka.
+Nazad/Napred prati istoriju aktivnog radnog taba. Home dugme u gornjoj traci
+vraća na stalni početni ekran koji nema bočni meni. Čuvanje zaključava navigaciju do završetka.
 Lokalna administracija za sada nema prijavu nalogom niti kontrolu korisničkih uloga.
 
 ## Teme i ikonice
@@ -210,3 +210,56 @@ horizontalno prevlačenje na trackpadu, uz dozvoljeno sistemsko podešavanje
 prevlačenja između stranica. Horizontalni skrol ostaje sistemski. Tokom upisa
 ni sistemska navigacija ne može promeniti ekran. Ponovno učitavanje aplikacije
 počinje novu istoriju.
+
+
+## Radni tabovi
+
+Home je stalni ekran iza kućice gore levo i ne računa se među tabove. Izbor turnira
+sa Home ekrana otvara radni tab. Naziv taba prikazuje samo otvorenu stranu, npr.
+Prijave ili Blagajna; zadržavanje miša prikazuje pun kontekst. Povratak na Home
+zadržava otvorene radne tabove. + i Cmd/Ctrl+T otvaraju Home za izbor novog radnog
+prostora, bez pravljenja praznog Home taba.
+
+Običan klik menja stranu u trenutnom tabu. Cmd/Ctrl+klik, srednje dugme miša ili
+desni klik → Otvori u novom tabu otvaraju odredište zasebno. Desni klik na radni
+tab otvara njegovo trenutno odredište u drugom tabu; ne kopira nesačuvanu formu.
+×, srednje dugme na tabu i Cmd/Ctrl+W zatvaraju radni tab. Home se ne zatvara.
+Ctrl+Tab / Ctrl+Shift+Tab menjaju Home i radne tabove. Strelice, Home i End pomeraju
+izbor kada je fokus na listi radnih tabova.
+
+Neaktivni radni prostori ostaju montirani i sakriveni, čuvajući forme, pretragu,
+izbor, nacrt žreba, fokus i poziciju skrola. Svaki ima zasebnu istoriju; dugmad miša
+i macOS gestovi koriste aktivni prostor. History API koristi centrirani most za
+sistemske gestove, tako da se istorije različitih tabova ne mešaju. Tokom upisa i
+dok je modalni dijalog otvoren ne može se menjati tab. Zatvaranje sa nesačuvanim
+profilom, redom prijava, formom turnira/kategorije ili nacrtom žreba traži potvrdu.
+Tabovi važe samo za trenutnu sesiju: restart ne vraća tabove ni nesačuvane forme.
+Sistemsko close dugme zadržava svoje postojeće ponašanje.
+
+Po povratku u tab osvežavaju se podaci blagajne, prijava, baze igrača i žreba.
+Važeći izbori ostaju, a nesačuvani nacrt se zadržava; promenjene prijave ili verzije
+proveravaju se pri čuvanju.
+
+Gornja traka od 48px je fiksna uz prozor. Visina radnog prostora i bočnog menija
+oduzima njenu visinu, pa kratke strane nemaju nepotreban vertikalni skrol.
+Na macOS-u Overlay i hiddenTitle postavljaju sistemske dugmiće uz Home i tabove;
+AppKit koordinate centriraju stvarne dugmiće u istom redu pri otvaranju, promeni
+veličine i fokusu. Za promene sistemske trake restartuj desktop proces. Ostali
+sistemi zadržavaju standardnu naslovnu traku iznad radnih tabova. Prazan prostor
+u redu omogućava prevlačenje prozora.
+
+Radni tabovi imaju fiksnu širinu 180px bez obzira na dužinu naziva. Tekst bledi sa
+desne strane samo kada zaista ne staje; ne koristi tri tačke. Pun naziv/kontekst
+je dostupan na zadržavanje miša, a lista tabova se skroluje horizontalno.
+
+
+## Sklopivi levi meni
+
+Dugme desno od logotipa sužava meni na 68px; proširen meni ima 208px, odnosno 184px
+na manjim desktop prozorima. Sužen meni prikazuje ikonice navigacije sa pristupačnim
+nazivima i opisom na zadržavanje miša, kao i `icon-dark.png` u tamnoj temi ili
+`icon-light.png` u svetloj. Klik na malu ikonicu logotipa proširuje meni, bez
+zasebne ikonice za proširenje. Ni pun logo ni mala ikonica ne vode na Home. Izbor važi za Home
+i sve radne tabove i pamti se u local storage-u kao `librett.sidebarCollapsed`,
+i posle restarta aplikacije. Promena teme menja i malu ikonicu brenda. Sužavanje
+menja raspored bez gubitka stanja otvorene strane.
