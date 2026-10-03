@@ -275,8 +275,9 @@ menjati disciplinu ili format. Promena kotizacije važi za buduće prijave.
 Podešavanja kategorije sadrže pravila, učesnike, redosled nosilaca i automatski ili
 ručni raspored. Pravila uključuju broj grupa, broj prolaznika, broj setova, poene,
 razliku za pobedu i redosled kriterijuma: mini-tabela izjednačenih, odnos setova i
-odnos poena. Žreb prikazuje grupe i round-robin parove levo, a ceo nokaut kostur
-sa horizontalnim skrolom desno. Prolaznici grupa su označena buduća mesta; obračun
+odnos poena. Kategorije sa grupama imaju poseban tab Grupe sa round-robin parovima i
+karticama u najviše tri kolone (dve ili jedna na užem prozoru). Žreb prikazuje
+samo ceo nokaut kostur sa horizontalnim skrolom. Prolaznici grupa su označena buduća mesta; obračun
 rezultata, rangiranje i napredovanje čekaju implementaciju mečeva.
 
 SQLite šema 11 čuva verzije pravila i preuzima postojeća podešavanja grupa uz

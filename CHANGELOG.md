@@ -6,13 +6,19 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Changed
 
+- README logos are left-aligned and limited to 256px width in both languages.
+
+- Draw now shows only the knockout bracket. Categories using groups have a
+  separate Groups tab with participant cards and round-robin pairings arranged
+  in up to three columns, reducing to two or one on smaller windows.
+
 - Categories now use a full-width list with Add Category opening a dedicated editor;
   Category cards and Edit/Delete actions share the player directory's layout, styles and icons.
   Registrations are accessed inside each category rather than at tournament root.
 - Category rules configure groups, qualifiers, match length, scoring targets and
   tied-player mini-table/set-ratio/point-ratio order. Settings contains participants,
-  ordered seeds and automatic/manual arrangements; Draw shows groups on the left,
-  round-robin pairings and a complete horizontally scrollable knockout bracket.
+  ordered seeds and automatic/manual arrangements; Groups shows round-robin
+  pairings, while Draw shows a complete horizontally scrollable knockout bracket.
   Group qualifiers remain placeholders until match results are implemented.
 - Working tab labels show the immediate parent and page, retaining full-context tooltips.
 - SQLite schema 11 stores versioned category rules, preserves existing group settings

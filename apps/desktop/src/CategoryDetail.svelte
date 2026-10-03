@@ -6,13 +6,15 @@
   import { formatMoney } from './money';
   import type { Tournament, Category } from './api';
   import { messages, type Language } from './i18n';
-  export type CategoryTab = 'settings' | 'registrations' | 'draw' | 'matches' | 'results';
+  export type CategoryTab = 'settings' | 'registrations' | 'groups' | 'draw' | 'matches' | 'results';
   let { active = true, tournament, category, language, tab, ontab, busy = $bindable(false), dirty = $bindable(false) }: {
     active?: boolean; tournament: Tournament; category: Category; language: Language; tab: CategoryTab;
     ontab: (tab: CategoryTab) => void; busy?: boolean; dirty?: boolean;
   } = $props();
   let text = $derived(messages[language]);
-  const tabs: CategoryTab[] = ['settings', 'registrations', 'draw', 'matches', 'results'];
+  let tabs: CategoryTab[] = $derived(category.format === 'groups_knockout'
+    ? ['settings', 'registrations', 'groups', 'draw', 'matches', 'results']
+    : ['settings', 'registrations', 'draw', 'matches', 'results']);
 </script>
 <div class="heading"><div><p class="eyebrow">{tournament.name}</p><h1>{category.name}</h1><p class="muted">{text[category.discipline]} · {text[category.format]} · {formatMoney(category.fee_minor, language)} {text.feePerEntry}</p></div></div>
 <nav class="category-tabs" aria-label={text.categorySections}>
@@ -22,7 +24,9 @@
   {#key category.id}<CategorySetup {active} {tournament} {category} {language} bind:busy bind:dirty onview={() => ontab('draw')} />{/key}
 {:else if tab === 'registrations'}
   {#key category.id}<Players {active} {tournament} {category} {language} bind:busy bind:dirty />{/key}
-{:else if tab === 'draw'}
+{:else if tab === 'groups' && category.format === 'groups_knockout'}
+  {#key category.id}<Draw view="groups" {active} {tournament} {category} {language} bind:busy bind:dirty onsettings={() => ontab('settings')} />{/key}
+{:else if tab === 'draw' || tab === 'groups'}
   {#key category.id}<Draw {active} {tournament} {category} {language} bind:busy bind:dirty onsettings={() => ontab('settings')} />{/key}
 {:else}
   <section class="panel stage-placeholder"><Icon name={tab === 'matches' ? 'list' : tab === 'results' ? 'trophy' : 'layer-group'} size={26} /><h2>{text[tab]}</h2><p class="muted">{text.stageNotReady}</p><button data-open-tab class="secondary" onclick={() => ontab('registrations')}>{text.registrations}</button></section>

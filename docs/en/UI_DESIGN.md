@@ -78,4 +78,4 @@ layout preference persists across workspaces and restarts.
 
 Category rows share player profile card spacing, avatar size, typography and
 responsive action layouts. Edit/Delete use the same icon-labeled secondary buttons.
-Category creation/editing has a dedicated screen; Draw is a group/bracket overview.
+Category creation/editing has a dedicated screen; Groups has its own tab with a maximum of three card columns; Draw shows only the bracket.

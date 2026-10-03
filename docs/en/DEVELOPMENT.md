@@ -279,8 +279,9 @@ discipline or format, and fee edits affect only future registrations.
 Category Settings combines saved rules, participants, ordered seeds and automatic
 or manual arrangements. Rules include group count, qualifiers, best-of sets,
 points, winning margin and the tied-player mini-table/set-ratio/point-ratio order.
-Draw is a visual overview with groups and round-robin pairings on the left and the
-complete horizontally scrollable knockout bracket on the right. Group qualifiers
+Categories using groups have a separate Groups tab with round-robin pairings
+and cards in up to three columns (two or one on smaller windows). Draw shows only
+the complete horizontally scrollable knockout bracket. Group qualifiers
 remain labeled placeholders; match scoring, standings and progression are pending.
 
 Schema 11 saves versioned rules and migrates existing group draft settings after

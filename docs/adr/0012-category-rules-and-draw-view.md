@@ -19,9 +19,10 @@ automatic/manual arrangement editor. Organizers save rules before generating a
 new layout. Automatic knockout placement awards byes to the strongest seeds;
 manual positioning remains available. Saved draw revisions remain immutable.
 
-Draw is a visual overview: group participants and round-robin pairings on the
-left, the full knockout bracket with connectors and horizontal scrolling on the
-right. Group qualifier slots are labeled projections, never inferred winners.
+Categories using groups have a separate Groups tab for participants and
+round-robin pairings, arranged in up to three columns (two or one on smaller
+windows). Draw displays only the full knockout bracket with connectors and
+horizontal scrolling, including for categories using groups. Group qualifier slots are labeled projections, never inferred winners.
 Stale arrangements retain their saved group counts and show a warning until a
 new revision is generated. Unknown match winners remain placeholders.
 
