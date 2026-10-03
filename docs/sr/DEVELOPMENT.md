@@ -41,8 +41,8 @@ Tab Igrači prikazuje zajedničku listu. Dodaj/Izmeni otvara zasebne ekrane za
 profile i fotografije, a čuvanje vraća na listu. Brisanje traži potvrdu i čuva
 igrače sa postojećim prijavama. Prijave unutar turnira koriste tu bazu i mogu
 da se povuku i vrate;
-dolazak igrača važi kroz sve kategorije istog turnira. Šema verzije 10 dodaje neizmenjive verzije nacrta žreba; pre migracije starijih baza pravi se konzistentan
-`pre-v10-<uuid>.sqlite` backup.
+dolazak igrača važi kroz sve kategorije istog turnira. Šema verzije 11 sadrži neizmenjive nacrte žreba i verzije pravila kategorije; pre migracije starijih baza pravi se konzistentan
+`pre-v11-<uuid>.sqlite` backup.
 
 Nazad/Napred prati istoriju aktivnog radnog taba. Home dugme u gornjoj traci
 vraća na stalni početni ekran koji nema bočni meni. Čuvanje zaključava navigaciju do završetka.
@@ -198,7 +198,7 @@ Sačuvaj nacrt upisuje novu verziju. Ručni nacrt može biti nepotpun. Sačuvaj 
 napuštanja ekrana: nesačuvane izmene postoje samo dok je ekran žreba otvoren.
 Učitaj trenutno stanje odbacuje lokalne izmene. Promena prijava zahteva novi
 nacrt. Sukob verzija odbija zastareli upis; neizvestan upis zadržava isti UUID i
-zaključava navigaciju do potvrde ponavljanjem. Pre migracije postoji pre-v10 backup.
+zaključava navigaciju do potvrde ponavljanjem. Pre migracije postoji pre-v11 backup.
 Potvrđivanje žreba, mečevi, rezultati, rangiranje i prolazak u nokaut još nisu
 implementirani. Čuvanje nacrta ne pokreće takmičenje.
 
@@ -215,8 +215,8 @@ počinje novu istoriju.
 ## Radni tabovi
 
 Home je stalni ekran iza kućice gore levo i ne računa se među tabove. Izbor turnira
-sa Home ekrana otvara radni tab. Naziv taba prikazuje samo otvorenu stranu, npr.
-Prijave ili Blagajna; zadržavanje miša prikazuje pun kontekst. Povratak na Home
+sa Home ekrana otvara radni tab. Naziv taba prikazuje neposrednog roditelja i otvorenu stranu, npr.
+Veterani | Žreb; zadržavanje miša prikazuje pun kontekst. Povratak na Home
 zadržava otvorene radne tabove. + i Cmd/Ctrl+T otvaraju Home za izbor novog radnog
 prostora, bez pravljenja praznog Home taba.
 
@@ -263,3 +263,21 @@ zasebne ikonice za proširenje. Ni pun logo ni mala ikonica ne vode na Home. Izb
 i sve radne tabove i pamti se u local storage-u kao `librett.sidebarCollapsed`,
 i posle restarta aplikacije. Promena teme menja i malu ikonicu brenda. Sužavanje
 menja raspored bez gubitka stanja otvorene strane.
+
+
+## Podešavanje kategorije i pregled žreba
+
+Turnir ima tabove Pregled, Kategorije i Blagajna. Lista kategorija ima Dodaj,
+Izmeni i Obriši u istom stilu kao lista igrača. Dodavanje i izmena otvaraju poseban
+ekran; klik na kategoriju otvara njene Prijave. Kategoriji sa prijavama nije moguće
+menjati disciplinu ili format. Promena kotizacije važi za buduće prijave.
+
+Podešavanja kategorije sadrže pravila, učesnike, redosled nosilaca i automatski ili
+ručni raspored. Pravila uključuju broj grupa, broj prolaznika, broj setova, poene,
+razliku za pobedu i redosled kriterijuma: mini-tabela izjednačenih, odnos setova i
+odnos poena. Žreb prikazuje grupe i round-robin parove levo, a ceo nokaut kostur
+sa horizontalnim skrolom desno. Prolaznici grupa su označena buduća mesta; obračun
+rezultata, rangiranje i napredovanje čekaju implementaciju mečeva.
+
+SQLite šema 11 čuva verzije pravila i preuzima postojeća podešavanja grupa uz
+pre-v11 backup. Vidi [ADR 0012](../adr/0012-category-rules-and-draw-view.md).

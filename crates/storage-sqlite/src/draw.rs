@@ -47,6 +47,28 @@ impl DrawRepository for SqliteTournamentRepository {
         if revision != expected_revision {
             return Err(ApplicationError::DrawConflict);
         }
+        if draw.format == librett_domain::CompetitionFormat::GroupsKnockout {
+            let payload: Option<String> = tx
+                .query_row(
+                    "SELECT payload FROM category_configurations WHERE category_id=?1",
+                    [draw.category_id.to_string()],
+                    |r| r.get(0),
+                )
+                .optional()
+                .map_err(|_| ApplicationError::Storage)?;
+            let configured = payload
+                .map(|json| {
+                    serde_json::from_str::<librett_domain::CategoryRules>(&json)
+                        .map_err(|_| ApplicationError::Storage)
+                })
+                .transpose()?
+                .unwrap_or_default();
+            if configured.group_count != draw.settings.group_count
+                || configured.qualifiers_per_group != draw.settings.qualifiers_per_group
+            {
+                return Err(ApplicationError::InvalidRules);
+            }
+        }
         // Recheck registration membership while holding the write transaction.
         let mut statement = tx.prepare("SELECT e.id FROM entries e JOIN categories c ON c.id=e.category_id WHERE e.category_id=?1 AND e.status='registered' AND c.archived=0").map_err(|_| ApplicationError::Storage)?;
         let active = statement

@@ -5,8 +5,8 @@ use librett_application::{
     PlayerCashRepository, PlayerRepository, TournamentRepository,
 };
 use librett_domain::{
-    CategoryDraw, CompetitionFormat, Discipline, DrawMode, DrawSettings, Entry, EntryStatus,
-    Player, PlayerProfile, Tournament,
+    CategoryDraw, CategoryRules, CompetitionFormat, Discipline, DrawMode, DrawSettings, Entry,
+    EntryStatus, Player, PlayerProfile, Tournament,
 };
 use librett_storage_sqlite::SqliteTournamentRepository;
 use std::sync::Mutex;
@@ -146,6 +146,10 @@ fn main() {
             let _ = (window, event);
         })
         .invoke_handler(tauri::generate_handler![
+            update_category_with_rules,
+            create_category_with_rules,
+            get_category_rules,
+            save_category_rules,
             get_category_draw,
             preview_category_draw,
             save_category_draw,
@@ -409,6 +413,82 @@ fn save_category_draw(
         &mut *database.0.lock().map_err(|_| ApplicationError::Storage)?,
         tournament_id,
         draw,
+        expected_revision,
+    )
+}
+
+#[tauri::command]
+fn create_category_with_rules(
+    database: tauri::State<Database>,
+    tournament_id: Uuid,
+    category_id: Uuid,
+    name: String,
+    discipline: Discipline,
+    format: CompetitionFormat,
+    fee_minor: i64,
+    rules: CategoryRules,
+) -> Result<Tournament, ApplicationError> {
+    application::create_category_with_rules(
+        &mut *database.0.lock().map_err(|_| ApplicationError::Storage)?,
+        tournament_id,
+        category_id,
+        &name,
+        discipline,
+        format,
+        fee_minor,
+        rules,
+    )
+}
+#[tauri::command]
+fn get_category_rules(
+    database: tauri::State<Database>,
+    tournament_id: Uuid,
+    category_id: Uuid,
+) -> Result<application::CategoryConfiguration, ApplicationError> {
+    application::get_category_rules(
+        &*database.0.lock().map_err(|_| ApplicationError::Storage)?,
+        tournament_id,
+        category_id,
+    )
+}
+#[tauri::command]
+fn save_category_rules(
+    database: tauri::State<Database>,
+    tournament_id: Uuid,
+    category_id: Uuid,
+    rules: CategoryRules,
+    expected_revision: u32,
+) -> Result<application::CategoryConfiguration, ApplicationError> {
+    application::save_category_rules(
+        &mut *database.0.lock().map_err(|_| ApplicationError::Storage)?,
+        tournament_id,
+        category_id,
+        rules,
+        expected_revision,
+    )
+}
+
+#[tauri::command]
+fn update_category_with_rules(
+    database: tauri::State<Database>,
+    tournament_id: Uuid,
+    category_id: Uuid,
+    name: String,
+    discipline: Discipline,
+    format: CompetitionFormat,
+    fee_minor: i64,
+    rules: CategoryRules,
+    expected_revision: u32,
+) -> Result<Tournament, ApplicationError> {
+    application::update_category_with_rules(
+        &mut *database.0.lock().map_err(|_| ApplicationError::Storage)?,
+        tournament_id,
+        category_id,
+        &name,
+        discipline,
+        format,
+        fee_minor,
+        rules,
         expected_revision,
     )
 }

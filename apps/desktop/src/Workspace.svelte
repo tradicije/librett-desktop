@@ -1,9 +1,10 @@
 <script lang="ts">
   import Select from './Select.svelte';
-  import { parseMoney, formatMoney } from './money';
+  import { formatMoney } from './money';
   import { onMount, tick, untrack } from 'svelte';
   import CategoryDetail, { type CategoryTab } from './CategoryDetail.svelte';
   import CashDesk from './CashDesk.svelte';
+  import CategoryEditor from './CategoryEditor.svelte';
   import PlayerDirectory from './PlayerDirectory.svelte';
   import PlayerEditor from './PlayerEditor.svelte';
   import Icon from './Icon.svelte';
@@ -12,7 +13,7 @@
   import darkIcon from '../../../assets/img/icon-dark.png';
   import lightIcon from '../../../assets/img/icon-light.png';
   import { type ThemePreference, type ResolvedTheme } from './theme';
-  import { addCategory, deleteCategory, createTournament, desktopAvailable, listTournaments, type CompetitionFormat, type Discipline, type Category, type Tournament } from './api';
+  import { deleteCategory, createTournament, desktopAvailable, listTournaments, type CompetitionFormat, type Discipline, type Category, type Tournament } from './api';
   import { messages, errorKey, type Language, type MessageKey } from './i18n';
 
   import type { Route, TournamentTab, WorkspaceStatus } from './workspace';
@@ -24,7 +25,7 @@
   } = $props();
   const uid = $props.id();
   let text = $derived(messages[language]);
-  const tournamentTabs: TournamentTab[] = ['overview', 'categories', 'registrations', 'cash'];
+  const tournamentTabs: TournamentTab[] = ['overview', 'categories', 'cash'];
   let history = $state<Route[]>([untrack(() => initialRoute)]);
   let historyIndex = $state(0);
   let route = $derived(history[historyIndex]);
@@ -33,7 +34,7 @@
   let pageLabel = $derived(route.view === 'dashboard' ? text.dashboard : inPlayers ? text.playerTab : text.tournaments);
   let mode = $derived(route.view === 'dashboard' ? 'dashboard' : 'tournaments');
   let childBusy = $state(false);
-  let selectedId = $derived((route.view === 'tournament' || route.view === 'category') ? route.id : null);
+  let selectedId = $derived((['tournament', 'category', 'category-create', 'category-edit'].includes(route.view)) ? route.id : null);
   let selected = $derived(tournaments.find(t => t.id === selectedId));
   let activeCategories = $derived(selected?.categories.filter(c => !c.archived) ?? []);
   let tournamentTab = $derived(route.view === 'tournament' ? route.tournamentTab ?? 'overview' : 'overview');
@@ -41,7 +42,6 @@
     switch (tab) {
       case 'overview': return text.tournamentTab_overview;
       case 'categories': return text.tournamentTab_categories;
-      case 'registrations': return text.tournamentTab_registrations;
       case 'cash': return text.tournamentTab_cash;
     }
   }
@@ -49,10 +49,6 @@
   let pendingCategory = $state<Category | null>(null);
   let categoryDialog: HTMLDialogElement;
   let tournamentName = $state('');
-  let categoryName = $state('');
-  let categoryFee = $state('0');
-  let discipline = $state<Discipline>('singles');
-  let format = $state<CompetitionFormat>('groups_knockout');
   let busy = $state(false);
   let navigationLocked = $derived(busy || childBusy || externalLocked);
   let loading = $state(false);
@@ -67,13 +63,13 @@
     catch (cause) { error = errorKey(cause); }
     finally { loading = false; }
   }
-  let dirty = $derived(childDirty || !!tournamentName.trim() || !!categoryName.trim() || categoryFee !== '0' || discipline !== 'singles' || format !== 'groups_knockout');
-  let workspaceContext = $derived(route.view === 'category' && selectedCategory
+  let dirty = $derived(childDirty || !!tournamentName.trim());
+  let workspaceContext = $derived(route.view === 'category-create' ? `${selected?.name} · ${text.addCategory}` : route.view === 'category-edit' ? `${selected?.name} · ${selectedCategory?.name} · ${text.editCategory}` : route.view === 'category' && selectedCategory
     ? `${selected?.name} · ${selectedCategory.name} · ${text[route.categoryTab ?? 'registrations']}`
     : selected ? `${selected.name} · ${tournamentTabLabel(tournamentTab)}`
     : route.view === 'player-create' ? text.addPlayer : route.view === 'player-edit' ? text.editPlayer : pageLabel);
-  let workspaceTitle = $derived(route.view === 'category' ? text[route.categoryTab ?? 'registrations']
-    : route.view === 'tournament' ? tournamentTabLabel(tournamentTab)
+  let workspaceTitle = $derived(route.view === 'category-create' ? `${selected?.name ?? text.tournaments} | ${text.addCategory}` : route.view === 'category-edit' ? `${selectedCategory?.name ?? text.categories} | ${text.editCategory}` : route.view === 'category' ? `${selectedCategory?.name ?? text.categories} | ${text[route.categoryTab ?? 'registrations']}`
+    : route.view === 'tournament' ? `${selected?.name ?? text.tournaments} | ${tournamentTabLabel(tournamentTab)}`
     : route.view === 'player-create' ? text.addPlayer : route.view === 'player-edit' ? text.editPlayer : pageLabel);
   $effect(() => { status = { title: workspaceTitle, context: workspaceContext, busy: busy || childBusy, dirty, view: route.view }; });
   onMount(() => { if (route.view !== 'dashboard' && desktopAvailable) void load(); });
@@ -89,23 +85,7 @@
     } catch (cause) { error = errorKey(cause); }
     finally { busy = false; }
   }
-  async function saveCategory(event: SubmitEvent) {
-    event.preventDefault();
-    if (!selected) return;
-    const fee = parseMoney(categoryFee, true);
-    if (fee === null) { error = 'invalid_category_fee'; return; }
-    busy = true; error = null; notice = null;
-    try {
-      const updated = await addCategory(selected.id, categoryName, discipline, format, fee);
-      tournaments = tournaments.map(t => t.id === updated.id ? updated : t);
-      categoryName = ''; categoryFee = '0'; notice = 'categorySaved';
-    } catch (cause) { error = errorKey(cause); }
-    finally { busy = false; }
-  }
-  function resetView() {
-    childDirty = false; categoryName = ''; categoryFee = '0'; error = null; notice = null;
-    discipline = 'singles'; format = 'groups_knockout';
-  }
+  function resetView() { childDirty = false; error = null; notice = null; }
   export function getRoute(): Route { return { ...route }; }
   export function goHome() { navigate({ view: 'dashboard' }, true); }
   function navigate(next: Route, forceCurrent = false) {
@@ -210,6 +190,14 @@
         <PlayerEditor {language} playerId={route.id} bind:busy={childBusy} bind:dirty={childDirty}
           onsaved={() => { navigate({ view: 'players' }); notice = 'playerSaved'; }} oncancel={() => navigate({ view: 'players' })} />
       {/key}
+    {:else if selected && (route.view === 'category-create' || route.view === 'category-edit')}
+      {#if route.view === 'category-create' || selectedCategory}
+        {#key `${route.view}:${route.categoryId ?? ''}`}
+          <CategoryEditor tournament={selected} category={route.view === 'category-edit' ? selectedCategory : undefined} {language} bind:busy={childBusy} bind:dirty={childDirty}
+            onsaved={(updated, categoryId) => { tournaments = tournaments.map(t => t.id === updated.id ? updated : t); navigate({ view: 'category', id: updated.id, categoryId, categoryTab: 'settings' }); notice = 'categorySaved'; }}
+            oncancel={() => navigate({ view: 'tournament', id: selected.id, tournamentTab: 'categories' })} />
+        {/key}
+      {:else}<p class="banner">{text.categoryUnavailable}</p>{/if}
     {:else if selected && route.view === 'category'}
       {#if selectedCategory}<CategoryDetail {active} tournament={selected} category={selectedCategory} {language} tab={route.categoryTab ?? 'registrations'} bind:dirty={childDirty} ontab={(tab) => navigate({ view: 'category', id: selected.id, categoryId: selectedCategory.id, categoryTab: tab })} bind:busy={childBusy} />
       {:else}<p class="banner">{text.categoryUnavailable}</p><button data-open-tab class="secondary" onclick={() => select(selected.id)}>{text.backToTournament}</button>{/if}
@@ -226,29 +214,17 @@
           <section class="panel"><div class="section-heading"><h2>{text.categories}</h2><span class="pill">{activeCategories.length}</span></div><p class="muted">{activeCategories.length ? activeCategories.map(category => `${category.name} · ${text[category.discipline]}`).join(' / ') : text.noCategories}</p><button data-open-tab class="secondary" disabled={navigationLocked} onclick={() => openTournamentTab('categories')}>{text.openCategories}<Icon name="arrow-right" size={16} /></button></section>
         </div>
       {:else if tournamentTab === 'categories'}
-      <div class="columns">
         <section class="panel">
-          <div class="section-heading"><h2>{text.categories}</h2><span class="pill">{activeCategories.length}</span></div>
+          <div class="section-heading"><div class="icon-label"><h2>{text.categories}</h2><span class="pill">{activeCategories.length}</span></div><button data-open-tab class="primary" disabled={navigationLocked} onclick={() => navigate({ view: 'category-create', id: selected.id })}><Icon name="plus" />{text.addCategory}</button></div>
           {#if activeCategories.length === 0}<p class="muted">{text.noCategories}</p>{/if}
           {#each activeCategories as category (category.id)}
-            <div class="category-list-row"><button data-open-tab class="tournament category-open" disabled={navigationLocked} onclick={() => navigate({ view: 'category', id: selected.id, categoryId: category.id, categoryTab: 'registrations' })}><span class="category-icon"><Icon name={category.discipline === 'singles' ? 'user' : 'users'} /></span><div class="row-content"><strong>{category.name}</strong><small>{text[category.discipline]} · {text[category.format]} · {formatMoney(category.fee_minor, language)} {text.feePerEntry}</small></div><Icon name="arrow-right" size={16} /></button><button class="icon-button" disabled={navigationLocked} aria-label={`${text.deleteCategory}: ${category.name} · ${text[category.discipline]}`} onclick={() => confirmCategory(category)}><Icon name="trash" size={16} /></button></div>
-          {/each}
-        </section>
-        <section class="panel form-panel"><h2 class="icon-label"><Icon name="layer-group" />{text.addCategory}</h2>
-          <form onsubmit={saveCategory}>
-            <label>{text.categoryName}<input bind:value={categoryName} required disabled={navigationLocked} /></label>
-            <label>{text.categoryFee}<input bind:value={categoryFee} inputmode="decimal" required disabled={navigationLocked} placeholder="1000,00" aria-describedby={`${uid}-category-fee-hint`} /></label><small class="muted" id={`${uid}-category-fee-hint`}>{text.categoryFeeHint}</small>
-            <label>{text.discipline}<Select label={text.discipline} bind:value={discipline} options={[{ value: 'singles', label: text.singles }, { value: 'doubles', label: text.doubles }]} disabled={navigationLocked} /></label>
-            <label>{text.format}<Select label={text.format} bind:value={format} options={[{ value: 'groups_knockout', label: text.groups_knockout }, { value: 'knockout', label: text.knockout }]} disabled={navigationLocked} /></label>
-            <button class="primary" disabled={navigationLocked || !desktopAvailable}><Icon name="check-circle" size={18} />{busy ? text.saving : text.save}</button>
-          </form>
-        </section>
-      </div>
-      {:else if tournamentTab === 'registrations'}
-        <section class="panel"><div class="section-heading"><h2>{text.registrations}</h2></div><p class="muted">{text.tournamentRegistrationsIntro}</p>
-          {#if activeCategories.length === 0}<p class="muted">{text.noCategories}</p>{/if}
-          {#each activeCategories as category (category.id)}
-            <button data-open-tab class="tournament" disabled={navigationLocked} onclick={() => navigate({ view: 'category', id: selected.id, categoryId: category.id, categoryTab: 'registrations' })}><span class="category-icon"><Icon name={category.discipline === 'singles' ? 'user' : 'users'} /></span><div class="row-content"><strong>{category.name}</strong><small>{text[category.discipline]} · {text[category.format]}</small></div><Icon name="arrow-right" size={16} /></button>
+            <article class="player-profile category-list-row">
+              <button data-open-tab class="category-open" disabled={navigationLocked} onclick={() => navigate({ view: 'category', id: selected.id, categoryId: category.id, categoryTab: 'registrations' })}><span class="player-avatar" aria-hidden="true"><Icon name={category.discipline === 'singles' ? 'user' : 'users'} size={18} /></span><span class="category-details"><strong>{category.name}</strong><span>{text[category.discipline]} · {text[category.format]} · {formatMoney(category.fee_minor, language)} {text.feePerEntry}</span></span></button>
+              <div class="player-actions">
+              <button data-open-tab class="secondary icon-label" disabled={navigationLocked} aria-label={`${text.editCategory}: ${category.name}`} onclick={() => navigate({ view: 'category-edit', id: selected.id, categoryId: category.id })}><Icon name="edit" size={18} />{text.editCategory}</button>
+              <button class="secondary icon-label" disabled={navigationLocked} aria-label={`${text.deleteCategory}: ${category.name} · ${text[category.discipline]}`} onclick={() => confirmCategory(category)}><Icon name="trash" size={18} />{text.deleteCategory}</button>
+              </div>
+            </article>
           {/each}
         </section>
       {:else if tournamentTab === 'cash'}

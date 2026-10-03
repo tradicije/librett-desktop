@@ -54,3 +54,8 @@ sužavanje je desno od punog logotipa sa razmakom od 16px; u suženom se koristi
 brenda prema temi kao dugme za proširenje i navigacija samo ikonicama, sa
 pristupačnim nazivima/opisima. Slike brenda ne vode na Home.
 Zajednički izbor širine pamti se kroz radne tabove i restart aplikacije.
+
+
+Kartice kategorija koriste iste razmake, veličinu ikonice, tipografiju i prilagodljivi
+raspored akcija kao kartice igrača. Izmeni/Obriši imaju iste sekundarne dugmiće
+sa ikonicama. Dodavanje/izmena ima poseban ekran; Žreb prikazuje grupe i kostur.

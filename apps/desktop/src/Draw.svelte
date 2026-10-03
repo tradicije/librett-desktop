@@ -1,204 +1,104 @@
 <script lang="ts">
   import { onMount, untrack } from 'svelte';
-  import { getCategoryDraw, listEntries, previewCategoryDraw, saveCategoryDraw, desktopAvailable,
-    type CategoryDraw, type Category, type Tournament, type Entry, type DrawMode } from './api';
-  import { messages, type Language } from './i18n';
-  let { active = true, tournament, category, language, busy = $bindable(false), dirty = $bindable(false) }: {
-    active?: boolean; tournament: Tournament; category: Category; language: Language; busy?: boolean; dirty?: boolean;
-  } = $props();
-  const labels = {
-    sr: {
-      title: 'Nacrt žreba', intro: 'Rasporedi učesnike automatski ili ručno. Nacrt još ne pokreće mečeve.',
-      automatic: 'Automatski', manual: 'Ručno', groupCount: 'Broj grupa', qualifiers: 'Prolaznika iz svake grupe',
-      seeds: 'Nosioci, od najjačeg', addSeed: 'Dodaj nosioca', choose: 'Izaberi prijavu', up: 'Pomeri gore', down: 'Pomeri dole', remove: 'Ukloni',
-      generate: 'Napravi raspored', replace: 'Zameni trenutni nacrt', replaceHint: 'Novi raspored će zameniti trenutni nacrt. Sačuvana prethodna verzija ostaje u istoriji.',
-      cancel: 'Odustani', save: 'Sačuvaj nacrt', saved: 'Nacrt sačuvan.', unsaved: 'Nesačuvane izmene', revision: 'Verzija',
-      group: 'Grupa', pair: 'Par', position: 'Pozicija', empty: 'Prazno', bye: 'Slobodan prolaz (bye)', missing: 'Neraspoređeno',
-      min: 'Za žreb su potrebne 2–4096 aktivne prijave.', invalid: 'Proveri grupe, prolaznike i raspored. Svaka prijava može biti raspoređena samo jednom.',
-      stale: 'Prijave su promenjene. Učitaj trenutno stanje i napravi novi nacrt.', conflict: 'Druga verzija je već sačuvana. Učitaj trenutno stanje.',
-      retry: 'Ponovi čuvanje', uncertain: 'Čuvanje nije potvrđeno. Ponovi isti upis pre nastavka.', load: 'Učitaj trenutno stanje',
-      hint: 'Izbor već raspoređene prijave menja njeno mesto sa ovom pozicijom. Prazna pozicija je bye tek kada je ceo kostur popunjen.',
-    },
-    en: {
-      title: 'Draw draft', intro: 'Arrange entries automatically or manually. Drafts do not start matches yet.',
-      automatic: 'Automatic', manual: 'Manual', groupCount: 'Number of groups', qualifiers: 'Qualifiers per group',
-      seeds: 'Seeds, strongest first', addSeed: 'Add seed', choose: 'Choose an entry', up: 'Move up', down: 'Move down', remove: 'Remove',
-      generate: 'Create arrangement', replace: 'Replace current draft', replaceHint: 'The new arrangement replaces this draft. The previous saved revision stays in history.',
-      cancel: 'Cancel', save: 'Save draft', saved: 'Draft saved.', unsaved: 'Unsaved changes', revision: 'Revision',
-      group: 'Group', pair: 'Pair', position: 'Position', empty: 'Empty', bye: 'Bye', missing: 'Unassigned',
-      min: 'A draw requires 2–4096 active entries.', invalid: 'Check groups, qualifiers and positions. Each entry can be placed only once.',
-      stale: 'Registrations changed. Reload the current state and create a new draft.', conflict: 'Another revision has already been saved. Reload the current state.',
-      retry: 'Retry saving', uncertain: 'Saving was not confirmed. Retry the same write before continuing.', load: 'Reload current state',
-      hint: 'Selecting an entry already placed swaps it with this position. An empty position is a bye only when the whole bracket is filled.',
-    },
-  };
-  let t = $derived(labels[language]);
+  import Icon from './Icon.svelte';
+  import KnockoutBracket from './KnockoutBracket.svelte';
+  import { bracketSlots, groupName, roundRobin } from './draw-view';
+  import { getCategoryDraw, getCategoryRules, listEntries, desktopAvailable, defaultCategoryRules, type CategoryDraw, type Category, type Tournament } from './api';
+  import { messages, errorKey, type Language, type MessageKey } from './i18n';
+  let { active = true, tournament, category, language, busy = $bindable(false), dirty = $bindable(false), onsettings }: { active?: boolean; tournament: Tournament; category: Category; language: Language; busy?: boolean; dirty?: boolean; onsettings: () => void } = $props();
   let text = $derived(messages[language]);
-  let entries = $state<Entry[]>([]);
-  let draft = $state<CategoryDraw | null>(null);
-  let revision = $state(0);
-  let seeds = $state<string[]>([]);
-  let newSeed = $state('');
-  let groupCount = $state(2);
-  let qualifiers = $state(2);
-  let mode = $state<DrawMode>('automatic');
-  let replacing = $state(false);
-  let saved = $state(false);
+  let draw = $state<CategoryDraw | null>(null);
+  let rules = $state(defaultCategoryRules());
   let loading = $state(true);
-  let action = $state(false);
-  let error = $state<'invalid' | 'conflict' | 'stale' | 'uncertain' | 'error' | null>(null);
-  let pending = $state<{ draw: CategoryDraw; revision: number } | null>(null);
-  let stale = $derived(!!draft && (draft.participants.length !== entries.length || draft.participants.some(e => !entries.some(active => active.id === e.id))));
-  let placed = $derived(new Set(draft?.sections.flat().filter((id): id is string => id !== null) ?? []));
-  let missing = $derived((draft?.participants.length ?? 0) - placed.size);
-  let locked = $derived(action || loading || pending !== null);
-  function label(entry: Entry) { return entry.members.map(member => member.name).join(' / '); }
-  function entryLabel(id: string) { const entry = draft?.participants.find(e => e.id === id) ?? entries.find(e => e.id === id); return entry ? label(entry) : id; }
-  function changed() { dirty = true; saved = false; replacing = false; }
+  let error = $state<MessageKey | null>(null);
+  let stale = $state(false);
+  let layoutRules = $derived(draw && category.format === 'groups_knockout' ? { ...rules, ...draw.settings } : rules);
+  let slots = $derived(bracketSlots(draw, layoutRules, category.format, language));
+  let groups = $derived(draw?.sections ?? []);
+  let missing = $derived(draw ? draw.participants.length - new Set(draw.sections.flat().filter(Boolean)).size : 0);
+  $effect(() => { busy = false; dirty = false; });
+  function entryName(id: string | null) { return draw?.participants.find(entry => entry.id === id)?.members.map(member => member.name).join(' / ') ?? (language === 'sr' ? 'Neraspoređeno' : 'Unassigned'); }
+  function clubName(id: string | null) { return [...new Set(draw?.participants.find(entry => entry.id === id)?.members.map(member => member.club).filter(Boolean))].join(' / '); }
   async function load() {
     loading = true; error = null;
     try {
-      const [all, stored] = await Promise.all([listEntries(category.id), getCategoryDraw(tournament.id, category.id)]);
-      entries = all.filter(e => e.status === 'registered'); draft = stored; revision = stored?.revision ?? 0;
-      seeds = stored?.seeds.filter(id => entries.some(e => e.id === id)) ?? [];
-      groupCount = stored?.settings.group_count ?? Math.max(1, Math.min(2, Math.floor(entries.length / 2)));
-      qualifiers = stored?.settings.qualifiers_per_group ?? Math.min(2, Math.floor(entries.length / groupCount));
-      mode = stored?.mode ?? 'automatic'; dirty = false; saved = false; replacing = false;
-    } catch { error = 'error'; }
+      const [stored, configuration, entries] = await Promise.all([getCategoryDraw(tournament.id, category.id), getCategoryRules(tournament.id, category.id), listEntries(category.id)]);
+      draw = stored; rules = configuration.rules;
+      const active = entries.filter(entry => entry.status === 'registered');
+      stale = !!stored && (stored.participants.length !== active.length || stored.participants.some(entry => !active.some(current => current.id === entry.id)) || category.format === 'groups_knockout' && (stored.settings.group_count !== rules.group_count || stored.settings.qualifiers_per_group !== rules.qualifiers_per_group));
+    } catch (cause) { error = errorKey(cause); }
     finally { loading = false; }
   }
   onMount(() => { if (desktopAvailable) void load(); else loading = false; });
   let wasActive = untrack(() => active);
-  $effect(() => {
-    if (active && !wasActive && desktopAvailable && !busy) void refresh();
-    wasActive = active;
-  });
-  async function refresh() {
-    loading = true;
-    try {
-      const [all, stored] = await Promise.all([listEntries(category.id), getCategoryDraw(tournament.id, category.id)]);
-      entries = all.filter(entry => entry.status === 'registered');
-      if (!dirty && stored && stored.revision !== revision) {
-        draft = stored; revision = stored.revision; seeds = [...stored.seeds];
-        groupCount = stored.settings.group_count; qualifiers = stored.settings.qualifiers_per_group; mode = stored.mode;
-      }
-    } catch { error = 'error'; }
-    finally { loading = false; }
-  }
-  function editSeeds(next: string[]) {
-    seeds = next;
-    if (draft) { draft.seeds = [...next]; draft.mode = 'manual'; }
-    changed();
-  }
-  function moveSeed(index: number, delta: number) {
-    const next = [...seeds]; [next[index], next[index + delta]] = [next[index + delta], next[index]]; editSeeds(next);
-  }
-  async function generate() {
-    if (draft && !replacing) { replacing = true; return; }
-    action = true; error = null;
-    try {
-      draft = await previewCategoryDraw(tournament.id, category.id, mode,
-        { group_count: groupCount, qualifiers_per_group: qualifiers }, seeds);
-      changed();
-    } catch (cause) { error = cause === 'invalid_draw' ? 'invalid' : 'error'; }
-    finally { action = false; }
-  }
-  function assign(section: number, slot: number, value: string) {
-    if (!draft || locked || stale) return;
-    const id = value || null;
-    const previous = draft.sections[section][slot];
-    const next = draft.sections.map(slots => [...slots]);
-    if (id !== null) {
-      for (let group = 0; group < next.length; group++) {
-        const position = next[group].indexOf(id);
-        if (position !== -1) next[group][position] = previous;
-      }
-    }
-    next[section][slot] = id; draft.sections = next; draft.mode = 'manual'; changed();
-  }
-  async function save() {
-    if (!draft || action) return;
-    if (!pending) pending = { draw: JSON.parse(JSON.stringify({ ...draft, id: crypto.randomUUID(), revision: 0 })) as CategoryDraw, revision };
-    action = true; busy = true; error = null;
-    try {
-      const result = await saveCategoryDraw(tournament.id, pending.draw, pending.revision);
-      draft = result; revision = result.revision; pending = null; dirty = false; saved = true;
-    } catch (cause) {
-      if (cause === 'invalid_draw' || cause === 'draw_conflict' || cause === 'not_found') {
-        error = cause === 'draw_conflict' ? 'conflict' : 'stale'; pending = null;
-      } else error = 'uncertain';
-    } finally { action = false; busy = pending !== null; }
-  }
+  $effect(() => { if (active && !wasActive && desktopAvailable) void load(); wasActive = active; });
 </script>
-
-<section class="panel draw-workspace">
-  <h2>{t.title}</h2><p class="muted">{t.intro}</p>
-  {#if !desktopAvailable}<p>{text.preview}</p>
-  {:else if loading}<p>{text.loading}</p>
-  {:else}
-    {#if error}<p role="alert">{error === 'error' ? text.error : t[error]}</p>{/if}
-    {#if saved}<p role="status">{t.saved}</p>{/if}
-    {#if stale}<p role="alert">{t.stale}</p>{/if}
-    <button class="secondary" disabled={locked} onclick={load}>{t.load}</button>
-    {#if entries.length < 2 || entries.length > 4096}<p>{t.min}</p>
-    {:else}
-      <fieldset disabled={locked}>
-        <legend>{text.draw}</legend>
-        <div class="draw-options">
-          <label>{text.draw}<select bind:value={mode}><option value="automatic">{t.automatic}</option><option value="manual">{t.manual}</option></select></label>
-          {#if category.format === 'groups_knockout'}
-            <label>{t.groupCount}<input type="number" min="1" max={Math.floor(entries.length / 2)} step="1" bind:value={groupCount} /></label>
-            <label>{t.qualifiers}<input type="number" min="1" max={Math.floor(entries.length / Math.max(1, groupCount))} step="1" bind:value={qualifiers} /></label>
-          {/if}
-        </div>
-        <h3>{t.seeds}</h3>
-        <ol class="seed-list">
-          {#each seeds as id, index (id)}
-            <li><span>{entryLabel(id)}</span><button class="secondary" disabled={index === 0 || stale} aria-label={`${t.up}: ${entryLabel(id)}`} onclick={() => moveSeed(index, -1)}>↑</button><button class="secondary" disabled={index === seeds.length - 1 || stale} aria-label={`${t.down}: ${entryLabel(id)}`} onclick={() => moveSeed(index, 1)}>↓</button><button class="secondary" disabled={stale} onclick={() => editSeeds(seeds.filter(seed => seed !== id))}>{t.remove}</button></li>
-          {/each}
-        </ol>
-        <div class="draw-options"><label>{t.addSeed}<select bind:value={newSeed} disabled={stale}><option value="">{t.choose}</option>{#each entries.filter(e => !seeds.includes(e.id)) as entry}<option value={entry.id}>{label(entry)}</option>{/each}</select></label><button class="secondary" disabled={!newSeed || stale} onclick={() => { editSeeds([...seeds, newSeed]); newSeed = ''; }}>{t.addSeed}</button></div>
-        {#if replacing}<p>{t.replaceHint}</p>{/if}
-        <div class="draw-options"><button onclick={generate}>{replacing ? t.replace : t.generate}</button>{#if replacing}<button class="secondary" onclick={() => replacing = false}>{t.cancel}</button>{/if}</div>
-      </fieldset>
-    {/if}
-    {#if draft}
-      <p class="muted">{t.revision}: {revision} · {dirty ? t.unsaved : t.saved} · {t.missing}: {missing}</p>
-      {#if draft.format === 'groups_knockout'}<p class="muted">{t.groupCount}: {draft.settings.group_count} · {t.qualifiers}: {draft.settings.qualifiers_per_group}</p>{/if}
-      <p class="muted">{t.hint}</p>
-      <div class="draw-sections">
-        {#each draft.sections as section, group}
-          <section class="draw-section">
-            <h3>{category.format === 'groups_knockout' ? `${t.group} ${group + 1}` : text.bracket}</h3>
-            {#each section as id, slot}
-              <label class:pair-start={category.format === 'knockout' && slot % 2 === 0}>
-                {category.format === 'knockout' ? `${t.pair} ${Math.floor(slot / 2) + 1} · ${t.position} ${slot % 2 + 1}` : `${t.position} ${slot + 1}`}
-                <select value={id ?? ''} disabled={locked || stale} onchange={event => assign(group, slot, event.currentTarget.value)}>
-                  <option value="">{category.format === 'knockout' && missing === 0 && section[slot ^ 1] ? t.bye : t.empty}</option>
-                  {#each draft.participants as entry}<option value={entry.id}>{draft.seeds.includes(entry.id) ? `#${draft.seeds.indexOf(entry.id) + 1} ` : ''}{label(entry)}</option>{/each}
-                </select>
-              </label>
+<div class="draw-view">
+  <div class="draw-toolbar">
+    <div><h2>{text.draw}</h2><p class="muted">{category.format === 'groups_knockout' ? (language === 'sr' ? 'Round robin grupe → nokaut' : 'Round-robin groups → knockout') : text.knockout} · {rules.best_of} {language === 'sr' ? 'setova' : 'sets'} · {rules.points_to_win} {language === 'sr' ? 'poena' : 'points'} · +{rules.win_by}</p></div>
+    <div class="draw-actions"><button class="secondary" disabled={loading} onclick={load}><Icon name="restore" size={16} />{language === 'sr' ? 'Osveži' : 'Refresh'}</button><button data-open-tab class="secondary" onclick={onsettings}><Icon name="edit" size={16} />{text.settings}</button></div>
+  </div>
+  {#if error}<p class="error" role="alert">{text[error]}</p>{/if}
+  {#if !desktopAvailable}<p class="banner">{text.preview}</p>{:else if loading}<p>{text.loading}</p>{:else}
+    {#if stale}<p class="banner" role="alert">{language === 'sr' ? 'Prijave ili pravila su promenjeni. Prikazan je poslednji sačuvan raspored; napravi novi u podešavanjima.' : 'Registrations or rules changed. This is the last saved layout; create a new one in settings.'}</p>{/if}
+    {#if !draw}<p class="banner">{language === 'sr' ? 'Raspored još nije sačuvan. Dodaj učesnike, poređaj nosioce i pripremi raspored u podešavanjima kategorije.' : 'No arrangement has been saved. Add participants, order seeds and prepare the layout in category settings.'}</p>{/if}
+    {#if missing > 0}<p class="banner">{language === 'sr' ? 'Nepotpun ručni raspored — neraspoređeno' : 'Incomplete manual layout — unassigned'}: {missing}</p>{/if}
+    <div class="draw-layout" class:knockout-only={category.format === 'knockout'}>
+      {#if category.format === 'groups_knockout'}
+        <section class="group-column" aria-label={text.groups}>
+          <div class="column-heading"><h3>{text.groups}</h3><span class="pill">{draw ? groups.length : rules.group_count}</span></div>
+          {#if draw}
+            {#each groups as group, index}
+              <section class="group-card">
+                <div class="group-heading"><h3>{language === 'sr' ? 'Grupa' : 'Group'} {groupName(index)}</h3><span>{group.filter(Boolean).length} / {group.length}</span></div>
+                <ol class="group-entries">{#each group as id}<li><span class="entry-position">{#if id && draw.seeds.includes(id)}<span class="group-seed">#{draw.seeds.indexOf(id) + 1}</span>{:else}<Icon name={category.discipline === 'doubles' ? 'users' : 'user'} size={15} />{/if}</span><span class="group-player" title={entryName(id)}>{entryName(id)}{#if clubName(id)}<small>{clubName(id)}</small>{/if}</span></li>{/each}</ol>
+                <div class="group-qualifiers"><Icon name="arrow-right" size={14} />{draw.settings.qualifiers_per_group} {language === 'sr' ? 'prolaze u nokaut' : 'advance to knockout'}</div>
+                {#if group.every(id => id !== null)}
+                  <details><summary>{language === 'sr' ? 'Ko sa kim igra' : 'Round-robin pairings'}</summary><div class="round-robin">{#each roundRobin(group.filter((id): id is string => id !== null)) as round, roundIndex}<h4>{language === 'sr' ? 'Kolo' : 'Round'} {roundIndex + 1}</h4>{#each round as [a, b]}<p><span>{entryName(a)}</span><span class="versus">vs</span><span>{entryName(b)}</span></p>{/each}{/each}</div></details>
+                {/if}
+              </section>
             {/each}
-          </section>
-        {/each}
-      </div>
-      <button disabled={action || loading || (!pending && (stale || !dirty))} onclick={save}>{action ? text.saving : pending ? t.retry : t.save}</button>
-    {/if}
+          {:else}<div class="group-empty"><Icon name="users" size={28} /><p>{language === 'sr' ? 'Grupe će se prikazati posle pripreme rasporeda.' : 'Groups will appear after the layout is prepared.'}</p></div>{/if}
+        </section>
+      {/if}
+      <section class="knockout-column" aria-label={text.bracket}>
+        <div class="column-heading"><h3>{text.bracket}</h3><span class="scroll-hint"><Icon name="arrow-left" size={14} /><Icon name="arrow-right" size={14} />{language === 'sr' ? 'Pomeri horizontalno' : 'Scroll horizontally'}</span></div>
+        {#if category.format === 'groups_knockout'}<p class="projection-note">{language === 'sr' ? 'Pregled kostura po mestima u grupama. Igrači se određuju posle rezultata grupa.' : 'Bracket preview by group positions. Players are determined after group results.'}</p>{/if}
+        <KnockoutBracket {slots} {language} />
+      </section>
+    </div>
   {/if}
-</section>
-
+</div>
 <style>
-  .draw-workspace { display: grid; gap: 1rem; }
-  fieldset { margin: 0; padding: 1rem; border: 1px solid var(--border); border-radius: 8px; min-width: 0; }
-  legend { padding: 0 .4rem; }
-  .draw-options { display: flex; gap: .75rem; align-items: end; flex-wrap: wrap; margin: .75rem 0; }
-  label { display: grid; gap: .4rem; min-width: 0; }
-  select { padding: .6rem; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: inherit; max-width: 100%; }
-  .seed-list { padding-left: 1.5rem; }
-  .seed-list li { padding: .25rem 0; }
-  .seed-list span { display: inline-block; min-width: 12rem; }
-  .seed-list button { margin-left: .35rem; }
-  .draw-sections { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 1rem; }
-  .draw-section { display: grid; align-content: start; gap: .75rem; }
-  .pair-start { padding-top: .75rem; border-top: 1px solid var(--border); }
+  .draw-view { display: grid; gap: 20px; min-width: 0; }
+  .draw-toolbar, .draw-actions { display: flex; align-items: center; gap: 12px; }
+  .draw-toolbar { justify-content: space-between; flex-wrap: wrap; }
+  .draw-toolbar h2 { margin: 0; }
+  .draw-toolbar p { margin: 6px 0 0; }
+  .draw-layout { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 24px; align-items: start; }
+  .draw-layout.knockout-only { grid-template-columns: minmax(0, 1fr); }
+  .group-column, .knockout-column { min-width: 0; }
+  .column-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+  .column-heading h3 { margin: 0; font-size: 13px; }
+  .group-card { border: 1px solid var(--border); border-radius: 8px; margin-bottom: 16px; background: var(--surface); overflow: hidden; }
+  .group-heading { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--border-subtle); }
+  .group-heading h3 { margin: 0; font-size: 12px; }
+  .group-heading > span { color: var(--text-muted); font-size: 11px; }
+  .group-entries { padding: 0; margin: 0; list-style: none; }
+  .group-entries li { display: flex; gap: 10px; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--border-subtle); }
+  .entry-position { width: 22px; flex-shrink: 0; color: var(--text-muted); }
+  .group-seed { color: var(--primary); font-weight: 650; font-size: 10px; }
+  .group-player { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 550; }
+  small { display: block; font-size: 10px; font-weight: 400; color: var(--text-muted); }
+  .group-qualifiers { display: flex; align-items: center; gap: 6px; padding: 10px 14px; color: var(--text-secondary); font-size: 10px; }
+  details { border-top: 1px solid var(--border-subtle); padding: 10px 14px; font-size: 11px; }
+  summary { cursor: pointer; color: var(--text-secondary); }
+  .round-robin h4 { font-size: 10px; color: var(--text-muted); margin: 14px 0 6px; }
+  .round-robin p { display: grid; grid-template-columns: minmax(0, 1fr) 16px minmax(0, 1fr); gap: 4px; font-size: 10px; }
+  .round-robin p span { overflow-wrap: anywhere; }
+  .versus { color: var(--text-muted); text-align: center; }
+  .projection-note { font-size: 11px; color: var(--text-muted); margin: 0 0 12px; }
+  .scroll-hint { display: flex; align-items: center; gap: 3px; color: var(--text-muted); font-size: 10px; }
+  .group-empty { display: grid; place-items: center; color: var(--text-muted); padding: 32px 16px; border: 1px dashed var(--border); border-radius: 8px; text-align: center; }
+  @media (max-width: 650px) { .draw-layout { grid-template-columns: 1fr; } }
 </style>

@@ -1,4 +1,12 @@
 const sr = {
+  editCategory: 'Izmeni kategoriju', categoryFormatLocked: 'Disciplina i format ostaju vezani za postojeće prijave.',
+  settings: 'Podešavanja', categoryRules: 'Pravila kategorije', groupCount: 'Broj grupa', qualifiersPerGroup: 'Prolaznika iz svake grupe',
+  bestOf: 'Meč na najviše setova', pointsToWin: 'Poena za set', winBy: 'Potrebna razlika', rankingOrder: 'Redosled za izjednačenje',
+  head_to_head: 'Međusobni meč / mini-tabela', set_ratio: 'Odnos dobijenih i izgubljenih setova', point_ratio: 'Odnos osvojenih i izgubljenih poena',
+  rulesHint: 'Svaka grupa igra round robin — svako sa svakim. Za tri ili više izjednačenih koristi se mini-tabela samo među njima.',
+  invalid_rules: 'Proveri grupe, prolaznike, neparan broj setova i tri različita kriterijuma rangiranja.',
+  draw_conflict: 'Podaci su promenjeni u drugom radnom prostoru. Učitaj trenutno stanje.',
+
   collapseSidebar: 'Suzi levi meni', expandSidebar: 'Proširi levi meni',
   openInNewTab: 'Otvori u novom tabu', workTabs: 'Radni tabovi', newTab: 'Novi tab', closeTab: 'Zatvori tab', unsavedChanges: 'Nesačuvane izmene',
   closeUnsavedTab: 'Ovaj tab ima nesačuvane izmene. Zatvaranjem će biti odbačene.', discardAndClose: 'Odbaci i zatvori',
@@ -81,6 +89,14 @@ const sr = {
 };
 type Messages = typeof sr;
 const en: Messages = {
+  editCategory: 'Edit category', categoryFormatLocked: 'Discipline and format are tied to existing registrations.',
+  settings: 'Settings', categoryRules: 'Category rules', groupCount: 'Number of groups', qualifiersPerGroup: 'Qualifiers per group',
+  bestOf: 'Best of sets', pointsToWin: 'Points to win a set', winBy: 'Winning margin', rankingOrder: 'Tie-break order',
+  head_to_head: 'Head-to-head / mini-table', set_ratio: 'Won/lost set ratio', point_ratio: 'Won/lost point ratio',
+  rulesHint: 'Groups use round robin: everyone plays everyone. For three or more tied entries, the mini-table includes only those entries.',
+  invalid_rules: 'Check groups, qualifiers, odd best-of sets and three distinct ranking criteria.',
+  draw_conflict: 'Data changed in another workspace. Reload the current state.',
+
   collapseSidebar: 'Collapse sidebar', expandSidebar: 'Expand sidebar',
   openInNewTab: 'Open in new tab', workTabs: 'Workspace tabs', newTab: 'New tab', closeTab: 'Close tab', unsavedChanges: 'Unsaved changes',
   closeUnsavedTab: 'This tab has unsaved changes. Closing it will discard them.', discardAndClose: 'Discard and close',
@@ -165,7 +181,7 @@ export type Language = 'sr' | 'en';
 export const messages = { sr, en };
 export type MessageKey = keyof Messages;
 export function errorKey(error: unknown): MessageKey {
-  return typeof error === 'string' && ['invalid_cash', 'player_in_use', 'invalid_profile', 'name_required', 'name_too_long', 'duplicate_category', 'not_found', 'storage', 'invalid_members', 'already_registered'].includes(error)
+  return typeof error === 'string' && ['invalid_rules', 'draw_conflict', 'invalid_cash', 'player_in_use', 'invalid_profile', 'name_required', 'name_too_long', 'duplicate_category', 'not_found', 'storage', 'invalid_members', 'already_registered'].includes(error)
     ? error as MessageKey : 'error';
 }
 export function savedLanguage(): Language {

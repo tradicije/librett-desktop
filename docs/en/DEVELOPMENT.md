@@ -41,8 +41,8 @@ The Players tab shows the shared directory. Add/Edit opens dedicated profile
 screens, including photos, and returns to the list after saving. Delete asks for
 confirmation and protects profiles with existing registrations. Tournament
 registration uses that directory. Entries can be withdrawn/restored, and player
-attendance is shared across categories in a tournament. Schema version 10 adds immutable category draw drafts; older on-disk databases receive a consistent
-`pre-v10-<uuid>.sqlite` backup before migration.
+attendance is shared across categories in a tournament. Schema version 11 includes immutable draw drafts and versioned category rules; older on-disk databases receive a consistent
+`pre-v11-<uuid>.sqlite` backup before migration.
 
 Back/Forward follows the active workspace’s screen history. The top Home button
 returns to the pinned mode-selection workspace. The mode chooser has no sidebar. Saves lock navigation until
@@ -204,7 +204,7 @@ to the open draw screen. Reload discards local edits and fetches current entries
 
 A changed registration list requires regeneration. Concurrent revisions reject
 a stale save. An uncertain write keeps its request UUID and blocks navigation
-until a retry confirms the outcome. Existing databases receive a pre-v10 backup.
+until a retry confirms the outcome. Existing databases receive a pre-v11 backup.
 Confirmation, match creation, scoring, standings and knockout advancement remain
 pending; saving a draft does not start the competition.
 
@@ -220,8 +220,8 @@ navigation is triggered outside the toolbar. History is reset on application rel
 ## Workspace tabs
 
 Home is pinned behind the top-left Home button and never appears in the tab list.
-Choosing a tournament from Home opens a working tab. The tab label shows only the
-current page (e.g. Registrations or Cash desk); its tooltip contains the full context.
+Choosing a tournament from Home opens a working tab. The tab label shows the immediate parent and current page (e.g. Veterans | Draw);
+its tooltip contains the full context.
 Home preserves open working tabs. The + button and Cmd/Ctrl+T open Home to choose
 another workspace; they do not create an empty Home tab.
 
@@ -267,3 +267,21 @@ separate expansion icon. Neither the full logo nor the compact icon navigates to
 is shared by Home and every working tab and saved under `librett.sidebarCollapsed`
 in local storage, including across application restarts. Theme changes also switch
 the compact brand icon. Collapse/expand changes layout without replacing screen state.
+
+
+## Category configuration and visual draw
+
+Tournament tabs are Overview, Categories and Cash desk. Categories provides Add,
+Edit and Delete actions matching the player directory. Add/Edit open a dedicated
+editor; category rows open their Registrations page. Used categories cannot change
+discipline or format, and fee edits affect only future registrations.
+
+Category Settings combines saved rules, participants, ordered seeds and automatic
+or manual arrangements. Rules include group count, qualifiers, best-of sets,
+points, winning margin and the tied-player mini-table/set-ratio/point-ratio order.
+Draw is a visual overview with groups and round-robin pairings on the left and the
+complete horizontally scrollable knockout bracket on the right. Group qualifiers
+remain labeled placeholders; match scoring, standings and progression are pending.
+
+Schema 11 saves versioned rules and migrates existing group draft settings after
+a pre-v11 backup. See [ADR 0012](../adr/0012-category-rules-and-draw-view.md).

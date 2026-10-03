@@ -5,6 +5,7 @@ use uuid::Uuid;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ApplicationError {
+    InvalidRules,
     InvalidDraw,
     DrawConflict,
     InvalidCash,
@@ -22,6 +23,7 @@ pub enum ApplicationError {
 impl From<DomainError> for ApplicationError {
     fn from(error: DomainError) -> Self {
         match error {
+            DomainError::InvalidRules => Self::InvalidRules,
             DomainError::InvalidDraw => Self::InvalidDraw,
             DomainError::InvalidCash => Self::InvalidCash,
             DomainError::InvalidProfile => Self::InvalidProfile,
@@ -81,7 +83,7 @@ fn draw_entries(
 }
 
 pub fn preview_category_draw(
-    repository: &(impl TournamentRepository + PlayerRepository),
+    repository: &(impl TournamentRepository + PlayerRepository + CategoryRulesRepository),
     tournament_id: Uuid,
     category_id: Uuid,
     mode: librett_domain::DrawMode,
@@ -89,6 +91,13 @@ pub fn preview_category_draw(
     seeds: Vec<Uuid>,
 ) -> Result<librett_domain::CategoryDraw, ApplicationError> {
     let category = draw_category(repository, tournament_id, category_id)?;
+    let configured = repository.find_category_rules(category_id)?;
+    if category.format == CompetitionFormat::GroupsKnockout
+        && (settings.group_count != configured.rules.group_count
+            || settings.qualifiers_per_group != configured.rules.qualifiers_per_group)
+    {
+        return Err(ApplicationError::InvalidRules);
+    }
     Ok(librett_domain::create_draw(
         &category,
         &draw_entries(repository, category_id)?,
@@ -100,12 +109,22 @@ pub fn preview_category_draw(
 }
 
 pub fn save_category_draw(
-    repository: &mut (impl TournamentRepository + PlayerRepository + DrawRepository),
+    repository: &mut (impl TournamentRepository
+              + PlayerRepository
+              + DrawRepository
+              + CategoryRulesRepository),
     tournament_id: Uuid,
     mut draw: librett_domain::CategoryDraw,
     expected_revision: u32,
 ) -> Result<librett_domain::CategoryDraw, ApplicationError> {
     let category = draw_category(repository, tournament_id, draw.category_id)?;
+    let configured = repository.find_category_rules(draw.category_id)?;
+    if category.format == CompetitionFormat::GroupsKnockout
+        && (draw.settings.group_count != configured.rules.group_count
+            || draw.settings.qualifiers_per_group != configured.rules.qualifiers_per_group)
+    {
+        return Err(ApplicationError::InvalidRules);
+    }
     let entries = draw_entries(repository, draw.category_id)?;
     librett_domain::validate_draw(&draw, &category, &entries)?;
     // Names and clubs come from persisted entry snapshots, never from client text.
@@ -390,4 +409,134 @@ pub trait PlayerCashRepository {
         entry_ids: Vec<Uuid>,
         paid: bool,
     ) -> Result<(), ApplicationError>;
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct CategoryConfiguration {
+    pub category_id: Uuid,
+    pub revision: u32,
+    pub rules: librett_domain::CategoryRules,
+}
+
+pub trait CategoryRulesRepository {
+    fn save_configured_category(
+        &mut self,
+        tournament_id: Uuid,
+        category: &librett_domain::Category,
+        rules: &librett_domain::CategoryRules,
+        expected_revision: u32,
+    ) -> Result<CategoryConfiguration, ApplicationError>;
+    fn find_category_rules(
+        &self,
+        category_id: Uuid,
+    ) -> Result<CategoryConfiguration, ApplicationError>;
+    fn insert_configured_category(
+        &mut self,
+        tournament_id: Uuid,
+        category: &librett_domain::Category,
+        rules: &librett_domain::CategoryRules,
+    ) -> Result<(), ApplicationError>;
+    fn save_category_rules(
+        &mut self,
+        tournament_id: Uuid,
+        category_id: Uuid,
+        rules: &librett_domain::CategoryRules,
+        expected_revision: u32,
+    ) -> Result<CategoryConfiguration, ApplicationError>;
+}
+
+pub fn create_category_with_rules(
+    repository: &mut (impl TournamentRepository + CategoryRulesRepository),
+    tournament_id: Uuid,
+    category_id: Uuid,
+    name: &str,
+    discipline: Discipline,
+    format: CompetitionFormat,
+    fee_minor: i64,
+    rules: librett_domain::CategoryRules,
+) -> Result<Tournament, ApplicationError> {
+    rules.validate(format)?;
+    if !(0..=librett_domain::MAX_CASH_MINOR).contains(&fee_minor) {
+        return Err(ApplicationError::InvalidCash);
+    }
+    let mut tournament = repository.find(tournament_id)?;
+    if let Some(existing) = tournament.categories.iter().find(|c| c.id == category_id) {
+        if existing.name != name.trim()
+            || existing.discipline != discipline
+            || existing.format != format
+            || existing.fee_minor != fee_minor
+            || existing.archived
+            || repository.find_category_rules(category_id)?.rules != rules
+        {
+            return Err(ApplicationError::DrawConflict);
+        }
+        return Ok(tournament);
+    }
+    tournament.add_category(name, discipline, format)?;
+    let category = tournament
+        .categories
+        .last_mut()
+        .ok_or(ApplicationError::Storage)?;
+    category.id = category_id;
+    category.fee_minor = fee_minor;
+    repository.insert_configured_category(tournament_id, category, &rules)?;
+    Ok(tournament)
+}
+
+pub fn get_category_rules(
+    repository: &(impl TournamentRepository + CategoryRulesRepository),
+    tournament_id: Uuid,
+    category_id: Uuid,
+) -> Result<CategoryConfiguration, ApplicationError> {
+    draw_category(repository, tournament_id, category_id)?;
+    repository.find_category_rules(category_id)
+}
+
+pub fn save_category_rules(
+    repository: &mut (impl TournamentRepository + CategoryRulesRepository),
+    tournament_id: Uuid,
+    category_id: Uuid,
+    rules: librett_domain::CategoryRules,
+    expected_revision: u32,
+) -> Result<CategoryConfiguration, ApplicationError> {
+    let category = draw_category(repository, tournament_id, category_id)?;
+    rules.validate(category.format)?;
+    repository.save_category_rules(tournament_id, category_id, &rules, expected_revision)
+}
+
+pub fn update_category_with_rules(
+    repository: &mut (impl TournamentRepository + CategoryRulesRepository),
+    tournament_id: Uuid,
+    category_id: Uuid,
+    name: &str,
+    discipline: Discipline,
+    format: CompetitionFormat,
+    fee_minor: i64,
+    rules: librett_domain::CategoryRules,
+    expected_revision: u32,
+) -> Result<Tournament, ApplicationError> {
+    rules.validate(format)?;
+    if !(0..=librett_domain::MAX_CASH_MINOR).contains(&fee_minor) {
+        return Err(ApplicationError::InvalidCash);
+    }
+    let tournament = repository.find(tournament_id)?;
+    let existing = tournament
+        .categories
+        .iter()
+        .find(|c| c.id == category_id && !c.archived)
+        .ok_or(ApplicationError::NotFound)?;
+    let mut validated = Tournament::new("category validation")?;
+    validated.add_category(name, discipline, format)?;
+    let mut category = validated.categories.remove(0);
+    category.id = existing.id;
+    category.fee_minor = fee_minor;
+    if tournament.categories.iter().any(|other| {
+        other.id != category_id
+            && other.discipline == discipline
+            && other.name.to_lowercase() == category.name.to_lowercase()
+    }) {
+        return Err(ApplicationError::DuplicateCategory);
+    }
+    repository.save_configured_category(tournament_id, &category, &rules, expected_revision)?;
+    repository.find(tournament_id)
 }

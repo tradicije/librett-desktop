@@ -5,7 +5,7 @@
   import { desktopAvailable, listEntries, listPlayers, registerEntries, setEntryStatus, setPlayerAttendance, type EntryStatus, type Entry, type Player, type Tournament, type Category } from './api';
   import { errorKey, messages, type Language, type MessageKey } from './i18n';
 
-  let { active = true, tournament, category, language, busy = $bindable(false), dirty = $bindable(false) }: { active?: boolean; tournament: Tournament; category: Category; language: Language; busy?: boolean; dirty?: boolean } = $props();
+  let { onentrieschange, active = true, tournament, category, language, busy = $bindable(false), dirty = $bindable(false) }: { onentrieschange?: () => void; active?: boolean; tournament: Tournament; category: Category; language: Language; busy?: boolean; dirty?: boolean } = $props();
   let text = $derived(messages[language]);
   let players = $state<Player[]>([]);
   let entries = $state<Entry[]>([]);
@@ -71,7 +71,7 @@
     busy = true; error = null; notice = null;
     try {
       const saved = await registerEntries(tournament.id, category.id, groups);
-      entries = [...entries, ...saved]; checked = []; pairs = []; notice = 'entrySaved';
+      entries = [...entries, ...saved]; checked = []; pairs = []; notice = 'entrySaved'; onentrieschange?.();
     } catch (cause) {
       error = errorKey(cause);
       try {
@@ -95,7 +95,7 @@
     try {
       await setEntryStatus(tournament.id, entry.id, next);
       entries = entries.map(item => item.id === entry.id ? { ...item, status: next } : item);
-      notice = 'registrationUpdated';
+      notice = 'registrationUpdated'; onentrieschange?.();
     } catch (cause) { error = errorKey(cause); }
     finally { busy = false; }
   }

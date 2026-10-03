@@ -60,6 +60,7 @@ history must be part of the results workflow, rather than an afterthought.
   per-tab navigation history and mouse/keyboard tab controls.
 - Multiple tournaments and singles/doubles categories with independently selected
   competition formats.
+- Dedicated category editors with competition rules, participants and seeded automatic/manual layouts; visual groups, round-robin pairings and a scrollable knockout bracket.
 - A shared local player directory with profiles, photos, and search.
 - Category workspaces with checkbox batch singles registration and explicit doubles
   pair selection; names may repeat across singles and doubles.

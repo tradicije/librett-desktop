@@ -21,7 +21,7 @@ remembers scroll/focus, and guards switches/closing while writes or modals are a
 Known unsaved forms and drafts require confirmation before a tab is discarded.
 
 Tabs are fixed at 180px; overflowing labels fade at the right after measuring
-the actual text width, without an ellipsis. Tab labels show the current page only; tooltips carry the full context. Navigation
+the actual text width, without an ellipsis. Tab labels show the immediate parent and current page; tooltips carry the full context. Navigation
 supports Cmd/Ctrl-click, middle-click and a contextual Open in new tab command.
 Opening a duplicate copies the destination, not unsaved form data. + / Cmd/Ctrl+T
 return to Home for choosing another workspace. Working tabs use Cmd/Ctrl+W and

@@ -74,3 +74,8 @@ collapse control beside the full logo with a 16px gap; compact mode uses the the
 brand icon as the expansion button and icon-only navigation with accessible
 names/tooltips. Brand images do not navigate to Home. The shared
 layout preference persists across workspaces and restarts.
+
+
+Category rows share player profile card spacing, avatar size, typography and
+responsive action layouts. Edit/Delete use the same icon-labeled secondary buttons.
+Category creation/editing has a dedicated screen; Draw is a group/bracket overview.

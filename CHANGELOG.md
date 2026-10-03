@@ -6,7 +6,20 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Changed
 
-- Added persistent tournament-level tabs for Overview, Categories, Registrations
+- Categories now use a full-width list with Add Category opening a dedicated editor;
+  Category cards and Edit/Delete actions share the player directory's layout, styles and icons.
+  Registrations are accessed inside each category rather than at tournament root.
+- Category rules configure groups, qualifiers, match length, scoring targets and
+  tied-player mini-table/set-ratio/point-ratio order. Settings contains participants,
+  ordered seeds and automatic/manual arrangements; Draw shows groups on the left,
+  round-robin pairings and a complete horizontally scrollable knockout bracket.
+  Group qualifiers remain placeholders until match results are implemented.
+- Working tab labels show the immediate parent and page, retaining full-context tooltips.
+- SQLite schema 11 stores versioned category rules, preserves existing group settings
+  and creates pre-v11 migration backups. Category metadata/rules save atomically;
+  fee edits affect future registrations, while used categories retain discipline/format.
+
+- Added persistent tournament-level tabs for Overview, Categories
   and Cash desk. Draw, Matches and Results are category-level tabs; Matches and
   Results are clearly marked as in development.
 

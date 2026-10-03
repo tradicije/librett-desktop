@@ -57,6 +57,7 @@ biti deo funkcionalnosti za rezultate, a ne naknadni dodatak.
 - Nezavisni radni tabovi sa stalnim Home ekranom, sačuvanim nacrtima i izborom,
   zasebnom istorijom i kontrolama mišem/tastaturom.
 - Kreiranje više turnira i singl/dubl kategorija sa zasebnim izborom formata.
+- Poseban editor kategorija sa pravilima, učesnicima i automatskim/ručnim rasporedom nosilaca; pregled grupa, round-robin parova i nokaut kostura sa skrolom.
 - Zajednička lokalna baza igrača sa profilima, fotografijama i pretragom.
 - Detalji kategorije sa čekiranjem više igrača za singl i sastavljanjem dubl
   parova; singl i dubl mogu imati isti naziv kategorije.
