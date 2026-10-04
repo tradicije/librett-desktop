@@ -47,11 +47,13 @@ and double-click maximize; narrow edge/corner regions start native resizing.
 Close uses CloseRequested and keeps the existing unsaved-work confirmation.
 These buttons are LibreTT controls, not KDE decoration widgets. Their capabilities
 are restricted to Linux and the main window. Windows retains native chrome.
-The Linux surface remains opaque with a theme-colored outline. Transparent
-surfaces/root clipping caused an invisible-window regression on NVIDIA/Wayland
-with the DMABUF workaround, so rounded outer corners remain deferred. Maximized
-and fullscreen states remove the outline. The outline/title bar use 10px visual
-rounding while restored; this does not change the rectangular native surface.
+The Linux native surface remains opaque. Both transparent-corner attempts
+produced invisible or hover-only rendering on the tested NVIDIA/Wayland setup,
+including when using the DMABUF workaround. Transparent backgrounds, clip-path masks and rounded root containment are
+removed. The Linux frame is deliberately square so its outline matches the
+opaque native surface. The theme-colored outline and smaller Tabler controls
+remain. Real corner shaping is deferred pending a verified portable solution;
+KDE-specific effects are not an application requirement. Maximized/fullscreen states remove the outline.
 Resize targets remain at the window edges.
 Blank parts of the row allow native dragging through a narrowly scoped capability.
 

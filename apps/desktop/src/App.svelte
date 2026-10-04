@@ -267,7 +267,6 @@
 
 <style>
   .work-titlebar { height: 48px; position: fixed; top: 0; left: 0; right: 0; z-index: 30; display: flex; align-items: center; gap: 6px; background: var(--background); border-bottom: 1px solid var(--border); user-select: none; }
-  :global(html.linux-window) .work-titlebar { border-radius: var(--window-radius) var(--window-radius) 0 0; }
   .window-drag-space { align-self: stretch; width: 12px; flex-shrink: 0; }
   .mac-titlebar > .window-drag-space:first-child { width: 80px; }
   .titlebar-info { flex-shrink: 0; margin-right: 12px; }
