@@ -6,6 +6,11 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Changed
 
+- Linux uses one title bar for workspace tabs, Info and application-drawn window
+  controls. Minimize, maximize/restore and guarded close use native window actions;
+  drag regions, double-click maximize and edge/corner resizing remain available.
+  macOS retains its native AppKit traffic lights and Windows retains its system frame.
+
 - Added a Rust stable shields.io badge to both README headers, matching the
   label/value format of the other badges.
 - Knockout entrants retain group/place prefixes (A1, B2, etc.) beside their names

@@ -95,6 +95,16 @@ fn center_window_controls(window: &tauri::WebviewWindow) -> tauri::Result<()> {
 
 fn main() {
     let context = tauri::generate_context!();
+    #[cfg(target_os = "linux")]
+    let context = {
+        let mut context = context;
+        // The workspace strip owns Linux window controls. Configure this before
+        // creating GTK windows so a second system title bar never flashes.
+        for window in &mut context.config_mut().app.windows {
+            window.decorations = false;
+        }
+        context
+    };
     // GDK's Wayland app_id defaults to the GLib program name. Set it before
     // GTK initializes so KWin matches the same desktop entry as the taskbar.
     #[cfg(target_os = "linux")]

@@ -1,11 +1,12 @@
 <script lang="ts">
   import {
     IconLayoutSidebarLeftCollapse, IconCash, IconTrophy, IconUser, IconUsers, IconUserPlus, IconArrowLeft, IconArrowRight,
-    IconPlus, IconSun, IconMoon, IconDeviceDesktop, IconSearch, IconCircleCheck,
+    IconPlus, IconSun, IconMoon, IconDeviceDesktop, IconSearch, IconCircleCheck, IconMinus, IconSquare, IconSquares,
     IconUserMinus, IconArrowBackUp, IconPencil, IconTrash, IconHome, IconWorld, IconLayersIntersect, IconList, IconAlertCircle, IconInfoCircle, IconX, IconArrowUp, IconArrowDown,
   } from '@tabler/icons-svelte';
 
   const icons = {
+    minimize: IconMinus, maximize: IconSquare, 'restore-window': IconSquares,
     'arrow-up': IconArrowUp, 'arrow-down': IconArrowDown, info: IconInfoCircle, close: IconX,
     'sidebar-collapse': IconLayoutSidebarLeftCollapse,
     cash: IconCash, trophy: IconTrophy, user: IconUser, users: IconUsers, 'user-plus': IconUserPlus,

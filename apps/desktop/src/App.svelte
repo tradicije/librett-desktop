@@ -10,6 +10,7 @@
   let discardDialog: DiscardDialog;
   let aboutDialog: AboutDialog;
   import Icon from './Icon.svelte';
+  import LinuxWindowControls from './LinuxWindowControls.svelte';
   import { fadeOverflow } from './tab-label';
   import { savedSidebarCollapsed, saveSidebarCollapsed } from './sidebar';
   import { desktopAvailable, type Tournament } from './api';
@@ -56,6 +57,7 @@
   }
   let openIntent = false;
   let macOS = /Mac/.test(navigator.platform);
+  const linuxWindow = desktopAvailable && /Linux/.test(navigator.platform);
   const historySession = crypto.randomUUID();
   let restoring = false;
   const nativeState = (index: number) => ({ librettSession: historySession, librettIndex: index });
@@ -130,6 +132,10 @@
   }
   function drag(event: MouseEvent) {
     if (!desktopAvailable || event.button !== 0 || (event.target as HTMLElement).closest('button')) return;
+    if (linuxWindow && event.detail === 2) {
+      void getCurrentWindow().toggleMaximize().catch(() => { /* Window buttons remain available. */ });
+      return;
+    }
     void getCurrentWindow().startDragging().catch(() => { /* Native title bar stays usable. */ });
   }
   onMount(() => {
@@ -234,6 +240,7 @@
   <button class="new-work-tab" disabled={locked} aria-label={text.newTab} title={text.newTab} onclick={() => openTab()}>+</button>
   <div class="window-drag-space trailing-drag" role="presentation" onmousedown={drag}></div>
   <button class="icon-button titlebar-info" disabled={locked} aria-label={language === 'sr' ? 'O aplikaciji' : 'About LibreTT'} title={language === 'sr' ? 'O aplikaciji' : 'About LibreTT'} onclick={() => { if (!modalOpen()) { contextMenu = null; aboutDialog.open(); } }}><Icon name="info" size={18} /></button>
+  {#if linuxWindow}<LinuxWindowControls {language} />{/if}
 </header>
 <div class="workspace-frame" id="home-workspace" hidden={activeId !== homeId}>
   <Workspace initialRoute={homeWorkspace.initialRoute} pinned bind:language bind:theme bind:sidebarCollapsed {resolvedTheme} bind:tournaments
