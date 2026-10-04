@@ -27,11 +27,15 @@ Opening a duplicate copies the destination, not unsaved form data. + / Cmd/Ctrl+
 return to Home for choosing another workspace. Working tabs use Cmd/Ctrl+W and
 Ctrl+Tab, plus accessible tab-list keyboard controls.
 
-Native webview history is kept centered between backward and forward entries.
+On macOS, native webview history is kept centered between backward and forward entries.
 Popstate dispatches to the active workspace's history and restores the center.
 This prevents histories from mixing when a user changes tabs. Toolbar/mouse
 controls use the same workspace travel operation. Native navigation is blocked
 during writes and modals. macOS trackpad navigation remains enabled.
+
+Linux and Windows use workspace history through toolbar and mouse controls.
+They do not initialize the macOS native-history bridge: WebKitGTK may omit its
+initial same-document popstate and leave startup navigation permanently locked.
 
 The 48px workspace row is fixed. Content/sidebar height subtracts that row so
 short pages do not force a scrollbar. macOS Overlay/hiddenTitle keep native window

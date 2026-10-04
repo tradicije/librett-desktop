@@ -151,13 +151,15 @@
     function beforeUnload(event: BeforeUnloadEvent) { if (locked || hasUnsaved()) { event.preventDefault(); event.returnValue = ''; } }
     window.addEventListener('beforeunload', beforeUnload);
     const stopTheme = watchSystemTheme(() => { if (theme === 'system') resolvedTheme = applyTheme(theme); });
-    // Keep native history centered between two same-document entries. Native
-    // gestures dispatch back/forward to the active workspace's own history;
-    // returning to center prevents histories of different tabs from mixing.
-    window.history.replaceState(nativeState(0), '');
-    window.history.pushState(nativeState(1), '');
-    window.history.pushState(nativeState(2), '');
-    nativePending = true; restoring = true; window.history.go(-1);
+    // WKWebView trackpad gestures use native history. WebKitGTK can fail to
+    // emit the initial popstate for these same-document entries, leaving every
+    // workspace locked. Linux/Windows use the toolbar and mouse controls below.
+    if (desktopAvailable && macOS) {
+      window.history.replaceState(nativeState(0), '');
+      window.history.pushState(nativeState(1), '');
+      window.history.pushState(nativeState(2), '');
+      nativePending = true; restoring = true;
+    }
     function onHistory(event: PopStateEvent) {
       const state = event.state;
       if (state?.librettSession !== historySession) return;
@@ -195,6 +197,8 @@
     }
     window.addEventListener('contextmenu', showContext);
     window.addEventListener('popstate', onHistory);
+    // Install the listener before requesting asynchronous traversal.
+    if (desktopAvailable && macOS) window.history.go(-1);
     window.addEventListener('mousedown', onMouse);
     window.addEventListener('mouseup', onMouse);
     window.addEventListener('auxclick', onMouse);

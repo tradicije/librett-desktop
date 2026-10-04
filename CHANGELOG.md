@@ -128,6 +128,10 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Fixed
 
+- Prevent Linux/Windows startup navigation from remaining locked while waiting
+  for a native-history event. The history bridge is scoped to macOS WKWebView
+  trackpad gestures; toolbar and mouse navigation remain available on all platforms.
+
 - Confirm before discarding dirty forms/drafts through navigation, history, editor
   cancellation, explicit draw reload, window closing or Quit.
 - Reject player edits against stale profile snapshots; matching request retries
