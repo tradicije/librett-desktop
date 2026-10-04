@@ -102,6 +102,9 @@ fn main() {
         // creating GTK windows so a second system title bar never flashes.
         for window in &mut context.config_mut().app.windows {
             window.decorations = false;
+            // Keep GTK/WebKit's surface opaque: transparent surfaces can leave
+            // the window invisible on NVIDIA/Wayland with the DMABUF workaround.
+            window.transparent = false;
         }
         context
     };

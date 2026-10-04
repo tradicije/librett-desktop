@@ -47,6 +47,10 @@ and double-click maximize; narrow edge/corner regions start native resizing.
 Close uses CloseRequested and keeps the existing unsaved-work confirmation.
 These buttons are LibreTT controls, not KDE decoration widgets. Their capabilities
 are restricted to Linux and the main window. Windows retains native chrome.
+The Linux surface remains opaque with a theme-colored outline. Transparent
+surfaces/root clipping caused an invisible-window regression on NVIDIA/Wayland
+with the DMABUF workaround, so rounded outer corners remain deferred. Maximized
+and fullscreen states remove the outline. Resize targets remain at the window edges.
 Blank parts of the row allow native dragging through a narrowly scoped capability.
 
 Read-only lists refresh when a tab becomes active, preserving valid selections.

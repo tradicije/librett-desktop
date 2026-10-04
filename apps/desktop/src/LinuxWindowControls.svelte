@@ -17,14 +17,18 @@
   async function refresh() {
     [maximized, fullscreen] = await Promise.all([window.isMaximized(), window.isFullscreen()]);
   }
+  $effect(() => {
+    document.documentElement.classList.toggle('window-flush', maximized || fullscreen);
+  });
   onMount(() => {
+    document.documentElement.classList.add('linux-window');
     let disposed = false;
     let stop: (() => void) | undefined;
     void refresh().catch(() => { error = true; });
     void window.onResized(() => { void refresh().catch(() => { error = true; }); })
       .then(unlisten => { if (disposed) unlisten(); else stop = unlisten; })
       .catch(() => { error = true; });
-    return () => { disposed = true; stop?.(); };
+    return () => { disposed = true; stop?.(); document.documentElement.classList.remove('linux-window', 'window-flush'); };
   });
   async function act(action: 'minimize' | 'maximize' | 'close') {
     if (working) return;
@@ -45,10 +49,11 @@
 </script>
 
 <div class="window-controls" role="group" aria-label={sr ? 'Kontrole prozora' : 'Window controls'}>
-  <button disabled={working} aria-label={sr ? 'Minimizuj prozor' : 'Minimize window'} title={sr ? 'Minimizuj prozor' : 'Minimize window'} onclick={() => act('minimize')}><Icon name="minimize" size={17} /></button>
-  <button disabled={working || fullscreen} aria-label={maximizeLabel} title={maximizeLabel} onclick={() => act('maximize')}><Icon name={maximized ? 'restore-window' : 'maximize'} size={16} /></button>
-  <button class="window-close" disabled={working} aria-label={sr ? 'Zatvori prozor' : 'Close window'} title={sr ? 'Zatvori prozor' : 'Close window'} onclick={() => act('close')}><Icon name="close" size={18} /></button>
+  <button disabled={working} aria-label={sr ? 'Minimizuj prozor' : 'Minimize window'} title={sr ? 'Minimizuj prozor' : 'Minimize window'} onclick={() => act('minimize')}><Icon name="minimize" size={14} /></button>
+  <button disabled={working || fullscreen} aria-label={maximizeLabel} title={maximizeLabel} onclick={() => act('maximize')}><Icon name={maximized ? 'restore-window' : 'maximize'} size={13} /></button>
+  <button class="window-close" disabled={working} aria-label={sr ? 'Zatvori prozor' : 'Close window'} title={sr ? 'Zatvori prozor' : 'Close window'} onclick={() => act('close')}><Icon name="close" size={15} /></button>
 </div>
+<div class="window-outline" aria-hidden="true"></div>
 {#if error}<p class="window-control-error" role="alert">{sr ? 'Kontrola prozora nije uspela. Pokušaj ponovo.' : 'Window action failed. Try again.'}</p>{/if}
 {#if !maximized && !fullscreen}
   {#each directions as direction}
@@ -57,10 +62,15 @@
 {/if}
 
 <style>
-  .window-controls { display: flex; align-items: stretch; align-self: stretch; flex-shrink: 0; margin-left: 2px; padding-right: 4px; border-left: 1px solid var(--border-subtle); }
-  .window-controls button { width: 40px; border: 0; border-radius: 0; padding: 0; background: transparent; color: var(--text-secondary); }
-  .window-controls button:hover:enabled { background: var(--surface-hover); color: var(--text-primary); }
-  .window-controls .window-close:hover:enabled { background: #C73E4D; color: #FFFFFF; }
+  .window-controls { display: flex; align-items: center; align-self: stretch; flex-shrink: 0; gap: 4px; margin-left: 0; padding: 0 10px 0 12px; border-left: 1px solid var(--border-subtle); }
+  .window-controls button { width: 28px; height: 28px; min-height: 28px; border: 1px solid transparent; border-radius: 7px; padding: 0; background: transparent; color: var(--text-secondary); }
+  .window-controls button:hover:enabled { background: var(--surface-hover); border-color: var(--border); color: var(--text-primary); }
+  .window-controls button:active:enabled { background: var(--primary-subtle); border-color: var(--primary); color: var(--primary); }
+  .window-controls .window-close:hover:enabled { background: #C73E4D; border-color: #C73E4D; color: #FFFFFF; }
+  .window-controls .window-close:active:enabled { background: #AE303E; border-color: #AE303E; color: #FFFFFF; }
+  .window-controls button:focus-visible { outline-offset: 1px; }
+  .window-outline { position: fixed; inset: 0; border: 1px solid var(--border); border-radius: var(--window-radius); z-index: 115; pointer-events: none; }
+  :global(.window-flush) .window-outline { display: none; }
   .window-control-error { position: fixed; top: 52px; right: 12px; z-index: 110; margin: 0; padding: 10px 14px; background: var(--surface); color: var(--text-primary); border: 1px solid var(--border); border-radius: 6px; font-size: 12px; }
   .resize-edge { position: fixed; z-index: 120; }
   .north, .south { left: 8px; right: 8px; height: 4px; cursor: ns-resize; }

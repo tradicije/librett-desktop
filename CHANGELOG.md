@@ -6,6 +6,10 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Changed
 
+- Added a theme-colored 1px Linux window outline, hidden when maximized/fullscreen.
+  Window controls use smaller Tabler icons, compact rounded buttons and consistent
+  hover, pressed and keyboard-focus states.
+
 - Linux uses one title bar for workspace tabs, Info and application-drawn window
   controls. Minimize, maximize/restore and guarded close use native window actions;
   drag regions, double-click maximize and edge/corner resizing remain available.
@@ -132,6 +136,10 @@ Notable changes to LibreTT are recorded here in English.
   commitment to free access, community-owned data and long-term sporting history.
 
 ### Fixed
+
+- Restore opaque Linux window surfaces and remove root clipping after transparent
+  rounded corners left the window invisible on NVIDIA/Wayland. Keep the themed
+  outline and compact Tabler controls; compositor-level rounding remains deferred.
 
 - Prevent Linux/Windows startup navigation from remaining locked while waiting
   for a native-history event. The history bridge is scoped to macOS WKWebView
