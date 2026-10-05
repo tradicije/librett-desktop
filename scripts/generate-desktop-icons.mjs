@@ -25,7 +25,8 @@ try {
       await copyFile(join(temporary, entry.name), join(destination, entry.name));
     }
   }
-  console.log('Desktop icons updated. Fully stop and restart LibreTT to apply them.');
+  console.log('Linux PNG, Windows ICO/Appx and macOS ICNS icons updated. Fully stop and restart LibreTT to apply them.');
+  if (process.platform === 'linux') console.log('For development taskbar icons, also run npm run desktop:install-icon.');
 } finally {
   await rm(temporary, { recursive: true, force: true });
 }

@@ -48,6 +48,23 @@ Back/Forward follows the active workspace’s screen history. The top Home butto
 returns to the pinned mode-selection workspace. The mode chooser has no sidebar. Saves lock navigation until
 completion. Local administration currently has no login or enforced user roles.
 
+## Desktop application name
+
+The user-facing name is **LibreTT** on macOS, Linux and Windows. Tauri's
+`productName` is LibreTT, and Cargo's explicit binary/default run target is
+`LibreTT` (`LibreTT.exe` on Windows). The internal Cargo package remains
+`librett-desktop`; Cargo commands such as `cargo build -p librett-desktop`
+therefore still work. Renaming the executable handles development OS displays
+that fall back to its filename rather than product metadata.
+
+macOS also supplies CFBundleName/CFBundleDisplayName in Info.plist and sets the
+NSProcessInfo name before AppKit initializes. Linux sets the GLib application
+name to LibreTT and preserves `org.librett.desktop` as the GTK app ID for shell
+matching; the development desktop entry uses `Exec=LibreTT`. Rerun
+`npm run desktop:install-icon` on Linux after updating an existing dev entry.
+The native build tracks Info.plist and icon changes on every platform.
+Fully stop and restart `npm run desktop -- dev` after native branding changes.
+
 ## Themes and icons
 
 The theme selector supports Light, Dark, and System; System follows live OS
@@ -65,7 +82,8 @@ npm run desktop:generate-icons
 ```
 
 The helper uses the installed Tauri CLI and copies only desktop PNG/ICO/ICNS
-assets into the project. Replacing the source PNG alone does not update these
+assets into the project for all three platforms: Linux PNG, Windows ICO/Appx
+and macOS ICNS. Replacing the source PNG alone does not update these
 files. macOS development uses `icons/icon.icns` for the Dock icon; native window
 icons use the generated PNGs. Fully stop the running desktop process (Ctrl+C in
 the development terminal) and start `npm run desktop -- dev` again. Frontend

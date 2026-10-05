@@ -30,7 +30,7 @@ for (const size of [32, 128, 256]) {
 await mkdir(dirname(entry), { recursive: true });
 // Hidden metadata for matching running windows, not a development launcher:
 // the dev binary needs the Vite server started by `npm run desktop -- dev`.
-await writeFile(entry, `${marker}\n[Desktop Entry]\nType=Application\nName=LibreTT\nComment=LibreTT development window identity\nExec=librett-desktop\nIcon=${id}\nStartupWMClass=${id}\nNoDisplay=true\nTerminal=false\nCategories=Utility;\n`, { mode: 0o644 });
+await writeFile(entry, `${marker}\n[Desktop Entry]\nType=Application\nName=LibreTT\nComment=LibreTT development window identity\nExec=LibreTT\nIcon=${id}\nStartupWMClass=${id}\nNoDisplay=true\nTerminal=false\nCategories=Utility;\n`, { mode: 0o644 });
 console.log(`Registered development icon: ${entry}`);
 if (!process.argv.includes('--no-refresh')) {
   const refresh = spawnSync('kbuildsycoca6', [], { encoding: 'utf8' });

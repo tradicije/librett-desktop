@@ -6,6 +6,20 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Changed
 
+- The Cargo binary and default run target are now named LibreTT on all desktop
+  platforms (LibreTT.exe on Windows), avoiding the macOS development fallback
+  to the former executable name. The internal package remains librett-desktop.
+- Linux sets its GLib application display name to LibreTT, retaining the stable
+  GTK application ID, and the development desktop entry targets Exec=LibreTT.
+- Documented cross-platform branding and icon refresh: Linux PNG, Windows
+  ICO/Appx and macOS ICNS share the same source and native rebuild tracking.
+
+- macOS startup sets the native process display name from Tauri's product name
+  before AppKit initializes. Development runs now use LibreTT instead of the
+  internal Cargo executable name, librett-desktop.
+- Added macOS CFBundleName/CFBundleDisplayName metadata and native build tracking
+  for Info.plist so display-name updates are embedded on the next build.
+
 - The native build explicitly tracks the generated `icons` directory so changing
   desktop icons recompiles Tauri's embedded icon resources instead of reusing
   a stale executable after a development restart.

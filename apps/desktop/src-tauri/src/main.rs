@@ -95,6 +95,14 @@ fn center_window_controls(window: &tauri::WebviewWindow) -> tauri::Result<()> {
 
 fn main() {
     let context = tauri::generate_context!();
+    #[cfg(target_os = "macos")]
+    {
+        // Development runs a bare Cargo executable rather than a named .app.
+        // Set its display name before AppKit initializes the application UI.
+        let name = context.config().product_name.as_deref().unwrap_or("LibreTT");
+        objc2_foundation::NSProcessInfo::processInfo()
+            .setProcessName(&objc2_foundation::NSString::from_str(name));
+    }
     #[cfg(any(target_os = "linux", target_os = "windows"))]
     let context = {
         let mut context = context;
@@ -112,7 +120,10 @@ fn main() {
     // GDK's Wayland app_id defaults to the GLib program name. Set it before
     // GTK initializes so KWin matches the same desktop entry as the taskbar.
     #[cfg(target_os = "linux")]
-    glib::set_prgname(Some(&context.config().identifier));
+    {
+        glib::set_prgname(Some(&context.config().identifier));
+        glib::set_application_name(context.config().product_name.as_deref().unwrap_or("LibreTT"));
+    }
 
     let app = tauri::Builder::default()
         .setup(|app| {

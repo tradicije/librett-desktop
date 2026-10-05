@@ -48,6 +48,23 @@ Nazad/Napred prati istoriju aktivnog radnog taba. Home dugme u gornjoj traci
 vraća na stalni početni ekran koji nema bočni meni. Čuvanje zaključava navigaciju do završetka.
 Lokalna administracija za sada nema prijavu nalogom niti kontrolu korisničkih uloga.
 
+## Naziv desktop aplikacije
+
+Korisnički naziv je **LibreTT** na macOS-u, Linuxu i Windowsu. Tauri
+`productName` je LibreTT, a Cargo ima eksplicitni izvršni fajl i podrazumevani
+run target `LibreTT` (`LibreTT.exe` na Windowsu). Interni Cargo paket ostaje
+`librett-desktop`, pa komande poput `cargo build -p librett-desktop` i dalje
+rade. Naziv samog izvršnog fajla pokriva razvojni režim u kome operativni sistem
+koristi ime fajla umesto podataka o proizvodu.
+
+macOS dodatno ima CFBundleName/CFBundleDisplayName u Info.plist fajlu i naziv
+NSProcessInfo procesa pre inicijalizacije AppKit-a. Linux postavlja GLib naziv
+aplikacije LibreTT, uz isti GTK identitet `org.librett.desktop` za povezivanje
+sa desktop zapisom. Razvojni desktop zapis koristi `Exec=LibreTT`; posle izmene
+postojećeg zapisa na Linuxu ponovi `npm run desktop:install-icon`.
+Native build prati Info.plist i ikonice na svim platformama. Posle native
+promene potpuno zaustavi i ponovo pokreni `npm run desktop -- dev`.
+
 ## Teme i ikonice
 
 Izbor teme podržava Svetla, Tamna i Sistemska. Sistemska prati promene OS teme
@@ -64,7 +81,8 @@ npm run desktop:generate-icons
 ```
 
 Komanda koristi instalirani Tauri CLI i kopira samo desktop PNG/ICO/ICNS
-resurse u projekat. Zamena izvornog PNG-a sama ne ažurira ove fajlove.
+resurse u projekat za sve tri platforme: Linux PNG, Windows ICO/Appx i macOS
+ICNS. Zamena izvornog PNG-a sama ne ažurira ove fajlove.
 macOS u razvojnom režimu koristi `icons/icon.icns` za ikonicu u Dock-u;
 ikonice prozora koriste generisane PNG slike. Potpuno zaustavi desktop proces
 (Ctrl+C u terminalu gde je pokrenut), pa ponovo pokreni `npm run desktop -- dev`.
