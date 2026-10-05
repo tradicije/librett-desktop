@@ -7,7 +7,7 @@ Notable changes to LibreTT are recorded here in English.
 ### Changed
 
 - Refreshed Linux PNG, Windows ICO/Appx and macOS ICNS assets from the latest
-  application icon design.
+  application icon design, including its latest visual revision.
 
 - The Cargo binary and default run target are now named LibreTT on all desktop
   platforms (LibreTT.exe on Windows), avoiding the macOS development fallback
