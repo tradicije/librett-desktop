@@ -1755,7 +1755,7 @@ dependencies = [
 
 [[package]]
 name = "librett-application"
-version = "0.1.0"
+version = "0.1.0-beta.1"
 dependencies = [
  "librett-domain",
  "serde",
@@ -1764,7 +1764,7 @@ dependencies = [
 
 [[package]]
 name = "librett-desktop"
-version = "0.1.0"
+version = "0.1.0-beta.1"
 dependencies = [
  "base64 0.22.1",
  "glib",
@@ -1781,7 +1781,7 @@ dependencies = [
 
 [[package]]
 name = "librett-domain"
-version = "0.1.0"
+version = "0.1.0-beta.1"
 dependencies = [
  "base64 0.22.1",
  "chrono",
@@ -1792,7 +1792,7 @@ dependencies = [
 
 [[package]]
 name = "librett-storage-sqlite"
-version = "0.1.0"
+version = "0.1.0-beta.1"
 dependencies = [
  "base64 0.22.1",
  "librett-application",

@@ -20,11 +20,11 @@ turnira i liga, koja se razvija sa lokalnim radom kao osnovom. Namenjena je
 klubovima, organizatorima, igračima i zajednici koja gradi ovaj sport.
 LibreTT je naziv aplikacije i krovni identitet projekta.
 
-**Status: rani razvoj.** Trenutno razvijamo desktop aplikaciju za turnire.
+**Status: prva beta (`0.1.0-beta.1`).** Trenutno razvijamo desktop aplikaciju za turnire.
 Žreb, rezultati mečeva, tabele grupa, prolaznici i nokaut napredovanje su dostupni.
 Dostupni su i konačan plasman, završavanje kategorija/turnira i ponovno otvaranje.
-Instaleri su još u razvoju. Uputstvo za
-pokretanje nalazi se u [razvojnoj dokumentaciji](docs/sr/DEVELOPMENT.md).
+Build instalera je podešen za macOS, Windows i Linux. Pogledaj
+[uputstvo za instalere i izdanje](docs/sr/RELEASE.md). Provera na pravom turniru još predstoji.
 
 ## Filozofija projekta
 

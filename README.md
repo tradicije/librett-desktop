@@ -20,10 +20,10 @@ table-tennis tournaments and leagues, with offline operation as its foundation.
 It is intended for clubs, organizers, players, and the community that builds
 the sport. LibreTT is both the application name and the umbrella project identity.
 
-**Status: early development.** We are currently building the tournament desktop
+**Status: first beta (`0.1.0-beta.1`).** We are currently building the tournament desktop
 application. Category draws, match scoring, group standings, qualification and
 knockout progression, final standings and confirmed category/tournament
-completion are available. Release installers are still in development. See the [development documentation](docs/en/DEVELOPMENT.md) to run it.
+completion are available. Installer builds are configured for macOS, Windows and Linux. See the [installer and release guide](docs/en/RELEASE.md); real-tournament validation is pending.
 
 ## Project philosophy
 

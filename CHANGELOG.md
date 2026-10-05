@@ -4,6 +4,13 @@ Notable changes to LibreTT are recorded here in English.
 
 ## Unreleased
 
+### Packaging
+
+- Prepared `0.1.0-beta.1` with synchronized npm, Cargo and Tauri metadata and a beta label in About.
+- Enabled macOS application/DMG bundles (Apple Silicon and Intel), Windows NSIS setup with offline WebView2 installation, and Linux DEB/AppImage packages. Application identifier and local data location are unchanged.
+- Added a manual/tag-triggered GitHub Actions matrix that uploads installers as artifacts without publishing a release, plus release-file collection with platform names and SHA-256 checksums.
+- Bundled AGPL, Tabler and Libre Franklin license notices. Documented local builds, manual GitHub pre-release publication and the ad-hoc/unsigned beta distribution limits in English and Serbian.
+
 ### Fixed
 
 - Restore/import validates the migrated SQLite schema against a fresh LibreTT database before replacing live data, rejecting missing/modified tables, unexpected views, indexes and triggers. Staging connections disable trusted schema.

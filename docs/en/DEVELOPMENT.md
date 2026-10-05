@@ -34,8 +34,9 @@ It needs no network connection after development dependencies are installed.
 The current slice supports tournaments, categories, local player profiles,
 name/club search, and singles/doubles category registration.
 Singles/doubles matches support set scoring, retirement and walkover. Group
-standings and group-to-knockout qualification update automatically. There is no
-export/restore UI or installer yet. Development version `0.1.0` is not a release.
+standings and group-to-knockout qualification update automatically. Backup/restore,
+manual tables and printable exports are available. Version `0.1.0-beta.1` is the
+first beta candidate; see [installer and release instructions](RELEASE.md).
 
 The Players tab shows the shared directory. Add/Edit opens dedicated profile
 screens, including photos, and returns to the list after saving. Delete asks for

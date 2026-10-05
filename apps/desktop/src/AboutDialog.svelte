@@ -21,7 +21,7 @@
       <div class="about-badges"><span><Icon name="desktop" size={14} />{language === 'sr' ? 'Rad bez interneta' : 'Works offline'}</span><span>AGPL-3.0-or-later</span></div>
     </div>
     <dl class="about-details">
-      <div><dt>{language === 'sr' ? 'Verzija' : 'Version'}</dt><dd>{metadata.version}<small>{language === 'sr' ? 'Rani razvoj' : 'Early development'}</small></dd></div>
+      <div><dt>{language === 'sr' ? 'Verzija' : 'Version'}</dt><dd>{metadata.version}<small>{language === 'sr' ? 'Beta verzija' : 'Beta release'}</small></dd></div>
       <div><dt>{language === 'sr' ? 'Autor' : 'Author'}</dt><dd>Aleksa Dimitrijević</dd></div>
       <div><dt>{language === 'sr' ? 'Licenca' : 'License'}</dt><dd>GNU AGPL v3<small>AGPL-3.0-or-later</small></dd></div>
     </dl>

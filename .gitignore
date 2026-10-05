@@ -21,3 +21,4 @@ Thumbs.db
 .codex/
 .aws/
 apps/desktop/src-tauri/gen/
+release-assets/

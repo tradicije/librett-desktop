@@ -34,8 +34,9 @@ Posle instalacije razvojnih zavisnosti lokalne operacije ne zahtevaju internet.
 Trenutno podržavamo turnire, kategorije, lokalne igrače, pretragu po imenu/klubu
 i prijavljivanje singl/dubl učesnika.
 Singl/dubl mečevi podržavaju rezultate po setovima, predaju i nedolazak.
-Tabele grupa i kvalifikacije za nokaut se ažuriraju automatski. Još nema interfejsa za
-izvoz/oporavak ili instalera. Razvojna verzija `0.1.0` nije objavljeno izdanje.
+Tabele grupa i kvalifikacije za nokaut se ažuriraju automatski. Dostupni su
+bekap/vraćanje, ručna dodela stolova i štampa/izvoz. Verzija `0.1.0-beta.1` je
+kandidat za prvu betu; vidi [uputstvo za instalere i izdanje](RELEASE.md).
 
 Tab Igrači prikazuje zajedničku listu. Dodaj/Izmeni otvara zasebne ekrane za
 profile i fotografije, a čuvanje vraća na listu. Brisanje traži potvrdu i čuva
