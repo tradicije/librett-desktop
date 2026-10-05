@@ -54,7 +54,7 @@
     {:else}
       <section class="knockout-column" aria-label={text.bracket}>
         {#if draw}<div class="bracket-tools">
-          {#if category.format === 'groups_knockout' && slots.some(slot => slot.kind === 'qualifier')}<span>{language === 'sr' ? 'Čeka prolaznike iz grupa.' : 'Awaiting group qualifiers.'}</span>{/if}
+          {#if category.format === 'groups_knockout' && slots.some(slot => slot.kind === 'qualifier')}<span>{language === 'sr' ? slots.some(slot=>slot.lucky_loser && slot.kind==='qualifier') ? 'Čeka prolaznike / Lucky loser izbor.' : 'Čeka prolaznike iz grupa.' : slots.some(slot=>slot.lucky_loser && slot.kind==='qualifier') ? 'Awaiting qualifiers / lucky loser selection.' : 'Awaiting group qualifiers.'}</span>{/if}
           <span class="scroll-hint" title={language === 'sr' ? 'Horizontalni skrol' : 'Scroll horizontally'} aria-label={language === 'sr' ? 'Horizontalni skrol' : 'Scroll horizontally'}><Icon name="arrow-left" size={14} /><Icon name="arrow-right" size={14} /></span>
         </div>{/if}
         <KnockoutBracket {slots} {language} {progress} />

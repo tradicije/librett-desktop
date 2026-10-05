@@ -169,6 +169,7 @@ fn main() {
             get_match_page,
             get_competition_state,
             save_group_order,
+            save_knockout_fillers,
             save_match_result,
             get_category_editor_state,
             add_category,
@@ -474,14 +475,19 @@ fn save_category_rules(
     category_id: Uuid,
     rules: CategoryRules,
     expected_revision: u32,
+    invalidate_downstream: Option<bool>,
 ) -> Result<application::CategoryConfiguration, ApplicationError> {
-    application::save_category_rules(
-        &mut *database.0.lock().map_err(|_| ApplicationError::Storage)?,
-        tournament_id,
-        category_id,
-        rules,
-        expected_revision,
-    )
+    database
+        .0
+        .lock()
+        .map_err(|_| ApplicationError::Storage)?
+        .save_category_rules_confirmed(
+            tournament_id,
+            category_id,
+            &rules,
+            expected_revision,
+            invalidate_downstream.unwrap_or(false),
+        )
 }
 
 #[tauri::command]
@@ -495,8 +501,9 @@ fn update_category_with_rules(
     fee_minor: i64,
     rules: CategoryRules,
     expected_revision: u32,
+    invalidate_downstream: Option<bool>,
 ) -> Result<Tournament, ApplicationError> {
-    application::update_category_with_rules(
+    application::update_category_with_rules_confirmed(
         &mut *database.0.lock().map_err(|_| ApplicationError::Storage)?,
         tournament_id,
         category_id,
@@ -506,6 +513,7 @@ fn update_category_with_rules(
         fee_minor,
         rules,
         expected_revision,
+        invalidate_downstream.unwrap_or(false),
     )
 }
 
@@ -607,4 +615,16 @@ fn save_group_order(
         .lock()
         .map_err(|_| ApplicationError::Storage)?
         .save_group_order(request)
+}
+
+#[tauri::command]
+fn save_knockout_fillers(
+    database: tauri::State<Database>,
+    request: application::SaveFillersRequest,
+) -> Result<application::CompetitionState, ApplicationError> {
+    database
+        .0
+        .lock()
+        .map_err(|_| ApplicationError::Storage)?
+        .save_knockout_fillers(request)
 }

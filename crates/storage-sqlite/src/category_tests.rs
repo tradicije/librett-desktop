@@ -171,7 +171,7 @@ fn v6_migration_preserves_fee_and_creates_one_pre_v8_backup() {
             r.connection
                 .query_row("PRAGMA user_version", [], |r| r.get::<_, i64>(0))
                 .unwrap(),
-            15
+            16
         );
     }
     let files = std::fs::read_dir(&dir)
@@ -180,7 +180,7 @@ fn v6_migration_preserves_fee_and_creates_one_pre_v8_backup() {
         .collect::<Vec<_>>();
     assert_eq!(files.len(), 2);
     let backup = files.iter().find(|p| **p != path).unwrap();
-    assert!(backup.to_string_lossy().contains("pre-v15"));
+    assert!(backup.to_string_lossy().contains("pre-v16"));
     let c = Connection::open(backup).unwrap();
     assert_eq!(
         c.query_row("PRAGMA user_version", [], |r| r.get::<_, i64>(0))
@@ -310,7 +310,7 @@ fn v7_category_names_allow_different_disciplines_and_preserve_references() {
         .collect::<Vec<_>>();
     assert_eq!(files.len(), 2);
     let backup = files.iter().find(|p| **p != path).unwrap();
-    assert!(backup.to_string_lossy().contains("pre-v15"));
+    assert!(backup.to_string_lossy().contains("pre-v16"));
     let c = Connection::open(backup).unwrap();
     assert_eq!(
         c.query_row("PRAGMA user_version", [], |r| r.get::<_, i64>(0))

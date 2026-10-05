@@ -131,6 +131,7 @@
     try {
       const result = await saveCategoryDraw(tournament.id, pending.draw, pending.revision);
       draft = result; revision = result.revision; pending = null; dirty = false; saved = true;
+      window.dispatchEvent(new CustomEvent('librett-results-updated',{detail:category.id}));
     } catch (cause) {
       if (cause === 'invalid_draw' || cause === 'invalid_rules' || cause === 'draw_conflict' || cause === 'not_found') {
         error = cause === 'draw_conflict' ? 'conflict' : cause === 'invalid_draw' ? 'invalid' : 'stale'; pending = null;

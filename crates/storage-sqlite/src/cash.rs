@@ -234,7 +234,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(files.len(), 2);
         let backup = files.iter().find(|p| **p != path).unwrap();
-        assert!(backup.to_string_lossy().contains("pre-v13"));
+        assert!(backup.to_string_lossy().contains("pre-v16"));
         let c = Connection::open(backup).unwrap();
         assert_eq!(
             c.query_row("PRAGMA user_version", [], |r| r.get::<_, i64>(0))
@@ -393,7 +393,7 @@ mod category_fee_tests {
             .collect::<Vec<_>>();
         assert_eq!(files.len(), 2);
         let backup = files.iter().find(|p| **p != path).unwrap();
-        assert!(backup.to_string_lossy().contains("pre-v13"));
+        assert!(backup.to_string_lossy().contains("pre-v16"));
         let c = Connection::open(backup).unwrap();
         assert_eq!(
             c.query_row("PRAGMA user_version", [], |r| r.get::<_, i64>(0))

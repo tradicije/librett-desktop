@@ -131,3 +131,11 @@ A brief pending-qualifier notice replaces duplicate headings and explanatory cop
 Category age restrictions use an off-by-default switch and inline From/To
 fields. Out-of-range registration uses one confirmation dialog for the selected
 players, with their club labels, ages and an explicit Register as exception action.
+
+Grouped categories offer one BYE/Lucky loser selector in the shared rules form.
+Lucky loser places form a flat section in Settings, with two columns of per-place
+selectors, Automatic / eligible player / BYE options and All automatic / Save
+places actions. Candidate statistics live in an expandable table. A short notice
+explains pending cutoff ties or invalidated manual choices. Result-impact dialogs
+require explicit confirmation and explain preservation of result history.
+Bracket origins display LL C3 before the player name, keeping club typography.

@@ -14,6 +14,8 @@ struct Snapshot {
     results: HashMap<String, StoredMatchResult>,
     orders: HashMap<usize, Vec<Uuid>>,
     order_revisions: HashMap<usize, u32>,
+    fillers: HashMap<usize, librett_domain::FillerChoice>,
+    filler_revision: u32,
 }
 fn snapshot(
     conn: &Connection,
@@ -120,7 +122,27 @@ fn snapshot(
             order_revisions.insert(group, revision);
         }
     }
+    let saved_fillers: Option<(u32, String)> = if let Some(draw) = &draw {
+        conn.query_row(
+            "SELECT revision,payload FROM knockout_fillers WHERE draw_id=?1",
+            [draw.id.to_string()],
+            |r| Ok((r.get(0)?, r.get(1)?)),
+        )
+        .optional()
+        .map_err(|_| ApplicationError::Storage)?
+    } else {
+        None
+    };
+    let (filler_revision, fillers) = match saved_fillers {
+        Some((revision, json)) => (
+            revision,
+            serde_json::from_str(&json).map_err(|_| ApplicationError::Storage)?,
+        ),
+        None => (0, HashMap::new()),
+    };
     Ok(Snapshot {
+        fillers,
+        filler_revision,
         draw,
         rules,
         revision,
@@ -133,6 +155,11 @@ fn snapshot(
 fn competition(state: &Snapshot) -> CompetitionState {
     let Some(draw) = &state.draw else {
         return CompetitionState {
+            match_version: state.results.values().map(|r| u64::from(r.revision)).sum(),
+            filler_revision: state.filler_revision,
+            rules_revision: state.revision,
+            fillers: state.fillers.clone(),
+            candidates: vec![],
             draw_id: None,
             stale: state.stale,
             groups: vec![],
@@ -144,6 +171,11 @@ fn competition(state: &Snapshot) -> CompetitionState {
     };
     if draw.format == CompetitionFormat::Knockout {
         return CompetitionState {
+            match_version: state.results.values().map(|r| u64::from(r.revision)).sum(),
+            filler_revision: state.filler_revision,
+            rules_revision: state.revision,
+            fillers: state.fillers.clone(),
+            candidates: vec![],
             draw_id: Some(draw.id),
             stale: state.stale,
             groups: vec![],
@@ -154,7 +186,12 @@ fn competition(state: &Snapshot) -> CompetitionState {
         };
     }
     let groups = librett_domain::group_standings(draw, &state.rules, &state.results, &state.orders);
-    let slots = librett_domain::qualification_slots(draw, &groups);
+    let slots = librett_domain::filled_qualification_slots(
+        draw,
+        &groups,
+        state.rules.knockout_filling,
+        &state.fillers,
+    );
     let matches = librett_domain::knockout_from_slots(
         slots
             .iter()
@@ -177,6 +214,11 @@ fn competition(state: &Snapshot) -> CompetitionState {
         })
         .collect();
     CompetitionState {
+        match_version: state.results.values().map(|r| u64::from(r.revision)).sum(),
+        filler_revision: state.filler_revision,
+        rules_revision: state.revision,
+        fillers: state.fillers.clone(),
+        candidates: librett_domain::lucky_loser_candidates(draw, &groups),
         draw_id: Some(draw.id),
         stale: state.stale,
         groups,
@@ -285,6 +327,93 @@ impl SqliteTournamentRepository {
             .transaction()
             .map_err(|_| ApplicationError::Storage)?;
         Ok(competition(&snapshot(&tx, tournament, category, None)?))
+    }
+    pub fn save_knockout_fillers(
+        &mut self,
+        request: librett_application::SaveFillersRequest,
+    ) -> Result<CompetitionState, ApplicationError> {
+        let json = serde_json::to_string(&("knockout_fillers", &request))
+            .map_err(|_| ApplicationError::Storage)?;
+        let tx = self
+            .connection
+            .transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)
+            .map_err(|_| ApplicationError::Storage)?;
+        let receipt: Option<(String, String)> = tx
+            .query_row(
+                "SELECT request_payload,result_payload FROM match_writes WHERE id=?1",
+                [request.request_id.to_string()],
+                |r| Ok((r.get(0)?, r.get(1)?)),
+            )
+            .optional()
+            .map_err(|_| ApplicationError::Storage)?;
+        if let Some((old, output)) = receipt {
+            return if old == json {
+                serde_json::from_str(&output).map_err(|_| ApplicationError::Storage)
+            } else {
+                Err(ApplicationError::MatchConflict)
+            };
+        }
+        let mut state = snapshot(&tx, request.tournament_id, request.category_id, None)?;
+        let current = competition(&state);
+        if state.stale
+            || current.draw_id != Some(request.draw_id)
+            || current.match_version != request.expected_match_version
+            || current.filler_revision != request.expected_revision
+            || state.revision != request.rules_revision
+            || current.order_revisions != request.order_revisions
+            || current.result_versions != request.result_versions
+        {
+            return Err(ApplicationError::MatchConflict);
+        }
+        if state.rules.knockout_filling != librett_domain::KnockoutFilling::LuckyLoser
+            || current.groups.is_empty()
+            || current.groups.iter().any(|g| !g.complete || !g.resolved)
+        {
+            return Err(ApplicationError::InvalidResult);
+        }
+        let draw = state.draw.as_ref().ok_or(ApplicationError::InvalidResult)?;
+        let base = librett_domain::qualification_slots(draw, &current.groups);
+        let eligible: HashSet<_> = current
+            .candidates
+            .iter()
+            .map(|c| c.standing.entry_id)
+            .collect();
+        let mut used = HashSet::new();
+        for (index, choice) in &request.fillers {
+            if !base.get(*index).is_some_and(|s| s.bye) {
+                return Err(ApplicationError::InvalidResult);
+            }
+            if let librett_domain::FillerChoice::Entry(id) = choice {
+                if !eligible.contains(id) || !used.insert(*id) {
+                    return Err(ApplicationError::InvalidResult);
+                }
+            }
+        }
+        state.fillers = request.fillers.clone();
+        let affected = invalidated(&state);
+        if !affected.is_empty() && !request.invalidate_downstream {
+            return Err(ApplicationError::ResultImpact);
+        }
+        clear_invalidated(&tx, &mut state, request.draw_id, affected)?;
+        state.filler_revision = request
+            .expected_revision
+            .checked_add(1)
+            .ok_or(ApplicationError::MatchConflict)?;
+        let payload =
+            serde_json::to_string(&state.fillers).map_err(|_| ApplicationError::Storage)?;
+        tx.execute("INSERT INTO knockout_fillers(draw_id,revision,payload) VALUES(?1,?2,?3) ON CONFLICT(draw_id) DO UPDATE SET revision=excluded.revision,payload=excluded.payload", params![request.draw_id.to_string(),state.filler_revision,payload]).map_err(|_| ApplicationError::Storage)?;
+        let output = competition(&state);
+        tx.execute(
+            "INSERT INTO match_writes(id,request_payload,result_payload) VALUES(?1,?2,?3)",
+            params![
+                request.request_id.to_string(),
+                json,
+                serde_json::to_string(&output).map_err(|_| ApplicationError::Storage)?
+            ],
+        )
+        .map_err(|_| ApplicationError::Storage)?;
+        tx.commit().map_err(|_| ApplicationError::Storage)?;
+        Ok(output)
     }
     pub fn save_group_order(
         &mut self,
@@ -507,4 +636,27 @@ impl SqliteTournamentRepository {
         tx.commit().map_err(|_| ApplicationError::Storage)?;
         Ok(updated)
     }
+}
+
+/// Rules and downstream result revisions are changed in the same transaction.
+pub(super) fn guard_rules_change(
+    conn: &Connection,
+    tournament: Uuid,
+    category: Uuid,
+    rules: &CategoryRules,
+    confirm: bool,
+) -> Result<(), ApplicationError> {
+    let mut state = snapshot(conn, tournament, category, None)?;
+    if state.rules == *rules {
+        return Ok(());
+    }
+    state.rules = rules.clone();
+    let affected = invalidated(&state);
+    if !affected.is_empty() && !confirm {
+        return Err(ApplicationError::ResultImpact);
+    }
+    if let Some(draw) = state.draw.as_ref().map(|d| d.id) {
+        clear_invalidated(conn, &mut state, draw, affected)?;
+    }
+    Ok(())
 }

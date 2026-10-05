@@ -8,10 +8,11 @@ pub use cash::{
 mod players;
 pub use players::{Entry, EntryMember, EntryStatus, Player, PlayerProfile};
 mod category_rules;
-pub use category_rules::{CategoryRules, RankingCriterion};
+pub use category_rules::{CategoryRules, KnockoutFilling, RankingCriterion};
 mod standings;
 pub use standings::{
-    group_standings, qualification_slots, GroupStanding, QualificationSlot, StandingRow,
+    filled_qualification_slots, group_standings, lucky_loser_candidates, qualification_slots,
+    FillerChoice, GroupStanding, LuckyLoserCandidate, QualificationSlot, StandingRow,
 };
 mod matches;
 pub use matches::{

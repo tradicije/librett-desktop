@@ -72,6 +72,7 @@ biti deo funkcionalnosti za rezultate, a ne naknadni dodatak.
 - Kreiranje više turnira i singl/dubl kategorija sa zasebnim izborom formata.
 - Poseban editor kategorija sa pravilima, učesnicima i automatskim/ručnim rasporedom nosilaca; pregled grupa, round-robin parova i nokaut kostura sa skrolom.
 - Unos rezultata po setovima, predaja i nedolazak, uz zaštićene ispravke, tabele grupa, kvalifikacije i nokaut napredovanje.
+- BYE ili Lucky loser popunjavanje kostura, automatsko rangiranje kandidata i ručni izbor igrača/BYE po mestu, uz potvrdu promena rezultata.
 - Obavezno godište, opcioni starosni raspon kategorije i potvrda izuzetaka pri prijavi.
 - Kartice turnira sa opcionim naslovnim slikama 16:9, brojem prijavljenih i kategorija i posebnim editorom Dodaj turnir.
 - Zajednička lokalna baza igrača sa profilima, fotografijama i pretragom.

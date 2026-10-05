@@ -109,3 +109,11 @@ Kratka poruka o prolaznicima zamenjuje duplirane naslove i duga objašnjenja.
 Starosna grupa koristi podrazumevano isključen prekidač i polja Od/Do u istoj
 formi. Prijava van raspona ima jedan dijalog sa imenima, oznakama klubova,
 starostima i eksplicitnim dugmetom Prijavi kao izuzetak.
+
+Kategorije sa grupama imaju jedan izbor BYE/Lucky loser u zajedničkoj formi pravila.
+Lucky loser mesta su ravan odeljak Podešavanja, sa dva stupca izbora po mestu:
+Automatski / igrač ispod crte / BYE, i dugmadima Sve automatski / Sačuvaj mesta.
+Statistika kandidata je u tabeli koja se otvara po potrebi. Kratka poruka objašnjava
+izjednačenje na granici ili nevažeći ručni izbor. Promene zavisnih rezultata traže
+potvrdu i objašnjavaju da istorija ostaje. Kostur pokazuje LL C3 ispred imena,
+uz isti manji sivi prikaz kluba.

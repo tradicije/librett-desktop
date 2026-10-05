@@ -41,8 +41,8 @@ Tab Igrači prikazuje zajedničku listu. Dodaj/Izmeni otvara zasebne ekrane za
 profile i fotografije, a čuvanje vraća na listu. Brisanje traži potvrdu i čuva
 igrače sa postojećim prijavama. Prijave unutar turnira koriste tu bazu i mogu
 da se povuku i vrate;
-dolazak igrača važi kroz sve kategorije istog turnira. Šema verzije 15 sadrži neizmenjive nacrte žreba i verzije pravila kategorije; pre migracije starijih baza pravi se konzistentan
-`pre-v15-<uuid>.sqlite` backup.
+dolazak igrača važi kroz sve kategorije istog turnira. Šema verzije 16 sadrži neizmenjive nacrte žreba i verzije pravila kategorije; pre migracije starijih baza pravi se konzistentan
+`pre-v16-<uuid>.sqlite` backup.
 
 Nazad/Napred prati istoriju aktivnog radnog taba. Home dugme u gornjoj traci
 vraća na stalni početni ekran koji nema bočni meni. Čuvanje zaključava navigaciju do završetka.
@@ -198,7 +198,7 @@ Sačuvaj nacrt upisuje novu verziju. Ručni nacrt može biti nepotpun. Sačuvaj 
 napuštanja ekrana: nesačuvane izmene postoje samo dok je ekran žreba otvoren.
 Učitaj trenutno stanje odbacuje lokalne izmene. Promena prijava zahteva novi
 nacrt. Sukob verzija odbija zastareli upis; neizvestan upis zadržava isti UUID i
-zaključava navigaciju do potvrde ponavljanjem. Pre migracije postoji pre-v15 backup.
+zaključava navigaciju do potvrde ponavljanjem. Pre migracije postoji pre-v16 backup.
 Potpun i važeći žreb određuje mečeve u tabu Mečevi. Unos rezultata i nokaut
 napredovanje, tabele grupa i kvalifikacije su dostupni; životni ciklus
 takmičenja ostaje u pripremi.
@@ -355,3 +355,41 @@ Upozorenje navodi igrače van raspona i one bez poznatog godišta, uključujući
 člana dubla. Organizator može da potvrdi izuzetak; otkazivanje zadržava izbor.
 Ista provera važi za vraćanje povučene prijave. Backend ne zabranjuje izuzetke,
 a promena raspona ne briše postojeće prijave.
+
+## Lucky loser popunjavanje kostura
+
+U pravljenju/izmeni kategorije ili Podešavanjima izaberi BYE (podrazumevano,
+kompatibilno sa postojećim pravilima) ili Lucky loser. Veličina kostura ostaje
+sledeći stepen dvojke prema direktnim prolaznicima: 5 → 8, 7 → 8, 9 → 16.
+Broj kandidata ne povećava kostur.
+
+Kada sačuvaš raspored grupa, Podešavanja prikazuju Lucky loser mesta. Automatski
+izbor popunjava sva moguća mesta tek kada su sve grupe završene i plasman
+razrešen. Sve automatski uklanja ručne izmene; na svakom mestu možeš izabrati
+igrača ispod crte ili BYE i sačuvati. Nema ponovljenih igrača ni direktnih
+prolaznika među kandidatima. Ako kandidata nema dovoljno, ostatak postaje BYE.
+Nerazrešeno mesto nikada ne daje slobodan prolaz.
+
+Redosled kandidata: plasman u grupi rastuće, pa procenat pobeda, odnos setova i
+odnos poena opadajuće. Poređenja koriste cele brojeve. Ako izjednačenje prelazi
+granicu automatskog izbora, sva sporna mesta čekaju ručni izbor. Ovo je
+dogovorena politika aplikacije, bez tvrdnje o pravilniku određenog saveza.
+Pregled kandidata pokazuje statistiku. Kostur koristi LL i grupu/plasman,
+sa očuvanjem oznake u kasnijim kolima.
+
+Ručni izbor je vezan za sačuvani žreb. Ostaje ako je igrač i dalje ispod crte;
+ako postane nevažeći, mesto čeka proveru. Novi žreb nema ručne izbore.
+Prelazak na BYE čuva neaktivne izbore za eventualni povratak na Lucky loser,
+uz ponovnu proveru kandidata.
+
+`save_knockout_fillers` koristi neizmenjivi UUID zahteva, očekivane verzije
+izbora/pravila, plasmana/rezultata grupa i svih rezultata mečeva. Zastareo upis
+vraća `match_conflict`, a nepotvrđen upis ponavlja isti zahtev. Promena učesnika
+zahteva potvrdu pre poništavanja zavisnih nokaut rezultata; u istoj transakciji
+se dodaju null verzije, a istorija ostaje. Isto važi za pravila koja menjaju
+učesnike sa sačuvanim nokaut rezultatima. Šema 16 i politika izbora opisani su
+u [ADR 0016](../adr/0016-lucky-loser-knockout-filling.md).
+
+Turnir i same prijave nemaju fiksno ograničenje broja igrača. Žreb podržava
+2–4096 prijava u jednoj kategoriji; kod dubla prijava znači par. To je granica
+u kodu, bez potvrde performansi za maksimalan broj učesnika.

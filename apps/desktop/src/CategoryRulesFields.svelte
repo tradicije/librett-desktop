@@ -15,6 +15,8 @@
   {#if format === 'groups_knockout'}
     <div class="form-fields"><label>{text.groupCount}<input type="number" min="1" max="2048" step="1" bind:value={rules.group_count} required /></label><label>{text.qualifiersPerGroup}<input type="number" min="1" max="4096" step="1" bind:value={rules.qualifiers_per_group} required /></label></div>
     <p class="field-hint">{text.rulesHint}</p>
+    <label>{language==='sr'?'Prazna mesta u nokaut fazi':'Vacant knockout places'}<Select label={language==='sr'?'Popunjavanje kostura':'Bracket filling'} bind:value={rules.knockout_filling} options={[{value:'bye',label:'BYE'},{value:'lucky_loser',label:'Lucky loser'}]} {disabled} /></label>
+    <p class="field-hint">{language==='sr'?'Lucky loser automatski bira najbolje ispod crte kada se završe sve grupe. Svako prazno mesto možeš ručno da promeniš ili ostaviš kao BYE.':'Lucky loser automatically selects the best non-qualifiers after all groups finish. Each vacant place can be changed manually or kept as BYE.'}</p>
   {/if}
   <div class="scoring-fields">
     <label>{text.bestOf}<Select label={text.bestOf} bind:value={rules.best_of} options={[1, 3, 5, 7, 9].map(value => ({ value, label: String(value) }))} {disabled} /></label>

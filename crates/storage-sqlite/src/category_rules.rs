@@ -63,48 +63,13 @@ impl CategoryRulesRepository for SqliteTournamentRepository {
         rules: &CategoryRules,
         expected_revision: u32,
     ) -> Result<CategoryConfiguration, ApplicationError> {
-        let payload = serde_json::to_string(rules).map_err(|_| ApplicationError::Storage)?;
-        let tx = self
-            .connection
-            .transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)
-            .map_err(|_| ApplicationError::Storage)?;
-        let exists: bool = tx.query_row("SELECT EXISTS(SELECT 1 FROM categories WHERE id=?1 AND tournament_id=?2 AND archived=0)",params![category_id.to_string(),tournament_id.to_string()],|r|r.get(0)).map_err(|_| ApplicationError::Storage)?;
-        if !exists {
-            return Err(ApplicationError::NotFound);
-        }
-        let old: Option<(u32, String)> = tx
-            .query_row(
-                "SELECT revision,payload FROM category_configurations WHERE category_id=?1",
-                [category_id.to_string()],
-                |r| Ok((r.get(0)?, r.get(1)?)),
-            )
-            .optional()
-            .map_err(|_| ApplicationError::Storage)?;
-        let revision = old.as_ref().map(|(revision, _)| *revision).unwrap_or(0);
-        if let Some((_, json)) = &old {
-            let previous: CategoryRules =
-                serde_json::from_str(json).map_err(|_| ApplicationError::Storage)?;
-            if previous == *rules {
-                return Ok(CategoryConfiguration {
-                    category_id,
-                    revision,
-                    rules: previous,
-                });
-            }
-        }
-        if revision != expected_revision {
-            return Err(ApplicationError::DrawConflict);
-        }
-        let revision = revision
-            .checked_add(1)
-            .ok_or(ApplicationError::DrawConflict)?;
-        tx.execute("INSERT INTO category_configurations(category_id,revision,payload) VALUES(?1,?2,?3) ON CONFLICT(category_id) DO UPDATE SET revision=excluded.revision,payload=excluded.payload",params![category_id.to_string(),revision,payload]).map_err(|_|ApplicationError::Storage)?;
-        tx.commit().map_err(|_| ApplicationError::Storage)?;
-        Ok(CategoryConfiguration {
+        self.save_category_rules_confirmed(
+            tournament_id,
             category_id,
-            revision,
-            rules: rules.clone(),
-        })
+            rules,
+            expected_revision,
+            false,
+        )
     }
     fn save_configured_category(
         &mut self,
@@ -112,6 +77,22 @@ impl CategoryRulesRepository for SqliteTournamentRepository {
         category: &Category,
         rules: &CategoryRules,
         expected_revision: u32,
+    ) -> Result<CategoryConfiguration, ApplicationError> {
+        self.save_configured_category_confirmed(
+            tournament_id,
+            category,
+            rules,
+            expected_revision,
+            false,
+        )
+    }
+    fn save_configured_category_confirmed(
+        &mut self,
+        tournament_id: Uuid,
+        category: &Category,
+        rules: &CategoryRules,
+        expected_revision: u32,
+        invalidate_downstream: bool,
     ) -> Result<CategoryConfiguration, ApplicationError> {
         let payload = serde_json::to_string(rules).map_err(|_| ApplicationError::Storage)?;
         let tx = self
@@ -165,6 +146,13 @@ impl CategoryRulesRepository for SqliteTournamentRepository {
         let revision = revision
             .checked_add(1)
             .ok_or(ApplicationError::DrawConflict)?;
+        super::matches::guard_rules_change(
+            &tx,
+            tournament_id,
+            category.id,
+            rules,
+            invalidate_downstream,
+        )?;
         tx.execute("UPDATE categories SET name=?2,name_key=?3,discipline=?4,format=?5,fee_minor=?6 WHERE id=?1",params![category.id.to_string(),category.name,category.name.to_lowercase(),discipline,format,category.fee_minor]).map_err(|_|ApplicationError::Storage)?;
         tx.execute("INSERT INTO category_configurations(category_id,revision,payload) VALUES(?1,?2,?3) ON CONFLICT(category_id) DO UPDATE SET revision=excluded.revision,payload=excluded.payload",params![category.id.to_string(),revision,payload]).map_err(|_|ApplicationError::Storage)?;
         tx.commit().map_err(|_| ApplicationError::Storage)?;
@@ -190,5 +178,86 @@ impl librett_application::CategoryEditorRepository for SqliteTournamentRepositor
                 configuration: CategoryConfiguration { category_id, revision: row.get(4)?, rules }, used: row.get(6)?,
             })
         }).optional().map_err(|_| ApplicationError::Storage)?.ok_or(ApplicationError::NotFound)
+    }
+}
+
+impl SqliteTournamentRepository {
+    pub fn save_category_rules_confirmed(
+        &mut self,
+        tournament_id: Uuid,
+        category_id: Uuid,
+        rules: &CategoryRules,
+        expected_revision: u32,
+        invalidate_downstream: bool,
+    ) -> Result<CategoryConfiguration, ApplicationError> {
+        let payload = serde_json::to_string(rules).map_err(|_| ApplicationError::Storage)?;
+        let tx = self
+            .connection
+            .transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)
+            .map_err(|_| ApplicationError::Storage)?;
+        let exists: bool = tx.query_row("SELECT EXISTS(SELECT 1 FROM categories WHERE id=?1 AND tournament_id=?2 AND archived=0)",params![category_id.to_string(),tournament_id.to_string()],|r|r.get(0)).map_err(|_| ApplicationError::Storage)?;
+        if !exists {
+            return Err(ApplicationError::NotFound);
+        }
+        let old: Option<(u32, String)> = tx
+            .query_row(
+                "SELECT revision,payload FROM category_configurations WHERE category_id=?1",
+                [category_id.to_string()],
+                |r| Ok((r.get(0)?, r.get(1)?)),
+            )
+            .optional()
+            .map_err(|_| ApplicationError::Storage)?;
+        let revision = old.as_ref().map(|(revision, _)| *revision).unwrap_or(0);
+        if let Some((_, json)) = &old {
+            let previous: CategoryRules =
+                serde_json::from_str(json).map_err(|_| ApplicationError::Storage)?;
+            if previous == *rules {
+                return Ok(CategoryConfiguration {
+                    category_id,
+                    revision,
+                    rules: previous,
+                });
+            }
+        }
+        if revision != expected_revision {
+            return Err(ApplicationError::DrawConflict);
+        }
+        rules.validate(snapshot_format(&tx, tournament_id, category_id)?)?;
+        super::matches::guard_rules_change(
+            &tx,
+            tournament_id,
+            category_id,
+            rules,
+            invalidate_downstream,
+        )?;
+        let revision = revision
+            .checked_add(1)
+            .ok_or(ApplicationError::DrawConflict)?;
+        tx.execute("INSERT INTO category_configurations(category_id,revision,payload) VALUES(?1,?2,?3) ON CONFLICT(category_id) DO UPDATE SET revision=excluded.revision,payload=excluded.payload",params![category_id.to_string(),revision,payload]).map_err(|_|ApplicationError::Storage)?;
+        tx.commit().map_err(|_| ApplicationError::Storage)?;
+        Ok(CategoryConfiguration {
+            category_id,
+            revision,
+            rules: rules.clone(),
+        })
+    }
+}
+
+fn snapshot_format(
+    conn: &Connection,
+    tournament: Uuid,
+    category: Uuid,
+) -> Result<CompetitionFormat, ApplicationError> {
+    let format: String = conn
+        .query_row(
+            "SELECT format FROM categories WHERE id=?1 AND tournament_id=?2 AND archived=0",
+            params![category.to_string(), tournament.to_string()],
+            |r| r.get(0),
+        )
+        .map_err(|_| ApplicationError::NotFound)?;
+    match format.as_str() {
+        "knockout" => Ok(CompetitionFormat::Knockout),
+        "groups_knockout" => Ok(CompetitionFormat::GroupsKnockout),
+        _ => Err(ApplicationError::Storage),
     }
 }

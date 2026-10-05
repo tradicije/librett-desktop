@@ -1,7 +1,7 @@
 import { playerLabel } from './player-label';
 import type { CategoryDraw, CategoryRules, ScheduledMatch, MatchResult, QualificationSlot } from './api';
 import type { Language } from './i18n';
-export interface BracketSlot { id?: string; label: string; kind: 'entry' | 'qualifier' | 'bye' | 'pending' | 'winner'; club?: string; seed?: number; group?: number; place?: number }
+export interface BracketSlot { lucky_loser?: boolean; id?: string; label: string; kind: 'entry' | 'qualifier' | 'bye' | 'pending' | 'winner'; club?: string; seed?: number; group?: number; place?: number }
 export function groupName(index: number): string {
   let result = ''; for (let value = index + 1; value > 0; value = Math.floor((value - 1) / 26)) result = String.fromCharCode(65 + (value - 1) % 26) + result;
   return result;
@@ -37,9 +37,9 @@ export function bracketSlots(draw: CategoryDraw | null, rules: CategoryRules, fo
     const entrants = new Map(draw.participants.map(e => [e.id,e]));
     return qualification.map(slot => {
       const entry = slot.entry_id ? entrants.get(slot.entry_id) : undefined;
-      if (entry) return { id: entry.id, kind: 'entry', group: slot.group ?? undefined, place: slot.place ?? undefined, label: entry.members.map(playerLabel).join(' / '), club: [...new Set(entry.members.map(m => m.club).filter(Boolean))].join(' / ') };
+      if (entry) return { id: entry.id, kind: 'entry', lucky_loser: slot.lucky_loser, group: slot.group ?? undefined, place: slot.place ?? undefined, label: entry.members.map(playerLabel).join(' / '), club: [...new Set(entry.members.map(m => m.club).filter(Boolean))].join(' / ') };
       if (slot.bye) return empty('bye');
-      return { kind:'qualifier',group:slot.group ?? undefined,place:slot.place ?? undefined,label:language==='sr' ? 'Čeka prolaznika' : 'Awaiting qualifier' };
+      return { kind:'qualifier',lucky_loser:slot.lucky_loser,group:slot.group ?? undefined,place:slot.place ?? undefined,label:slot.lucky_loser ? (language==='sr' ? 'Čeka Lucky loser' : 'Awaiting lucky loser') : (language==='sr' ? 'Čeka prolaznika' : 'Awaiting qualifier') };
     });
   }
   const count = rules.group_count * rules.qualifiers_per_group;
@@ -47,7 +47,7 @@ export function bracketSlots(draw: CategoryDraw | null, rules: CategoryRules, fo
   const qualified: BracketSlot[] = [];
   for (let place = 1; place <= rules.qualifiers_per_group; place++) for (let group = 0; group < rules.group_count; group++) qualified.push({ kind: 'qualifier', group, place, label: language === 'sr' ? 'Čeka prolaznika' : 'Awaiting qualifier' });
   const size = 2 ** Math.ceil(Math.log2(count));
-  const slots = seedPositions(size).map(rank => qualified[rank - 1] ?? empty('bye'));
+  const slots = seedPositions(size).map(rank => qualified[rank - 1] ?? (rules.knockout_filling === 'lucky_loser' ? {kind: 'qualifier', lucky_loser:true, label: language==='sr'?'Čeka Lucky loser':'Awaiting lucky loser'} as BracketSlot : empty('bye')));
   // Separate qualifiers from the same group in the opening round where possible.
   // This is a structural preview, never a claim about actual qualified players.
   for (let i = 0; i < slots.length; i += 2) {

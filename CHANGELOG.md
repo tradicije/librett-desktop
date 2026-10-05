@@ -6,6 +6,23 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Changed
 
+- Categories with groups can choose BYE or Lucky loser for spare knockout
+  places. Automatic selection waits for all groups to finish and resolves
+  candidates by group place, win percentage, set ratio and point ratio.
+  Exact ties at the cutoff await the organizer's choice.
+- Category settings include per-place Automatic, eligible player and BYE
+  choices, an All automatic action and candidate statistics. Direct qualifiers
+  and duplicate entrants cannot be selected as lucky losers.
+- Brackets label lucky losers with LL and their group/place (e.g. LL C3),
+  retaining the origin through subsequent rounds. Ineligible saved manual
+  choices await review rather than silently changing to another player.
+- Lucky loser edits guard draw, rules, standings, filler and match revisions;
+  retries preserve write identity. Participant changes and rule edits require
+  confirmation before clearing dependent knockout results, retaining history.
+- Schema 16 stores versioned knockout filler choices. Existing databases
+  receive a consistent pre-v16 backup before migration. Existing rules and
+  result snapshots default to BYE; migration does not alter their participants.
+
 - Removed the redundant top separator and spacing from category Registrations;
   its layout no longer depends on being adjacent to the category tabs.
 - Player create/edit screens and guarded desktop profile saves require a birth

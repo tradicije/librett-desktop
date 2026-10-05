@@ -25,6 +25,7 @@
   let baseline = $state(snapshot());
   type Request = { name: string; fee: number; discipline: Discipline; format: CompetitionFormat; rules: CategoryRules; revision: number };
   let pending = $state<Request | null>(null);
+  let impact=$state(false);let impactDialog:HTMLDialogElement;const uid=$props.id();
   $effect(() => { dirty = loaded && snapshot() !== baseline; });
   async function load() {
     if (!category) return;
@@ -40,8 +41,8 @@
   }
   async function reload() { if (!busy && (!dirty || await confirmDiscard())) await load(); }
   onMount(() => { if (desktopAvailable && category) void load(); });
-  async function save(event: SubmitEvent) {
-    event.preventDefault(); if (action || !loaded) return;
+  async function save(event?: SubmitEvent, invalidateDownstream=false) {
+    event?.preventDefault(); if (action || !loaded) return;
     if (!pending) {
       const amount = parseMoney(fee, true);
       if (amount === null) { error = 'invalid_category_fee'; return; }
@@ -51,11 +52,11 @@
     try {
       const request = pending;
       const result = category
-        ? await updateCategoryWithRules(tournament.id, categoryId, request.name, request.discipline, request.format, request.fee, request.rules, request.revision)
+        ? await updateCategoryWithRules(tournament.id, categoryId, request.name, request.discipline, request.format, request.fee, request.rules, request.revision, invalidateDownstream)
         : await createCategoryWithRules(tournament.id, categoryId, request.name, request.discipline, request.format, request.fee, request.rules);
       pending = null; baseline = snapshot(); dirty = false; busy = false; await tick(); onsaved(result, categoryId);
     } catch (cause) {
-      error = errorKey(cause);
+      if(cause==='result_impact'){impact=true;impactDialog.showModal();}else error = errorKey(cause);
       if (typeof cause === 'string' && ['invalid_rules', 'invalid_cash', 'draw_conflict', 'not_found', 'name_required', 'name_too_long', 'duplicate_category'].includes(cause)) pending = null;
     } finally { action = false; busy = pending !== null; }
   }
@@ -63,7 +64,7 @@
 <div class="heading"><div><p class="eyebrow">{tournament.name}</p><h1>{category ? text.editCategory : text.addCategory}</h1></div></div>
 {#if error}<p class="error" role="alert">{text[error]}{#if !loaded || error === 'draw_conflict'}<button disabled={busy || loading} onclick={reload}>{text.retry}</button>{/if}</p>{/if}
 {#if loading}<p>{text.loading}</p>{:else}
-  <form class="panel form-panel category-editor" onsubmit={save}>
+  <form class="panel form-panel category-editor" onsubmit={event=>save(event)}>
     <fieldset class="form-group"><legend>{language === 'sr' ? 'Osnovni podaci' : 'Category details'}</legend><div class="form-fields">
       <label>{text.categoryName}<input bind:value={name} required maxlength="120" disabled={busy || !loaded} /></label>
       <label>{text.categoryFee}<input bind:value={fee} inputmode="decimal" required disabled={busy || !loaded} /></label>
@@ -73,9 +74,10 @@
     {#if used}<p class="muted">{text.categoryFormatLocked}</p>{/if}
     </fieldset>
     <CategoryRulesFields {language} {format} bind:rules disabled={busy || !loaded} />
-    <div class="form-actions"><button class="primary" disabled={action || !loaded || !desktopAvailable}><Icon name="check-circle" />{action ? text.saving : pending ? text.retry : category ? text.editCategory : text.addCategory}</button><button type="button" class="secondary" disabled={busy} onclick={oncancel}><Icon name="arrow-left" size={18} />{text.cancelEdit}</button></div>
+    <div class="form-actions"><button class="primary" disabled={action || impact || !loaded || !desktopAvailable}><Icon name="check-circle" />{action ? text.saving : pending ? text.retry : category ? text.editCategory : text.addCategory}</button><button type="button" class="secondary" disabled={busy} onclick={oncancel}><Icon name="arrow-left" size={18} />{text.cancelEdit}</button></div>
   </form>
 {/if}
+<dialog class="confirm-dialog" bind:this={impactDialog} aria-labelledby={`${uid}-impact`} oncancel={event=>{event.preventDefault();impact=false;pending=null;busy=false;impactDialog.close();}}><h2 id={`${uid}-impact`}>{language==='sr'?'Promena prolaznika':'Change qualifiers'}</h2><p>{language==='sr'?'Promena pravila poništiće nokaut rezultate koji zavise od promenjenih učesnika. Istorija ostaje sačuvana.':'Changing rules clears knockout results that depend on changed participants. History is retained.'}</p><div class="dialog-actions"><button class="secondary" onclick={()=>{impact=false;pending=null;busy=false;impactDialog.close();}}>{language==='sr'?'Vrati se':'Back'}</button><button class="primary" onclick={()=>{impact=false;impactDialog.close();void save(undefined,true);}}>{language==='sr'?'Potvrdi promenu':'Confirm change'}</button></div></dialog>
 <style>
   .category-editor { display: grid; gap: 24px; max-width: 850px; }
   label { display: grid; gap: 6px; min-width: 0; }

@@ -9,10 +9,20 @@ pub enum RankingCriterion {
     PointRatio,
 }
 
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum KnockoutFilling {
+    #[default]
+    Bye,
+    LuckyLoser,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CategoryRules {
     #[serde(default)]
     pub age_enabled: bool,
+    #[serde(default)]
+    pub knockout_filling: KnockoutFilling,
     #[serde(default)]
     pub age_min: Option<u8>,
     #[serde(default)]
@@ -28,6 +38,7 @@ impl Default for CategoryRules {
     fn default() -> Self {
         Self {
             age_enabled: false,
+            knockout_filling: KnockoutFilling::Bye,
             age_min: None,
             age_max: None,
             group_count: 2,

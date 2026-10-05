@@ -33,7 +33,8 @@
           <div class="bracket-match" style:left={`${column * 252}px`} style:top={`${44 + match.center - 34}px`}>
             <span class="match-number">#{match.number}</span>
             {#each [match.left, match.right] as entry, side}
-              <div class="bracket-entry" class:winner={!!entry.id && match.result?.winner === entry.id} class:unresolved={entry.kind !== 'entry'} class:bye={entry.kind === 'bye'} title={`${entry.group !== undefined && entry.place !== undefined ? `${groupName(entry.group)}${entry.place} ` : ''}${entry.label}`}>
+              <div class="bracket-entry" class:winner={!!entry.id && match.result?.winner === entry.id} class:unresolved={entry.kind !== 'entry'} class:bye={entry.kind === 'bye'} title={`${entry.lucky_loser ? 'LL ' : ''}${entry.group !== undefined && entry.place !== undefined ? `${groupName(entry.group)}${entry.place} ` : ''}${entry.label}`}>
+                {#if entry.lucky_loser}<span class="qualification-code">LL</span>{/if}
                 {#if entry.group !== undefined && entry.place !== undefined}<span class="qualification-code">{groupName(entry.group)}{entry.place}</span>{:else if entry.seed}<span class="seed-number">{entry.seed}</span>{/if}
                 <span class="entry-name"><PlayerName label={entry.label} /></span>
                 {#if match.result}<b class="bracket-score">{setsWon(match.result, side)}</b>{/if}

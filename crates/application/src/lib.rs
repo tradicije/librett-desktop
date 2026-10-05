@@ -435,6 +435,16 @@ pub struct CategoryConfiguration {
 }
 
 pub trait CategoryRulesRepository {
+    fn save_configured_category_confirmed(
+        &mut self,
+        tournament_id: Uuid,
+        category: &librett_domain::Category,
+        rules: &librett_domain::CategoryRules,
+        expected_revision: u32,
+        _invalidate_downstream: bool,
+    ) -> Result<CategoryConfiguration, ApplicationError> {
+        self.save_configured_category(tournament_id, category, rules, expected_revision)
+    }
     fn save_configured_category(
         &mut self,
         tournament_id: Uuid,
@@ -531,6 +541,32 @@ pub fn update_category_with_rules(
     rules: librett_domain::CategoryRules,
     expected_revision: u32,
 ) -> Result<Tournament, ApplicationError> {
+    update_category_with_rules_confirmed(
+        repository,
+        tournament_id,
+        category_id,
+        name,
+        discipline,
+        format,
+        fee_minor,
+        rules,
+        expected_revision,
+        false,
+    )
+}
+
+pub fn update_category_with_rules_confirmed(
+    repository: &mut (impl TournamentRepository + CategoryRulesRepository),
+    tournament_id: Uuid,
+    category_id: Uuid,
+    name: &str,
+    discipline: Discipline,
+    format: CompetitionFormat,
+    fee_minor: i64,
+    rules: librett_domain::CategoryRules,
+    expected_revision: u32,
+    invalidate_downstream: bool,
+) -> Result<Tournament, ApplicationError> {
     rules.validate(format)?;
     if !(0..=librett_domain::MAX_CASH_MINOR).contains(&fee_minor) {
         return Err(ApplicationError::InvalidCash);
@@ -553,7 +589,13 @@ pub fn update_category_with_rules(
     }) {
         return Err(ApplicationError::DuplicateCategory);
     }
-    repository.save_configured_category(tournament_id, &category, &rules, expected_revision)?;
+    repository.save_configured_category_confirmed(
+        tournament_id,
+        &category,
+        &rules,
+        expected_revision,
+        invalidate_downstream,
+    )?;
     repository.find(tournament_id)
 }
 
@@ -659,6 +701,16 @@ pub struct SaveMatchRequest {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct CompetitionState {
+    #[serde(default)]
+    pub match_version: u64,
+    #[serde(default)]
+    pub filler_revision: u32,
+    #[serde(default)]
+    pub rules_revision: u32,
+    #[serde(default)]
+    pub fillers: std::collections::HashMap<usize, librett_domain::FillerChoice>,
+    #[serde(default)]
+    pub candidates: Vec<librett_domain::LuckyLoserCandidate>,
     pub draw_id: Option<Uuid>,
     pub stale: bool,
     pub groups: Vec<librett_domain::GroupStanding>,
@@ -677,5 +729,20 @@ pub struct GroupOrderRequest {
     pub expected_revision: u32,
     pub expected_result_version: u64,
     pub order: Option<Vec<Uuid>>,
+    pub invalidate_downstream: bool,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct SaveFillersRequest {
+    pub request_id: Uuid,
+    pub tournament_id: Uuid,
+    pub category_id: Uuid,
+    pub draw_id: Uuid,
+    pub expected_revision: u32,
+    pub expected_match_version: u64,
+    pub rules_revision: u32,
+    pub order_revisions: Vec<u32>,
+    pub result_versions: Vec<u64>,
+    pub fillers: std::collections::HashMap<usize, librett_domain::FillerChoice>,
     pub invalidate_downstream: bool,
 }

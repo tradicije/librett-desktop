@@ -34,6 +34,8 @@ pub struct QualificationSlot {
     pub group: Option<usize>,
     pub place: Option<usize>,
     pub bye: bool,
+    #[serde(default)]
+    pub lucky_loser: bool,
 }
 fn apply(rows: &mut HashMap<Uuid, StandingRow>, result: &MatchResult) {
     let mut sets = [0u64; 2];
@@ -272,6 +274,7 @@ pub fn qualification_slots(
                 group: Some(group),
                 place: Some(place + 1),
                 bye: false,
+                lucky_loser: false,
             });
         }
     }
@@ -291,6 +294,7 @@ pub fn qualification_slots(
                     group: None,
                     place: None,
                     bye: true,
+                    lucky_loser: false,
                 })
         })
         .collect();
@@ -312,6 +316,144 @@ pub fn qualification_slots(
                 && slots[index ^ 1].group != slots[moving].group
         }) {
             slots.swap(moving, candidate);
+        }
+    }
+    slots
+}
+
+/// Only places below the direct qualification cutoff can be lucky losers.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LuckyLoserCandidate {
+    pub group: usize,
+    pub place: usize,
+    pub standing: StandingRow,
+}
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "kind", content = "entry_id", rename_all = "snake_case")]
+pub enum FillerChoice {
+    Bye,
+    Entry(Uuid),
+}
+
+fn candidate_cmp(a: &LuckyLoserCandidate, b: &LuckyLoserCandidate) -> Ordering {
+    a.place
+        .cmp(&b.place)
+        .then_with(|| {
+            ratio(
+                (b.standing.wins as u64, b.standing.played as u64),
+                (a.standing.wins as u64, a.standing.played as u64),
+            )
+        })
+        .then_with(|| {
+            ratio(
+                (b.standing.sets_for, b.standing.sets_against),
+                (a.standing.sets_for, a.standing.sets_against),
+            )
+        })
+        .then_with(|| {
+            ratio(
+                (b.standing.points_for, b.standing.points_against),
+                (a.standing.points_for, a.standing.points_against),
+            )
+        })
+}
+pub fn lucky_loser_candidates(
+    draw: &CategoryDraw,
+    groups: &[GroupStanding],
+) -> Vec<LuckyLoserCandidate> {
+    if groups.len() != draw.settings.group_count
+        || groups.iter().any(|g| !g.complete || !g.resolved)
+    {
+        return vec![];
+    }
+    let mut candidates: Vec<_> = groups
+        .iter()
+        .flat_map(|g| {
+            g.rows
+                .iter()
+                .enumerate()
+                .skip(draw.settings.qualifiers_per_group)
+                .map(move |(index, row)| LuckyLoserCandidate {
+                    group: g.group,
+                    place: index + 1,
+                    standing: row.clone(),
+                })
+        })
+        .collect();
+    candidates.sort_by(candidate_cmp);
+    candidates
+}
+pub fn filled_qualification_slots(
+    draw: &CategoryDraw,
+    groups: &[GroupStanding],
+    mode: crate::KnockoutFilling,
+    choices: &HashMap<usize, FillerChoice>,
+) -> Vec<QualificationSlot> {
+    let mut slots = qualification_slots(draw, groups);
+    if mode == crate::KnockoutFilling::Bye {
+        return slots;
+    }
+    let ready = groups.len() == draw.settings.group_count
+        && groups.iter().all(|g| g.complete && g.resolved);
+    let candidates = lucky_loser_candidates(draw, groups);
+    let mut used = HashSet::new();
+    let mut automatic = Vec::new();
+    for (index, slot) in slots.iter_mut().enumerate() {
+        if !slot.bye {
+            continue;
+        }
+        slot.lucky_loser = true;
+        match choices.get(&index) {
+            Some(FillerChoice::Bye) => {}
+            Some(FillerChoice::Entry(id)) => {
+                slot.bye = false;
+                if let Some(c) = candidates
+                    .iter()
+                    .find(|c| c.standing.entry_id == *id && !used.contains(id))
+                {
+                    slot.entry_id = Some(*id);
+                    slot.group = Some(c.group);
+                    slot.place = Some(c.place);
+                    used.insert(*id);
+                }
+                // A formerly eligible manual choice must be reviewed, never silently replaced.
+            }
+            None => {
+                slot.bye = false;
+                automatic.push(index);
+            }
+        }
+    }
+    if !ready {
+        return slots;
+    }
+    let available: Vec<_> = candidates
+        .iter()
+        .filter(|c| !used.contains(&c.standing.entry_id))
+        .collect();
+    let cutoff = automatic.len().min(available.len());
+    let boundary = if cutoff > 0
+        && cutoff < available.len()
+        && candidate_cmp(available[cutoff - 1], available[cutoff]) == Ordering::Equal
+    {
+        let mut start = cutoff - 1;
+        while start > 0 && candidate_cmp(available[start - 1], available[cutoff]) == Ordering::Equal
+        {
+            start -= 1;
+        }
+        start
+    } else {
+        cutoff
+    };
+    for (rank, index) in automatic.into_iter().enumerate() {
+        let slot = &mut slots[index];
+        if rank < boundary {
+            let c = available[rank];
+            slot.entry_id = Some(c.standing.entry_id);
+            slot.group = Some(c.group);
+            slot.place = Some(c.place);
+        } else if rank >= available.len() {
+            slot.bye = true;
         }
     }
     slots

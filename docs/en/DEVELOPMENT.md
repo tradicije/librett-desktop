@@ -41,8 +41,8 @@ The Players tab shows the shared directory. Add/Edit opens dedicated profile
 screens, including photos, and returns to the list after saving. Delete asks for
 confirmation and protects profiles with existing registrations. Tournament
 registration uses that directory. Entries can be withdrawn/restored, and player
-attendance is shared across categories in a tournament. Schema version 15 includes immutable draw drafts and versioned category rules; older on-disk databases receive a consistent
-`pre-v15-<uuid>.sqlite` backup before migration.
+attendance is shared across categories in a tournament. Schema version 16 includes immutable draw drafts and versioned category rules; older on-disk databases receive a consistent
+`pre-v16-<uuid>.sqlite` backup before migration.
 
 Back/Forward follows the active workspace’s screen history. The top Home button
 returns to the pinned mode-selection workspace. The mode chooser has no sidebar. Saves lock navigation until
@@ -204,7 +204,7 @@ to the open draw screen. Reload discards local edits and fetches current entries
 
 A changed registration list requires regeneration. Concurrent revisions reject
 a stale save. An uncertain write keeps its request UUID and blocks navigation
-until a retry confirms the outcome. Existing databases receive a pre-v15 backup.
+until a retry confirms the outcome. Existing databases receive a pre-v16 backup.
 Complete current draws supply the Matches tab. Set results and knockout
 advancement, group standings and qualification are implemented; explicit
 competition lifecycle remains pending.
@@ -363,3 +363,41 @@ unknown-year players and allows a confirmed exception. Cancel preserves the
 selection. Restoring withdrawn registrations follows the same warning flow.
 The backend intentionally does not reject entries based on age, and changing a
 category age range does not remove existing entries.
+
+## Lucky loser knockout filling
+
+In category creation/editing or Settings, choose BYE (the compatible default)
+or Lucky loser under Vacant knockout places. Lucky loser fills the next power
+of two already determined by direct qualifiers: 5 → 8, 7 → 8, 9 → 16. It does
+not enlarge the bracket based on the number of candidate entries.
+
+After saving a group arrangement, Settings shows Lucky loser places. Automatic
+fills every available place after all group standings are complete and resolved.
+Use All automatic to remove overrides, or select a non-qualifier/BYE for each
+place and save. A candidate cannot appear twice or be a direct qualifier.
+Insufficient candidates leave real BYEs; unresolved places never award a bye.
+
+Candidates rank by group place ascending, then win percentage, set ratio and
+point ratio descending, using exact integer comparisons. When an exact tie
+straddles the automatic cutoff, all affected places wait for manual selection.
+This is the application's agreed policy, not a claim about a federation's rules.
+The candidate table shows the statistics used for selection. Bracket labels
+include LL and group/place, carried into later rounds.
+
+Manual choices belong to a saved draw. An eligible choice survives standings
+changes; one that becomes ineligible blocks that place until reviewed. A new
+draw starts with no overrides. Switching to BYE retains inactive overrides so
+switching back can restore them, subject to current eligibility.
+
+`save_knockout_fillers` uses an immutable request UUID, expected filler/rules
+revisions, group order/result versions and the version of all match results.
+Stale edits reject with `match_conflict`; uncertain writes must retry the same
+request. Result-impact confirmation appends null revisions to affected knockout
+results atomically with the choices; previous results remain in history.
+Category rule writes also require confirmation when the projected participants
+would invalidate recorded knockout results. Schema 16 and the selection policy
+are documented in [ADR 0016](../adr/0016-lucky-loser-knockout-filling.md).
+
+Tournament totals and registration do not have a fixed player cap. A draw
+supports 2–4096 entries in one category (a doubles entry is a pair), independently
+of other categories. This is a code limit, not a performance qualification.

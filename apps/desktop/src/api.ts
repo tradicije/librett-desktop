@@ -56,14 +56,15 @@ export const previewCategoryDraw = (tournamentId: string, categoryId: string, mo
 export const saveCategoryDraw = (tournamentId: string, draw: CategoryDraw, expectedRevision: number) => invoke<CategoryDraw>('save_category_draw', { tournamentId, draw, expectedRevision });
 
 export type RankingCriterion = 'head_to_head' | 'set_ratio' | 'point_ratio';
-export interface CategoryRules { age_enabled: boolean; age_min: number | null; age_max: number | null; group_count: number; qualifiers_per_group: number; best_of: number; points_to_win: number; win_by: number; ranking: RankingCriterion[] }
+export type KnockoutFilling = 'bye' | 'lucky_loser';
+export interface CategoryRules { knockout_filling: KnockoutFilling; age_enabled: boolean; age_min: number | null; age_max: number | null; group_count: number; qualifiers_per_group: number; best_of: number; points_to_win: number; win_by: number; ranking: RankingCriterion[] }
 export interface CategoryConfiguration { category_id: string; revision: number; rules: CategoryRules }
-export const defaultCategoryRules = (): CategoryRules => ({ age_enabled: false, age_min: null, age_max: null, group_count: 2, qualifiers_per_group: 2, best_of: 5, points_to_win: 11, win_by: 2, ranking: ['head_to_head', 'set_ratio', 'point_ratio'] });
+export const defaultCategoryRules = (): CategoryRules => ({ knockout_filling: 'bye', age_enabled: false, age_min: null, age_max: null, group_count: 2, qualifiers_per_group: 2, best_of: 5, points_to_win: 11, win_by: 2, ranking: ['head_to_head', 'set_ratio', 'point_ratio'] });
 export const createCategoryWithRules = (tournamentId: string, categoryId: string, name: string, discipline: Discipline, format: CompetitionFormat, feeMinor: number, rules: CategoryRules) => invoke<Tournament>('create_category_with_rules', { tournamentId, categoryId, name, discipline, format, feeMinor, rules });
 export const getCategoryRules = (tournamentId: string, categoryId: string) => invoke<CategoryConfiguration>('get_category_rules', { tournamentId, categoryId });
-export const saveCategoryRules = (tournamentId: string, categoryId: string, rules: CategoryRules, expectedRevision: number) => invoke<CategoryConfiguration>('save_category_rules', { tournamentId, categoryId, rules, expectedRevision });
+export const saveCategoryRules = (tournamentId: string, categoryId: string, rules: CategoryRules, expectedRevision: number, invalidateDownstream = false) => invoke<CategoryConfiguration>('save_category_rules', { tournamentId, categoryId, rules, expectedRevision, invalidateDownstream });
 
-export const updateCategoryWithRules = (tournamentId: string, categoryId: string, name: string, discipline: Discipline, format: CompetitionFormat, feeMinor: number, rules: CategoryRules, expectedRevision: number) => invoke<Tournament>('update_category_with_rules', { tournamentId, categoryId, name, discipline, format, feeMinor, rules, expectedRevision });
+export const updateCategoryWithRules = (tournamentId: string, categoryId: string, name: string, discipline: Discipline, format: CompetitionFormat, feeMinor: number, rules: CategoryRules, expectedRevision: number, invalidateDownstream = false) => invoke<Tournament>('update_category_with_rules', { tournamentId, categoryId, name, discipline, format, feeMinor, rules, expectedRevision, invalidateDownstream });
 
 export interface CategoryEditorState { category: Category; configuration: CategoryConfiguration; used: boolean }
 export const getCategoryEditorState = (tournamentId: string, categoryId: string) => invoke<CategoryEditorState>('get_category_editor_state', { tournamentId, categoryId });
@@ -82,8 +83,13 @@ export const saveMatchResult = (request: SaveMatchRequest) => invoke<ScheduledMa
 
 export interface StandingRow { entry_id: string; played: number; wins: number; losses: number; sets_for: number; sets_against: number; points_for: number; points_against: number; tied: boolean }
 export interface GroupStanding { group: number; rows: StandingRow[]; completed: number; total: number; complete: boolean; resolved: boolean; manual: boolean }
-export interface QualificationSlot { entry_id: string | null; group: number | null; place: number | null; bye: boolean }
-export interface CompetitionState { draw_id: string | null; stale: boolean; groups: GroupStanding[]; slots: QualificationSlot[]; matches: ScheduledMatch[]; order_revisions: number[]; result_versions: number[] }
+export interface QualificationSlot { lucky_loser: boolean; entry_id: string | null; group: number | null; place: number | null; bye: boolean }
+export interface CompetitionState { match_version: number; filler_revision: number; rules_revision: number; fillers: Record<string, FillerChoice>; candidates: LuckyLoserCandidate[]; draw_id: string | null; stale: boolean; groups: GroupStanding[]; slots: QualificationSlot[]; matches: ScheduledMatch[]; order_revisions: number[]; result_versions: number[] }
 export interface GroupOrderRequest { request_id: string; tournament_id: string; category_id: string; draw_id: string; group: number; expected_revision: number; expected_result_version: number; order: string[] | null; invalidate_downstream: boolean }
 export const getCompetitionState = (tournamentId: string, categoryId: string) => invoke<CompetitionState>('get_competition_state', { tournamentId, categoryId });
 export const saveGroupOrder = (request: GroupOrderRequest) => invoke<CompetitionState>('save_group_order', { request });
+
+export type FillerChoice = { kind: 'bye' } | { kind: 'entry'; entry_id: string };
+export interface LuckyLoserCandidate { group: number; place: number; standing: StandingRow }
+export interface SaveFillersRequest { expected_match_version: number; request_id: string; tournament_id: string; category_id: string; draw_id: string; expected_revision: number; rules_revision: number; order_revisions: number[]; result_versions: number[]; fillers: Record<string,FillerChoice>; invalidate_downstream: boolean }
+export const saveKnockoutFillers = (request: SaveFillersRequest) => invoke<CompetitionState>('save_knockout_fillers', { request });
