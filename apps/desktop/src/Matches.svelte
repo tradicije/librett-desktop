@@ -6,13 +6,14 @@
   import Icon from './Icon.svelte';
   import Select from './Select.svelte';
   import { groupName, roundTitle } from './draw-view';
-  import { getMatchPage, saveMatchResult, desktopAvailable, type Tournament, type Category, type MatchPage, type ScheduledMatch, type MatchOutcome, type SaveMatchRequest } from './api';
+  import { getSchedule, changeSchedule, getMatchTables, type ScheduleState, type ScheduleRequest, getMatchPage, saveMatchResult, desktopAvailable, type Tournament, type Category, type MatchPage, type ScheduledMatch, type MatchOutcome, type SaveMatchRequest } from './api';
   import { messages, errorKey, type Language, type MessageKey } from './i18n';
   let { active = true, tournament, category, language, busy = $bindable(false), dirty = $bindable(false), onsettings }: { active?: boolean; tournament: Tournament; category: Category; language: Language; busy?: boolean; dirty?: boolean; onsettings: () => void } = $props();
   let text = $derived(messages[language]);
   let readOnly=$derived(category.completed || tournament.completed);
   let sr = $derived(language === 'sr');
   let data = $state<MatchPage | null>(null);
+  let schedule=$state<ScheduleState|null>(null);let tables=$state<Record<string,number>>({});let tableNumber=$state<number|undefined>(undefined);let tableOriginal=$state<number|undefined>(undefined);let tableSaving=$state(false);let tablePending=$state<ScheduleRequest|null>(null);let tableNotice=$state(false);
   let loading = $state(false); let saving = $state(false);
   let error = $state<MessageKey | null>(null); let editorError = $state<MessageKey | null>(null);
   let stage = $state('groups');
@@ -26,7 +27,7 @@
   let original = '';
   let dialog: HTMLDialogElement;
   const uid = $props.id();
-  const snapshot = () => JSON.stringify([outcome, winner, sets]);
+  const snapshot = () => JSON.stringify([outcome, winner, sets, tableNumber??null]);
   let names = $derived(new Map(data?.draw?.participants.map(entry => [entry.id, entry.members.map(playerLabel).join(' / ')]) ?? []));
   const name = (id: string | null) => id ? names.get(id) ?? id : sr ? 'Čeka protivnika' : 'Awaiting opponent';
   let groupOptions = $derived(data?.draw?.sections.map((_, index) => ({ value: String(index), label: `${sr ? 'Grupa' : 'Group'} ${groupName(index)}` })) ?? []);
@@ -49,11 +50,11 @@
     sets = sets.map((set, position) => position === index ? { ...set, [side]: value } : set);
     editorError = null;
   }
-  $effect(() => { busy = loading || saving || selected !== null || pending !== null; dirty = selected !== null && snapshot() !== original; });
+  $effect(() => { busy = loading || saving || tableSaving || selected !== null || pending !== null || tablePending!==null; dirty = selected !== null && snapshot() !== original; });
   async function load() {
     if (loading) return;
     loading = true; error = null;
-    try { data = await getMatchPage(tournament.id, category.id, Number(group), Number(round), page, stage === 'knockout'); }
+    try { const [matchPage,state]=await Promise.all([getMatchPage(tournament.id, category.id, Number(group), Number(round), page, stage === 'knockout'),getSchedule(tournament.id)]);data=matchPage;schedule=state;tables=matchPage.draw?await getMatchTables(tournament.id,matchPage.draw.id):{}; }
     catch (cause) { error = errorKey(cause); }
     finally { loading = false; }
   }
@@ -70,16 +71,29 @@
     if (readOnly || loading || selected || !data || data.stale || !item.first || !item.second || item.bye) return;
     selected = item; outcome = item.result?.outcome ?? 'played'; winner = item.result?.winner ?? item.first;
     sets = item.result?.sets.map(set => ({ ...set })) ?? Array.from({ length: Math.floor(data.rules.best_of / 2) + 1 }, () => ({ first: undefined, second: undefined }));
+    tableNumber=tables[item.key];tableOriginal=tableNumber;tablePending=null;tableNotice=false;
     original = snapshot(); editorError = null; impact = null; confirmation = null;
     dialog.showModal();
   }
-  function closeEditor() { selected = null; pending = null; impact = null; confirmation = null; dialog.close(); }
+  function closeEditor() { selected = null; pending = null; tablePending=null; impact = null; confirmation = null; dialog.close(); }
   function cancel() {
-    if (saving || pending) return;
+    if (saving || tableSaving || tablePending || pending) return;
     if (dirty) confirmation = 'discard'; else closeEditor();
   }
+  async function saveTable():Promise<boolean>{
+    if(tableSaving||!selected||!data?.draw||!schedule)return false;
+    if(!tablePending){
+      if(tableNumber!==undefined && (!Number.isInteger(tableNumber)||tableNumber<1||tableNumber>128)){editorError='table_busy';return false;}
+      tablePending={request_id:crypto.randomUUID(),tournament_id:tournament.id,expected_version:schedule.version,action:tableNumber===undefined?{kind:'remove',draw_id:data.draw.id,key:selected.key}:{kind:'assign',draw_id:data.draw.id,key:selected.key,table:tableNumber}};
+    }
+    tableSaving=true;editorError=null;
+    try{schedule=await changeSchedule(tablePending);tables={...tables};if(tableNumber===undefined)delete tables[selected.key];else tables[selected.key]=tableNumber;tableOriginal=tableNumber;tablePending=null;tableNotice=true;const baseline=JSON.parse(original);baseline[3]=tableNumber??null;original=JSON.stringify(baseline);window.dispatchEvent(new CustomEvent('librett-tables-updated',{detail:tournament.id}));return true;}
+    catch(cause){editorError=errorKey(cause);if(['schedule_conflict','player_busy','table_busy','competition_closed','not_found'].includes(String(cause))){tablePending=null;try{schedule=await getSchedule(tournament.id);}catch{}}return false;}
+    finally{tableSaving=false;}
+  }
   async function submit(event: SubmitEvent) {
-    event.preventDefault(); if (saving || !selected || !data?.draw) return;
+    event.preventDefault(); if (saving || tableSaving || !selected || !data?.draw) return;
+    if(tableNumber!==tableOriginal || tablePending){if(!await saveTable())return;}
     if (!pending) {
       const input = outcome === 'walkover' ? [] : sets;
       if (input.some(set => set.first === undefined || set.second === undefined || !Number.isInteger(set.first) || !Number.isInteger(set.second))) { editorError = 'invalid_result'; return; }
@@ -125,7 +139,7 @@
     <div class="match-list" aria-busy={loading}>
       {#each data.matches as item (item.key)}
         <article class="panel match-card">
-          <div class="match-label"><span class="eyebrow">{item.key.startsWith('ko:') && item.round===data.round_count-1 && item.position===1 ? (sr?'Treće mesto':'Third place') : `${sr?'Meč':'Match'} ${item.position+1}`} </span><span class="pill">{item.bye ? 'BYE' : item.result ? (item.result.outcome === 'retired' ? sr ? 'Predaja' : 'Retired' : item.result.outcome === 'walkover' ? sr ? 'Nedolazak' : 'Walkover' : sr ? 'Završen' : 'Completed') : item.first && item.second ? sr ? 'Spreman' : 'Ready' : sr ? 'Čeka' : 'Pending'}</span></div>
+          <div class="match-label">{#if tables[item.key]}<span class="pill">{sr?'Sto':'Table'} {tables[item.key]}</span>{/if}<span class="eyebrow">{item.key.startsWith('ko:') && item.round===data.round_count-1 && item.position===1 ? (sr?'Treće mesto':'Third place') : `${sr?'Meč':'Match'} ${item.position+1}`} </span><span class="pill">{item.bye ? 'BYE' : item.result ? (item.result.outcome === 'retired' ? sr ? 'Predaja' : 'Retired' : item.result.outcome === 'walkover' ? sr ? 'Nedolazak' : 'Walkover' : sr ? 'Završen' : 'Completed') : item.first && item.second ? sr ? 'Spreman' : 'Ready' : sr ? 'Čeka' : 'Pending'}</span></div>
           <div class="match-players"><div class:winner={item.result?.winner === item.first}><span><PlayerName label={item.first ? name(item.first) : item.bye ? 'BYE' : name(null)} /></span><b>{item.result ? score(item)?.split(' : ')[0] : '—'}</b></div><div class:winner={item.result?.winner === item.second}><span><PlayerName label={item.second ? name(item.second) : item.bye ? 'BYE' : name(null)} /></span><b>{item.result ? score(item)?.split(' : ')[1] : '—'}</b></div></div>
           {#if item.result}<p class="match-set-summary muted"><span class="set-scores">{#each item.result.sets as set,index}<span class="set-score"><small>{sr?'Set':'Set'} {index+1}</small><strong>{set.first}:{set.second}</strong></span>{/each}</span>{#if item.result.outcome !== 'played'}<span class="metadata-line">{sr ? 'Pobednik' : 'Winner'}: <PlayerName label={name(item.result.winner)} /></span>{/if}</p>{/if}
           {#if !item.bye}<button class="secondary icon-label" disabled={readOnly || loading || data.stale || !item.first || !item.second} onclick={() => edit(item)}><Icon name="edit" size={16} />{item.result ? sr ? 'Ispravi rezultat' : 'Edit result' : sr ? 'Unesi rezultat' : 'Enter result'}</button>{/if}
@@ -144,6 +158,9 @@
     {:else}
       {#if editorError}<p class="error" role="alert">{text[editorError]}</p>{/if}
       <form onsubmit={submit}>
+        <div class="table-assignment"><label>{sr?'Broj stola':'Table number'}<input type="number" min="1" max="128" step="1" bind:value={tableNumber} disabled={readOnly || saving || tableSaving || !!pending || !!tablePending} /></label><button type="button" class="secondary" disabled={readOnly || saving || tableSaving || !!pending || (!tablePending && tableNumber===tableOriginal)} onclick={()=>saveTable()}>{tableSaving?text.saving:tablePending?text.retry:sr?'Sačuvaj sto':'Save table'}</button></div><p class="muted">{sr?'Ostavi prazno i sačuvaj da ukloniš dodelu stola.':'Leave blank and save to remove the table assignment.'}</p>
+        {#if tableNotice}<p class="notice" role="status">{sr?'Sto je sačuvan.':'Table saved.'}</p>{/if}
+
         <fieldset disabled={readOnly || saving || pending !== null}>
           <label>{sr ? 'Ishod' : 'Outcome'}<Select label={sr ? 'Ishod' : 'Outcome'} bind:value={() => outcome, (value) => changeOutcome(value as MatchOutcome)} disabled={readOnly || saving || pending !== null} options={[{ value: 'played', label: sr ? 'Odigran meč' : 'Played match' }, { value: 'retired', label: sr ? 'Predaja' : 'Retired' }, { value: 'walkover', label: sr ? 'Nedolazak' : 'Walkover' }]} /></label>
           {#if outcome !== 'played'}<label>{sr ? 'Pobednik' : 'Winner'}<Select playerLabels label={sr ? 'Pobednik' : 'Winner'} bind:value={winner} options={winnerOptions} disabled={readOnly || saving || pending !== null} /></label>{/if}
@@ -157,7 +174,7 @@
         </fieldset>
         <div class="dialog-actions">
           {#if editorError === 'match_conflict'}<button type="button" class="secondary" onclick={() => confirmation = 'reload'}>{sr ? 'Učitaj ponovo' : 'Reload'}</button>{/if}
-          <button type="button" class="secondary" disabled={saving || pending !== null} onclick={cancel}>{sr ? 'Otkaži' : 'Cancel'}</button><button class="primary" disabled={(readOnly && !pending) || saving}>{saving ? text.saving : pending ? text.retry : sr ? 'Sačuvaj rezultat' : 'Save result'}</button>
+          <button type="button" class="secondary" disabled={saving || tableSaving || !!tablePending || pending !== null} onclick={cancel}>{sr ? 'Otkaži' : 'Cancel'}</button><button class="primary" disabled={(readOnly && !pending) || saving || tableSaving}>{saving ? text.saving : pending ? text.retry : sr ? 'Sačuvaj rezultat' : 'Save result'}</button>
         </div>
       </form>
     {/if}
@@ -192,4 +209,5 @@
   .add-set { justify-self: start; }
   .result-total { margin: 0; font-weight: 600; }
   @media (max-width: 900px) { .match-list { grid-template-columns: 1fr; } }
+.table-assignment{display:flex;gap:14px;align-items:end;margin:20px 0;}.table-assignment label{display:grid;gap:8px;max-width:140px;}.table-assignment input{width:100%;}
 </style>

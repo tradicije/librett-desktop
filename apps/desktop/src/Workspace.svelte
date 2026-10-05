@@ -1,5 +1,6 @@
 <script lang="ts">
   import InfoRows from './InfoRows.svelte';
+  import Backups, {type RestoreSource} from './Backups.svelte';
   import Select from './Select.svelte';
   import { confirmDiscard } from './confirmation';
   import { formatMoney } from './money';
@@ -22,9 +23,10 @@
 
   import type { Route, TournamentTab, WorkspaceStatus } from './workspace';
   let { initialRoute, sidebarCollapsed = $bindable(false), language = $bindable(), theme = $bindable(), resolvedTheme, tournaments = $bindable(),
-    status = $bindable(), externalLocked, active, pinned = false, onopen, wantsNewTab }: {
+    status = $bindable(), externalLocked, active, pinned = false, onopen, wantsNewTab, onrestore }: {
     initialRoute: Route; sidebarCollapsed?: boolean; language: Language; theme: ThemePreference; resolvedTheme: ResolvedTheme;
     tournaments: Tournament[]; status: WorkspaceStatus; externalLocked: boolean; pinned?: boolean; active: boolean;
+    onrestore:(source:RestoreSource)=>Promise<boolean>;
     onopen: (route: Route) => void; wantsNewTab: () => boolean;
   } = $props();
   const uid = $props.id();
@@ -38,7 +40,7 @@
   let route = $derived(history[historyIndex]);
   let childDirty = $state(false);
   let inPlayers = $derived(route.view === 'players' || route.view === 'player-create' || route.view === 'player-edit');
-  let pageLabel = $derived(route.view === 'tournament-create' ? text.addTournament : route.view === 'dashboard' ? text.dashboard : inPlayers ? text.playerTab : text.tournaments);
+  let pageLabel = $derived(route.view === 'backups' ? (language==='sr'?'Rezervne kopije':'Backups') : route.view === 'tournament-create' ? text.addTournament : route.view === 'dashboard' ? text.dashboard : inPlayers ? text.playerTab : text.tournaments);
   let mode = $derived(route.view === 'dashboard' ? 'dashboard' : 'tournaments');
   let childBusy = $state(false);
   let selectedId = $derived((['tournament', 'category', 'category-create', 'category-edit'].includes(route.view)) ? route.id : null);
@@ -56,6 +58,7 @@
   let selectedCategory = $derived(activeCategories.find(c => c.id === route.categoryId));
   let breadcrumbs = $derived.by(() => {
     const items: { label: string; route: Route }[] = [];
+    if(route.view==='backups')return [{label:language==='sr'?'Rezervne kopije':'Backups',route:{view:'backups' as const}}];
     if (inPlayers) {
       items.push({ label: text.playerTab, route: { view: 'players' } });
       if (route.view !== 'players') items.push({ label: route.view === 'player-create' ? text.addPlayer : text.editPlayer, route: { ...route } });
@@ -174,8 +177,9 @@
     </div>
     {#if !sidebarCollapsed}<p class="sidebar-label">{text.workspace}</p>{/if}
     <nav id={`${uid}-sidebar-nav`} aria-label={text.navigation}>
-      <button data-open-tab class="nav-item" class:active={!inPlayers} aria-current={!inPlayers ? 'page' : undefined} disabled={navigationLocked} aria-label={text.tournaments} title={text.tournaments} onclick={openTournaments}><Icon name="trophy" />{#if !sidebarCollapsed}<span>{text.tournaments}</span>{/if}</button>
+      <button data-open-tab class="nav-item" class:active={!inPlayers && route.view!=='backups'} aria-current={!inPlayers && route.view!=='backups' ? 'page' : undefined} disabled={navigationLocked} aria-label={text.tournaments} title={text.tournaments} onclick={openTournaments}><Icon name="trophy" />{#if !sidebarCollapsed}<span>{text.tournaments}</span>{/if}</button>
       <button data-open-tab class="nav-item" class:active={inPlayers} aria-current={inPlayers ? 'page' : undefined} disabled={navigationLocked} aria-label={text.playerTab} title={text.playerTab} onclick={() => navigate({ view: 'players' })}><Icon name="users" />{#if !sidebarCollapsed}<span>{text.playerTab}</span>{/if}</button>
+      <button data-open-tab class="nav-item" class:active={route.view==='backups'} disabled={navigationLocked} aria-label={language==='sr'?'Rezervne kopije':'Backups'} title={language==='sr'?'Rezervne kopije':'Backups'} onclick={()=>navigate({view:'backups'})}><Icon name="backup"/>{#if !sidebarCollapsed}<span>{language==='sr'?'Rezervne kopije':'Backups'}</span>{/if}</button>
     </nav>
     <div class="sidebar-bottom">
       <span class="icon-label" title={text.local}><Icon name="desktop" size={16} />{#if !sidebarCollapsed}{text.local}{/if}</span>
@@ -228,6 +232,8 @@
           <span class="pill" id={`${uid}-league-status`}>{text.later}</span>
         </button>
       </div>
+    {:else if route.view === 'backups'}
+      <Backups {language} bind:busy={childBusy} {onrestore}/>
     {:else if route.view === 'players'}
       <PlayerDirectory {language} {active} bind:busy={childBusy} onadd={() => navigate({ view: 'player-create' })} onedit={(id) => navigate({ view: 'player-edit', id })} ondeletebegin={() => { notice = null; }} />
     {:else if route.view === 'player-create' || route.view === 'player-edit'}

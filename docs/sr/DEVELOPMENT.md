@@ -41,8 +41,8 @@ Tab Igrači prikazuje zajedničku listu. Dodaj/Izmeni otvara zasebne ekrane za
 profile i fotografije, a čuvanje vraća na listu. Brisanje traži potvrdu i čuva
 igrače sa postojećim prijavama. Prijave unutar turnira koriste tu bazu i mogu
 da se povuku i vrate;
-dolazak igrača važi kroz sve kategorije istog turnira. Šema verzije 17 sadrži neizmenjive nacrte žreba i verzije pravila kategorije; pre migracije starijih baza pravi se konzistentan
-`pre-v17-<uuid>.sqlite` backup.
+dolazak igrača važi kroz sve kategorije istog turnira. Šema verzije 18 sadrži neizmenjive nacrte žreba i verzije pravila kategorije; pre migracije starijih baza pravi se konzistentan
+`pre-v18-<uuid>.sqlite` backup.
 
 Nazad/Napred prati istoriju aktivnog radnog taba. Home dugme u gornjoj traci
 vraća na stalni početni ekran koji nema bočni meni. Čuvanje zaključava navigaciju do završetka.
@@ -236,7 +236,7 @@ Sačuvaj nacrt upisuje novu verziju. Ručni nacrt može biti nepotpun. Sačuvaj 
 napuštanja ekrana: nesačuvane izmene postoje samo dok je ekran žreba otvoren.
 Učitaj trenutno stanje odbacuje lokalne izmene. Promena prijava zahteva novi
 nacrt. Sukob verzija odbija zastareli upis; neizvestan upis zadržava isti UUID i
-zaključava navigaciju do potvrde ponavljanjem. Pre migracije postoji pre-v17 backup.
+zaključava navigaciju do potvrde ponavljanjem. Pre migracije postoji pre-v18 backup.
 Potpun i važeći žreb određuje mečeve u tabu Mečevi. Unos rezultata i nokaut
 napredovanje, tabele grupa i kvalifikacije su dostupni; životni ciklus
 takmičenja ostaje u pripremi.
@@ -477,3 +477,13 @@ U kategoriji otvori **Žreb → Uredi**, pa klikni na igrača ili BYE u prvoj ru
 Pravljenje i podešavanja kategorije imaju tri prekidača u jednom redu (na uskim prozorima jedan ispod drugog): starosna grupa, Lucky loser/BYE i jedno treće mesto. Lucky loser je dostupan za grupe → nokaut, dok direktni nokaut koristi BYE. Isključen prekidač trećeg mesta znači zajedničko treće mesto. Uključen otvara izbor meča za bronzu ili dodelu trećeg mesta polufinalisti koji je izgubio od kasnijeg pobednika; drugi poraženi polufinalista je četvrti. Meč za bronzu je u završnoj rundi Mečeva i ispod kostura; kategorija čeka njegov rezultat. Ako zbog BYE postoji samo jedan poraženi polufinalista, on je treći bez dodatnog meča.
 
 Uključen Lucky loser prekidač otvara automatsko ili ručno popunjavanje. U ručnom režimu prazna mesta čekaju izbor učesnika ili BYE. Kartice baze igrača prikazuju samo ime/klub i starost (tekuća godina minus godište); ostali podaci su u profilu.
+
+## Rezervne kopije, ručni stolovi i izveštaji
+
+Šema 18 dodaje tournament_scheduling, match_assignments i schedule_writes. Sto se ručno unosi u editoru meča (1–128), uz posebno dugme Sačuvaj sto. Prazno polje + čuvanje uklanja dodelu. Transakcije proveravaju verzije i koriste neizmenjive potvrde upisa. Dodeljeni mečevi rezervišu igrače kroz sve kategorije, uključujući oba člana dubla. Rezultat ili promenjeni učesnici oslobađaju sto; broj stola ostaje zabeležen za završeni meč.
+
+Stranica Rezervne kopije u bočnom meniju koristi SQLite Backup API za konzistentne snimke. Provera pri pokretanju i svakog sata pravi najviše jednu dnevnu kopiju, uz najviše 14 automatskih kopija; ručne kopije i kopije pre vraćanja ostaju. Vraćanje proverava šemu, identitet aplikacije, integritet, reference i turnire u privremenoj kopiji pre zaštitnog snimka i zamene baze. Uvoz iz fajla prihvata SQLite kopije do 256 MiB. Posle vraćanja frontend se ponovo učitava i tabovi zatvaraju, uz proveru nesačuvanih izmena.
+
+Izveštaji su dostupni u Grupama/Žrebu, Rezultatima i Blagajni. CSV koristi UTF-8 BOM, navodnike i zaštitu od formula. HTML kodira korisničke vrednosti. Izveštaj kategorije čita stanje u jednoj transakciji. Poseban pregled otvara sistemski dijalog za štampu, uključujući čuvanje PDF-a. Listovi kostura imaju najviše 32 početna učesnika po bloku. Fajlovi idu u Downloads/LibreTT (rezervno u app data); dugme Otvori folder prikazuje lokaciju.
+
+Provere: `npm run check`, `npm run build`, `npm run test:reports` i `cargo test --workspace --exclude librett-desktop --offline`. Sistemske dijaloge za štampu i otvaranje foldera treba ručno proveriti po platformama.

@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import ts from 'typescript';
+const source=await readFile(new URL('../apps/desktop/src/report-format.ts',import.meta.url),'utf8');
+const code=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;
+const {escapeHtml,csvCell,csv}=await import('data:text/javascript;base64,'+Buffer.from(code).toString('base64'));
+assert.equal(escapeHtml('<script>"Đorđe" & Željko\'</script>'),'&lt;script&gt;&quot;Đorđe&quot; &amp; Željko&#39;&lt;/script&gt;');
+assert.equal(csvCell('=SUM(A1:A2)'), '"\'=SUM(A1:A2)"');
+assert.equal(csvCell(' +cmd'), '"\' +cmd"');
+assert.equal(csvCell('@SUM(1)'), '"\'@SUM(1)"');
+assert.equal(csvCell(-12),'"-12"');
+assert.equal(csvCell('Bubušinac, "Đorđe"'),'"Bubušinac, ""Đorđe"""');
+assert.equal(csv([['Igrač','Klub'],['Đorđe\nŽeljko','BUB']]),'\uFEFF"Igrač","Klub"\r\n"Đorđe\nŽeljko","BUB"\r\n');
+console.log('Report formatting: HTML escaping, CSV formula protection, numeric values, quoting, Serbian text and newlines passed.');

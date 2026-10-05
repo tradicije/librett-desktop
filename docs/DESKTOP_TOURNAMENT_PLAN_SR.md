@@ -361,7 +361,7 @@ zajedničkim trećim mestima i rasponima prema fazi ispadanja.
 
 Završavanje kategorije/turnira proverava uslove, čuva potvrđeni snimak rezultata
 i zaključava takmičarske izmene. Ponovno otvaranje traži potvrdu, uz očuvanje
-istorije. Šema 17 čuva statuse i završetke. Slede stolovi/raspored, korisnički
-backup/restore, izvoz/štampa, drugi ekran i kvalifikacija kompletnog toka na svim
-podržanim sistemima. Meč za bronzu i precizno rangiranje svih učesnika koji
-ispadnu u istoj fazi nisu uvedeni.
+istorije. Šema 18 čuva i ručne dodele stolova. Uvedeni su backup/restore, izvoz/štampa,
+meč za bronzu i tri pravila trećeg mesta. Stolovi se za sada ručno unose u
+editoru meča. Dodati su testovi kompletnog takmičarskog toka. Ostaju automatski
+raspored, drugi ekran, instalacioni paketi i ručna provera sistemskih dijaloga.

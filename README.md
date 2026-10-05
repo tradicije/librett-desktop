@@ -163,3 +163,7 @@ LibreTT is licensed under the **GNU Affero General Public License, version 3
 or any later version** (`AGPL-3.0-or-later`). See [LICENSE](LICENSE).
 
 LibreTT is provided without warranty; see the license for the full terms.
+
+### Backups, tables and reports
+
+Use **Backups** in the sidebar for daily/manual snapshots and restore. Assign tables manually in **Matches → Edit match**. Groups, Draw, Results and Cash Desk offer print/PDF preview and CSV/HTML export.

@@ -231,7 +231,7 @@ pub(super) fn competition(state: &Snapshot) -> CompetitionState {
         result_versions,
     }
 }
-fn matches_for(
+pub(super) fn matches_for(
     state: &Snapshot,
     group: usize,
     round: usize,
@@ -290,7 +290,7 @@ fn clear_invalidated(
     }
     Ok(())
 }
-fn key_parts(key: &str) -> Result<(usize, usize, usize), ApplicationError> {
+pub(super) fn key_parts(key: &str) -> Result<(usize, usize, usize), ApplicationError> {
     let parts: Vec<_> = key.split(':').collect();
     let num = |i: usize| {
         parts
@@ -320,6 +320,23 @@ fn write_result(
     Ok(())
 }
 impl SqliteTournamentRepository {
+    pub fn category_report(
+        &mut self,
+        tournament: Uuid,
+        category: Uuid,
+    ) -> Result<librett_application::CategoryReportData, ApplicationError> {
+        let tx = self
+            .connection
+            .transaction()
+            .map_err(|_| ApplicationError::Storage)?;
+        let state = snapshot(&tx, tournament, category, None)?;
+        Ok(librett_application::CategoryReportData {
+            results: super::completion::category_results(&tx, tournament, category)?,
+            competition: competition(&state),
+            rules: state.rules,
+        })
+    }
+
     pub fn competition_state(
         &mut self,
         tournament: Uuid,

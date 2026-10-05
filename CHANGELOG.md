@@ -6,6 +6,14 @@ Notable changes to LibreTT are recorded here in English.
 
 - Refined metadata layouts: short category/scoring summaries and position labels stay inline and wrap when needed; player details and group/knockout progress use separate rows. Set scores use compact tiles.
 
+### Added
+
+- Database backups: daily consistent SQLite snapshots with 14-copy rotation, manual copies, export, validated restore/import and a safety copy before replacing data. Restore reloads workspaces to prevent stale writes.
+- Manual table assignment in Matches → Edit match, independently of score entry. Table/player conflicts are checked across tournament categories and doubles; assignments can be moved/removed and completed matches release tables while retaining their table number.
+- Print/PDF previews and UTF-8 CSV/HTML export for groups, bracket, final standings and cash desk. Brackets split into blocks of up to 32 entrants; category reports use one SQLite read snapshot. Export escapes HTML and protects spreadsheet cells from formula injection.
+- Workflow tests cover odd draws, scoring, completion/reopening locks, bronze/champion-based third place, automatic/manual lucky losers, cross-category table conflicts and backup restoration. Updated migration expectations and added report-format checks.
+- Schema 18 stores table assignments and idempotent scheduling receipts, with a consistent pre-v18 snapshot before upgrading existing databases.
+
 ### Changed
 
 - Draw → Edit now keeps the bracket visible and lets organizers select opening-round participants or BYE by clicking a slot. Existing participants swap positions; group knockout overrides support any registered category entry after resolved groups, with guarded result invalidation.

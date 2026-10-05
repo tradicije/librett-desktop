@@ -1,5 +1,6 @@
 <script lang="ts">
   import InfoRows from './InfoRows.svelte';
+  import ReportActions from './ReportActions.svelte';
   import BracketEditor from './BracketEditor.svelte';
   import { onMount, untrack } from 'svelte';
   import Icon from './Icon.svelte';
@@ -18,10 +19,12 @@
   let error = $state<MessageKey | null>(null);
   let stale = $state(false);
   let editing=$state(false);
+  let exportBusy=$state(false);let groupsBusy=$state(false);let editorBusy=$state(false);
   let layoutRules = $derived(draw && category.format === 'groups_knockout' ? { ...rules, ...draw.settings } : rules);
   let slots = $derived(bracketSlots(draw, layoutRules, category.format, language, competition?.draw_id === draw?.id ? competition?.slots : undefined));
   let missing = $derived(draw ? draw.participants.length - new Set(draw.sections.flat().filter(Boolean)).size : 0);
-  $effect(() => { if (view !== 'groups' && !editing) { busy = false; dirty = false; } });
+  $effect(()=>{busy=loading||exportBusy||groupsBusy||editorBusy;});
+  $effect(()=>{if(view!=='groups' && !editing)dirty=false;});
   async function load() {
     loading = true; error = null;
     try {
@@ -48,19 +51,20 @@
     <div class="draw-heading"><h2>{view === 'groups' ? text.groups : text.draw}</h2><InfoRows compact items={[{label:language==='sr'?'Setova':'Sets',value:rules.best_of},{label:language==='sr'?'Poena':'Points',value:rules.points_to_win},{label:language==='sr'?'Razlika':'Win by',value:`+${rules.win_by}`}]} /></div>
     <div class="draw-actions"><button class="icon-button" disabled={loading || busy || editing} onclick={load} aria-label={language === 'sr' ? 'Osveži' : 'Refresh'} title={language === 'sr' ? 'Osveži' : 'Refresh'}><Icon name="restore" size={18} /></button><button class="secondary icon-label" disabled={busy || editing || (view !== 'groups' && !!draw && (stale || category.completed || tournament.completed))} onclick={()=>{if(view==='groups' || !draw)onsettings();else editing=true;}}><Icon name="edit" size={16} />{language === 'sr' ? 'Uredi' : 'Edit'}</button><button data-open-tab class="icon-button" disabled={busy || dirty} onclick={onsettings} aria-label={text.settings} title={text.settings}><Icon name="settings" size={18}/></button></div>
   </div>
+  <ReportActions kind={view==='groups'?'groups':'draw'} {tournament} {category} {language} bind:busy={exportBusy} disabled={loading || editing || dirty || groupsBusy || !!error}/>
   {#if error}<p class="error" role="alert">{text[error]}</p>{/if}
   {#if !desktopAvailable}<p class="banner">{text.preview}</p>{:else if loading}<p>{text.loading}</p>{:else}
     {#if stale}<p class="banner" role="alert">{language === 'sr' ? 'Žreb je zastareo. Napravi novi u Podešavanjima.' : 'The draw is outdated. Create a new one in Settings.'}</p>{/if}
     {#if missing > 0}<p class="banner">{language === 'sr' ? 'Nepotpun ručni raspored — neraspoređeno' : 'Incomplete manual layout — unassigned'}: {missing}</p>{/if}
     {#if view === 'groups'}
-      <GroupsGrid {draw} {category} {tournament} {language} {competition} bind:busy bind:dirty onreload={load} />
+      <GroupsGrid {draw} {category} {tournament} {language} {competition} bind:busy={groupsBusy} bind:dirty onreload={load} />
     {:else}
       <section class="knockout-column" aria-label={text.bracket}>
         {#if draw}<div class="bracket-tools">
           {#if category.format === 'groups_knockout' && slots.some(slot => slot.kind === 'qualifier')}<span>{language === 'sr' ? slots.some(slot=>slot.lucky_loser && slot.kind==='qualifier') ? 'Čeka prolaznike / Lucky loser izbor.' : 'Čeka prolaznike iz grupa.' : slots.some(slot=>slot.lucky_loser && slot.kind==='qualifier') ? 'Awaiting qualifiers / lucky loser selection.' : 'Awaiting group qualifiers.'}</span>{/if}
           <span class="scroll-hint" title={language === 'sr' ? 'Horizontalni skrol' : 'Scroll horizontally'} aria-label={language === 'sr' ? 'Horizontalni skrol' : 'Scroll horizontally'}><Icon name="arrow-left" size={14} /><Icon name="arrow-right" size={14} /></span>
         </div>{/if}
-        {#if editing && draw}<BracketEditor {draw} {rules} {competition} {tournament} {category} {language} bind:busy bind:dirty ondone={()=>{editing=false;busy=false;dirty=false;void load();}} />{:else}<KnockoutBracket {slots} {language} {progress} />{/if}
+        {#if editing && draw}<BracketEditor {draw} {rules} {competition} {tournament} {category} {language} bind:busy={editorBusy} bind:dirty ondone={()=>{editing=false;busy=false;dirty=false;void load();}} />{:else}<KnockoutBracket {slots} {language} {progress} />{/if}
       </section>
     {/if}
   {/if}

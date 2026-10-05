@@ -139,3 +139,5 @@ Uključen Lucky loser prekidač otvara automatsko ili ručno popunjavanje. U ru�
 Izbor učesnika u kosturu koristi dropdown unutar toka dijaloga. Visina liste prilagođava se prozoru; lista se skroluje bez širenja apsolutno postavljenog menija izvan dijaloga.
 
 Broj godina koristi glavnu boju teksta teme, a jedinica je siva. Prikaz koristi „godina“ za završetke 1 i 5–9/0, „godine“ za završetke 2–4, uz izuzetke 11–14 koji koriste „godina“.
+
+Rezervne kopije su u bočnom meniju. Editor meča prikazuje broj stola sa zasebnim čuvanjem; dugmad za izveštaje su uz Grupe/Žreb, Rezultate i Blagajnu. Pregled štampe je u zasebnom prozoru.

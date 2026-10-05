@@ -12,6 +12,7 @@
     "desktop:install-icon": "node scripts/install-linux-dev-icon.mjs",
     "desktop:generate-icons": "node scripts/generate-desktop-icons.mjs",
     "desktop": "npm run tauri --workspace @librett/desktop --",
+    "test:reports": "node scripts/verify-reports.mjs",
     "test:core": "cargo test --workspace --exclude librett-desktop"
   }
 }

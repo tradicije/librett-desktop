@@ -39,7 +39,7 @@ pub(super) fn ensure_tournament_open(conn: &Connection, id: Uuid) -> Result<(), 
         Ok(())
     }
 }
-fn category_results(
+pub(super) fn category_results(
     conn: &Connection,
     tournament: Uuid,
     category: Uuid,

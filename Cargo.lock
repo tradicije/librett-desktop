@@ -1766,6 +1766,7 @@ dependencies = [
 name = "librett-desktop"
 version = "0.1.0"
 dependencies = [
+ "base64 0.22.1",
  "glib",
  "librett-application",
  "librett-domain",
@@ -1793,9 +1794,11 @@ dependencies = [
 name = "librett-storage-sqlite"
 version = "0.1.0"
 dependencies = [
+ "base64 0.22.1",
  "librett-application",
  "librett-domain",
  "rusqlite",
+ "serde",
  "serde_json",
  "uuid",
 ]

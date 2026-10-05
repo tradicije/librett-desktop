@@ -4,6 +4,7 @@ use rusqlite::{params, Connection, OptionalExtension};
 use std::{path::Path, time::Duration};
 use uuid::Uuid;
 
+mod backup;
 mod cash;
 mod category_rules;
 #[cfg(test)]
@@ -15,6 +16,9 @@ mod matches;
 mod player_cash_tests;
 mod players;
 mod registration;
+mod scheduling;
+#[cfg(test)]
+mod workflow_tests;
 
 pub struct SqliteTournamentRepository {
     connection: Connection,
@@ -64,9 +68,9 @@ impl SqliteTournamentRepository {
         let path = path.as_ref();
         let connection = Connection::open(path)?;
         let version: i64 = connection.query_row("PRAGMA user_version", [], |row| row.get(0))?;
-        if (1..17).contains(&version) {
+        if (1..18).contains(&version) {
             // VACUUM INTO creates a consistent SQLite snapshot before changing an existing schema.
-            let backup = path.with_extension(format!("pre-v17-{}.sqlite", Uuid::new_v4()));
+            let backup = path.with_extension(format!("pre-v18-{}.sqlite", Uuid::new_v4()));
             connection.execute("VACUUM INTO ?1", [backup.to_string_lossy().as_ref()])?;
         }
         Self::initialize(connection)
@@ -76,7 +80,7 @@ impl SqliteTournamentRepository {
         connection.busy_timeout(Duration::from_secs(5))?;
         connection.execute_batch("PRAGMA foreign_keys = ON;")?;
         let version: i64 = connection.query_row("PRAGMA user_version", [], |row| row.get(0))?;
-        if version > 17 {
+        if version > 18 {
             return Err(rusqlite::Error::InvalidQuery);
         }
         if version == 0 {
@@ -189,6 +193,11 @@ impl SqliteTournamentRepository {
         if version < 17 {
             let transaction = connection.transaction()?;
             transaction.execute_batch(include_str!("../migrations/017_completion.sql"))?;
+            transaction.commit()?;
+        }
+        if version < 18 {
+            let transaction = connection.transaction()?;
+            transaction.execute_batch(include_str!("../migrations/018_scheduling.sql"))?;
             transaction.commit()?;
         }
         Ok(Self { connection })
@@ -392,7 +401,7 @@ mod tests {
             .unwrap();
         assert_eq!(
             repository.insert_category(tournament.id, &tournament.categories[0]),
-            Err(ApplicationError::Storage)
+            Err(ApplicationError::NotFound)
         );
         assert!(repository.list().unwrap().is_empty());
     }

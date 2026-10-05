@@ -1,4 +1,5 @@
 <script lang="ts">
+  import ReportActions from './ReportActions.svelte';
   import PlayerName from './PlayerName.svelte';
   import { playerLabel } from './player-label';
   import { onMount, tick, untrack } from 'svelte';
@@ -8,6 +9,8 @@
   import { messages, errorKey, type Language, type MessageKey } from './i18n';
   let { active = true, tournament, language, busy = $bindable(false) }: { active?: boolean; tournament: Tournament; language: Language; busy?: boolean } = $props();
   const uid = $props.id();
+  let exportBusy=$state(false);let writeBusy=$state(false);
+  $effect(()=>{busy=exportBusy||writeBusy;});
   let text = $derived(messages[language]);
   let entries = $state<Entry[]>([]);
   let ledger = $state<CashLedger>({ records: [], allocations: [] });
@@ -99,16 +102,16 @@
   }
   async function save() {
     if (!pending || saving) return;
-    busy = true; saving = true; error = null; notice = false;
+    writeBusy = true; saving = true; error = null; notice = false;
     try {
       await settlePlayerCash(pending.id,tournament.id,pending.playerId,pending.entryIds,pending.paid,pending.expected);
       ledger = await cashLedger(tournament.id);
       selected = { ...selected, [pending.playerId]: [] };
-      pending = null; busy = false; notice = true;
+      pending = null; writeBusy = false; notice = true;
     } catch (cause) {
       error = errorKey(cause);
-      if (cause === 'cash_conflict') { pending = null; busy = false; await load(true); error = 'cash_conflict'; }
-      if (cause === 'invalid_cash' || cause === 'not_found') { pending = null; busy = false; }
+      if (cause === 'cash_conflict') { pending = null; writeBusy = false; await load(true); error = 'cash_conflict'; }
+      if (cause === 'invalid_cash' || cause === 'not_found') { pending = null; writeBusy = false; }
     } finally { saving = false; }
   }
 </script>
@@ -120,7 +123,8 @@
 {#if loading}<p role="status">{text.loading}</p>{/if}
 {#if !loaded && desktopAvailable && !loading}<button onclick={() => load()}>{text.retry}</button>{/if}
 {#if loaded}
-  <div class="cash-totals"><section class="panel"><h2>{text.outstanding}</h2><strong>{money(outstanding)}</strong></section><section class="panel"><h2>{text.netReceived}</h2><strong>{money(netReceived)}</strong></section><section class="panel"><h2>{text.registeredPlayers}</h2><strong>{registered}</strong></section></div>
+  <ReportActions kind="cash" {tournament} {language} bind:busy={exportBusy} disabled={writeBusy || loading}/>
+<div class="cash-totals"><section class="panel"><h2>{text.outstanding}</h2><strong>{money(outstanding)}</strong></section><section class="panel"><h2>{text.netReceived}</h2><strong>{money(netReceived)}</strong></section><section class="panel"><h2>{text.registeredPlayers}</h2><strong>{registered}</strong></section></div>
   <section class="panel player-cash-list">
     <div class="directory-toolbar"><label class="search-field"><Icon name="search" size={17} /><input type="search" aria-label={text.searchCashPlayers} placeholder={text.searchCashPlayers} bind:value={search} disabled={busy || loading} /></label><span class="muted">{filtered.length} / {rows.length}</span></div>
     <!-- svelte-ignore a11y_no_noninteractive_tabindex (Keyboard users need a focusable container to scroll the category matrix horizontally.) -->

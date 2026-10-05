@@ -8,6 +8,9 @@ authors.workspace = true
 [dependencies]
 librett-domain = { path = "../domain" }
 librett-application = { path = "../application" }
-rusqlite = { version = "0.32", features = ["bundled"] }
+rusqlite = { version = "0.32", features = ["bundled", "backup"] }
 uuid.workspace = true
 serde_json = "1"
+
+serde.workspace = true
+base64 = "0.22"

@@ -41,8 +41,8 @@ The Players tab shows the shared directory. Add/Edit opens dedicated profile
 screens, including photos, and returns to the list after saving. Delete asks for
 confirmation and protects profiles with existing registrations. Tournament
 registration uses that directory. Entries can be withdrawn/restored, and player
-attendance is shared across categories in a tournament. Schema version 17 includes immutable draw drafts and versioned category rules; older on-disk databases receive a consistent
-`pre-v17-<uuid>.sqlite` backup before migration.
+attendance is shared across categories in a tournament. Schema version 18 includes immutable draw drafts and versioned category rules; older on-disk databases receive a consistent
+`pre-v18-<uuid>.sqlite` backup before migration.
 
 Back/Forward follows the active workspace’s screen history. The top Home button
 returns to the pinned mode-selection workspace. The mode chooser has no sidebar. Saves lock navigation until
@@ -243,7 +243,7 @@ to the open draw screen. Reload discards local edits and fetches current entries
 
 A changed registration list requires regeneration. Concurrent revisions reject
 a stale save. An uncertain write keeps its request UUID and blocks navigation
-until a retry confirms the outcome. Existing databases receive a pre-v17 backup.
+until a retry confirms the outcome. Existing databases receive a pre-v18 backup.
 Complete current draws supply the Matches tab. Set results and knockout
 advancement, group standings and qualification are implemented; explicit
 competition lifecycle remains pending.
@@ -489,3 +489,13 @@ Open a category’s **Draw → Edit**, then click a player or BYE in the opening
 Category creation/settings display three switches in one row (stacked on narrow windows): age group, Lucky loser/BYE, and a single third place. Lucky loser is available for groups → knockout; direct knockout uses BYE. With the third-place switch off, semifinalists share third place. With it on, choose a bronze match or award third to the semifinalist beaten by the eventual champion. The other semifinalist is fourth. A bronze match is shown beside the final round in Matches and below the bracket; completion waits for its result. If there is only one semifinal loser because of BYEs, that participant is third without an extra match.
 
 Enabling the Lucky loser switch reveals automatic or manual filling. Manual mode leaves vacant places awaiting a participant or BYE. Player directory cards show only name/club and age (current year minus birth year); other details are in the profile.
+
+## Backups, manual tables and reports
+
+Schema 18 adds tournament_scheduling, match_assignments and schedule_writes. Table assignment is manual through the match editor (1–128), with an independent Save table action. Empty + Save removes the assignment. Transactions compare versions and use immutable UUID receipts. Queued/running matches reserve players across categories, including every doubles member. A result or changed participant projection releases the table; recorded table numbers remain available for completed matches.
+
+The sidebar Backups page creates consistent snapshots with SQLite Backup API. Startup/hourly checks create at most one daily snapshot and retain 14 automatic copies; manual/pre-restore copies are retained. Restore validates schema version, application identity, integrity, foreign keys and tournament data in a staging copy before making a safety backup and replacing the database. File imports accept SQLite backups up to 256 MiB. Successful restore reloads the frontend and closes workspaces, after checking unsaved edits.
+
+Reports are available in Groups/Draw, Results and Cash Desk. CSV uses UTF-8 BOM, quoted cells and formula-prefix protection. HTML escapes all user values. Category reports share one read transaction. A separate preview window opens the native print dialog, including the system PDF destination. Bracket sheets contain at most 32 starting entrants per block. Files are saved to Downloads/LibreTT (app data fallback); Open folder reveals that location.
+
+Checks: `npm run check`, `npm run build`, `npm run test:reports`, and `cargo test --workspace --exclude librett-desktop --offline`. Native print dialogs and filesystem folder opening still require manual platform verification.

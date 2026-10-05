@@ -1,4 +1,8 @@
 const sr = {
+  invalid_backup: 'Rezervna kopija nije ispravna ili je iz novije verzije aplikacije.',
+  schedule_conflict: 'Raspored je promenjen. Učitaj trenutno stanje i pokušaj ponovo.',
+  player_busy: 'Igrač je već dodeljen drugom stolu. Oslobodi taj sto ili završi meč.',
+  table_busy: 'Sto je zauzet ili broj stola nije ispravan (1–128).',
   competition_closed: 'Takmičenje je završeno. Prvo ponovo otvori turnir i kategoriju u Rezultatima/Pregledu.',
   completion_conflict: 'Status ili rezultati su promenjeni. Učitaj trenutno stanje pre potvrde.',
   competition_incomplete: 'Takmičenje nije spremno za završetak. Završi mečeve i razreši plasman.',
@@ -99,6 +103,10 @@ const sr = {
 };
 type Messages = typeof sr;
 const en: Messages = {
+  invalid_backup: 'Invalid backup or a backup from a newer app version.',
+  schedule_conflict: 'The schedule changed. Reload and try again.',
+  player_busy: 'A player is already assigned to another table. Release it or finish the match.',
+  table_busy: 'The table is occupied or its number is invalid (1–128).',
   competition_closed: 'The competition is closed. Reopen the tournament and category in Overview/Results first.',
   completion_conflict: 'The status or results changed. Reload before confirming.',
   competition_incomplete: 'The competition is not ready to close. Complete the matches and resolve standings.',
@@ -201,7 +209,7 @@ export type Language = 'sr' | 'en';
 export const messages = { sr, en };
 export type MessageKey = keyof Messages;
 export function errorKey(error: unknown): MessageKey {
-  return typeof error === 'string' && ['competition_closed', 'completion_conflict', 'competition_incomplete', 'birth_year_required', 'invalid_result', 'match_conflict', 'result_impact', 'player_conflict', 'cash_conflict', 'invalid_rules', 'draw_conflict', 'invalid_cash', 'player_in_use', 'invalid_profile', 'name_required', 'name_too_long', 'duplicate_category', 'not_found', 'storage', 'invalid_members', 'already_registered'].includes(error)
+  return typeof error === 'string' && ['invalid_backup', 'schedule_conflict', 'player_busy', 'table_busy', 'competition_closed', 'completion_conflict', 'competition_incomplete', 'birth_year_required', 'invalid_result', 'match_conflict', 'result_impact', 'player_conflict', 'cash_conflict', 'invalid_rules', 'draw_conflict', 'invalid_cash', 'player_in_use', 'invalid_profile', 'name_required', 'name_too_long', 'duplicate_category', 'not_found', 'storage', 'invalid_members', 'already_registered'].includes(error)
     ? error as MessageKey : 'error';
 }
 export function savedLanguage(): Language {

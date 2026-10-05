@@ -1,5 +1,6 @@
 <script lang="ts">
   import InfoRows from './InfoRows.svelte';
+  import ReportActions from './ReportActions.svelte';
   import { onMount, untrack } from 'svelte';
   import CompletionControl from './CompletionControl.svelte';
   import PlayerName from './PlayerName.svelte';
@@ -9,10 +10,11 @@
   import { getCategoryResults, desktopAvailable, type CategoryResults as Results, type Category, type Tournament, type FinalPlacement } from './api';
   import { messages, errorKey, type Language, type MessageKey } from './i18n';
   let {active=true,tournament,category,language,busy=$bindable(false),ontab}: {active?:boolean;tournament:Tournament;category:Category;language:Language;busy?:boolean;ontab:(tab:'matches'|'settings'|'groups')=>void}=$props();
+  let exportBusy=$state(false);
   let sr=$derived(language==='sr');let text=$derived(messages[language]);let data=$state<Results|null>(null);let loading=$state(false);let writing=$state(false);let error=$state<MessageKey|null>(null);
   let names=$derived(new Map(data?.draw?.participants.map(e=>[e.id,e.members.map(playerLabel).join(' / ')])??[]));
   let podium=$derived([1,2,3].map(place=>({place,entries:data?.placements.filter(p=>p.place===place && p.stage!=='groups')??[]})).filter(item=>item.entries.length));
-  $effect(()=>{busy=loading || writing;});
+  $effect(()=>{busy=loading || writing || exportBusy;});
   async function load(){if(!desktopAvailable || writing || loading)return;loading=true;error=null;try{data=await getCategoryResults(tournament.id,category.id);}catch(cause){error=errorKey(cause);}finally{loading=false;}}
   onMount(()=>{void load();const refresh=(event:Event)=>{if((event as CustomEvent).detail===category.id && !writing)void load();};const completion=(event:Event)=>{if((event as CustomEvent).detail===tournament.id && !writing)void load();};window.addEventListener('librett-results-updated',refresh);window.addEventListener('librett-completion-updated',completion);return()=>{window.removeEventListener('librett-results-updated',refresh);window.removeEventListener('librett-completion-updated',completion);};});
   let wasActive=untrack(()=>active);$effect(()=>{if(active && !wasActive && !busy)void load();wasActive=active;});
@@ -28,6 +30,7 @@
     <div class="result-status"><span class="pill">{data.completion.completed_at ? (sr?'Završeno':'Completed') : data.ready ? (sr?'Spremno':'Ready') : (sr?'U toku':'In progress')}</span><InfoRows items={[{label:sr?'Grupe':'Groups',value:data.group_total?`${data.group_completed}/${data.group_total}`:null},{label:sr?'Nokaut':'Knockout',value:`${data.knockout_completed}/${data.knockout_total}`}]} />{#if data.completion.completed_at}<time datetime={data.completion.completed_at}>{new Date(data.completion.completed_at).toLocaleString(sr?'sr-Latn-RS':'en-GB')}</time>{/if}</div>
     {#if !data.ready}<ul class="blockers">{#each data.blockers as code}<li>{blocker(code)}</li>{/each}</ul><div class="form-actions"><button data-open-tab class="secondary" onclick={()=>ontab('matches')}>{text.matches}</button><button data-open-tab class="secondary" onclick={()=>ontab(category.format==='groups_knockout'?'groups':'settings')}>{category.format==='groups_knockout'?text.groups:text.settings}</button></div>
     {:else}
+      <ReportActions kind="results" {tournament} {category} {language} bind:busy={exportBusy} disabled={writing}/>
       <div class="podium">{#each podium as item (item.place)}<article class="podium-place" class:gold={item.place===1}><span class="medal"><Icon name="trophy" size={22} />{item.place}.</span><h3>{item.place===1?(sr?'Pobednik':'Winner'):item.place===2?(sr?'Finalista':'Finalist'):(sr?'Treće mesto':'Third place')}</h3>{#each item.entries as entry (entry.entry_id)}<p><PlayerName label={names.get(entry.entry_id)??entry.entry_id} /></p>{/each}</article>{/each}</div>
       <p class="muted placement-policy">{data.third_place==='bronze_match' ? sr?'Treće i četvrto mesto određuje meč za bronzu.':'Third and fourth places are decided by the bronze match.' : data.third_place==='champion_semifinalist' ? sr?'Treći je polufinalista koji je izgubio od kasnijeg pobednika turnira.':'Third is the semifinalist beaten by the eventual champion.' : sr?'Poraženi polufinalisti dele treće mesto.':'Losing semifinalists share third place.'} {sr?'Ostali dele raspon prema fazi ispadanja.':'Other entries share ranges by elimination stage.'}</p>
       <div class="results-scroll"><table><thead><tr><th>{sr?'Plasman':'Place'}</th><th>{sr?'Igrač / par':'Player / pair'}</th><th>{sr?'Faza':'Stage'}</th></tr></thead><tbody>{#each data.placements as placement (placement.entry_id)}<tr><td><b>{place(placement)}</b></td><td><PlayerName label={names.get(placement.entry_id)??placement.entry_id} /></td><td>{stage(placement)}</td></tr>{/each}</tbody></table></div>

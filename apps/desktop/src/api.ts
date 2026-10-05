@@ -103,3 +103,27 @@ export interface CompletionRequest { request_id: string; tournament_id: string; 
 export const getCategoryResults = (tournamentId: string, categoryId: string) => invoke<CategoryResults>('get_category_results', { tournamentId, categoryId });
 export const getTournamentProgress = (tournamentId: string) => invoke<TournamentProgress>('get_tournament_progress', { tournamentId });
 export const changeCompletion = (request: CompletionRequest) => invoke<TournamentProgress>('change_completion', { request });
+
+export interface BackupInfo { name:string; size:number; modified:number }
+export const listBackups=()=>invoke<BackupInfo[]>('list_backups');
+export const createBackup=()=>invoke<BackupInfo>('create_backup');
+export const automaticBackup=()=>invoke<void>('automatic_backup');
+export const restoreBackup=(name:string)=>invoke<void>('restore_backup',{name});
+export const importBackup=(encoded:string)=>invoke<void>('import_backup',{encoded});
+export const exportBackup=(name:string)=>invoke<string>('export_backup',{name});
+export const openDataFolder=(kind:'backups'|'exports')=>invoke<void>('open_data_folder',{kind});
+export interface ReadyMatch {category_id:string;category_name:string;draw_id:string;key:string;phase:'groups'|'knockout';round:number;first:string;second:string;first_name:string;second_name:string;players:string[]}
+export interface TableAssignment {table:number;status:'queued'|'running';scheduled:ReadyMatch;started_at:string|null}
+export interface ScheduleState {tournament_id:string;table_count:number;version:string;assignments:TableAssignment[];waiting:ReadyMatch[];truncated:boolean}
+export type ScheduleAction={kind:'remove';draw_id:string;key:string}|{kind:'configure';table_count:number}|{kind:'assign';draw_id:string;key:string;table:number}|{kind:'start'|'clear';table:number};
+export interface ScheduleRequest {request_id:string;tournament_id:string;expected_version:string;action:ScheduleAction}
+export const getSchedule=(tournamentId:string)=>invoke<ScheduleState>('get_schedule',{tournamentId});
+export const changeSchedule=(request:ScheduleRequest)=>invoke<ScheduleState>('change_schedule',{request});
+export const saveReport=(kind:string,format:'csv'|'html',content:string)=>invoke<string>('save_report',{kind,format,content});
+export const openPrintReport=(content:string)=>invoke<void>('open_print_report',{content});
+export const getPrintReport=(token:string)=>invoke<string>('get_print_report',{token});
+export const printReport=()=>invoke<void>('print_report');
+
+export const getMatchTables=(tournamentId:string,drawId:string)=>invoke<Record<string,number>>('get_match_tables',{tournamentId,drawId});
+
+export const getCategoryReport=(tournamentId:string,categoryId:string)=>invoke<{results:CategoryResults;competition:CompetitionState;rules:CategoryRules}>('get_category_report',{tournamentId,categoryId});

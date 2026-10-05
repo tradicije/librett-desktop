@@ -4,6 +4,8 @@
   import { listen } from '@tauri-apps/api/event';
   import { getCurrentWindow } from '@tauri-apps/api/window';
   import Workspace from './Workspace.svelte';
+  import type {RestoreSource} from './Backups.svelte';
+  import {restoreBackup,importBackup,automaticBackup} from './api';
   import AboutDialog from './AboutDialog.svelte';
   import DiscardDialog from './DiscardDialog.svelte';
   import { registerDiscardConfirmation, confirmDiscard } from './confirmation';
@@ -98,6 +100,11 @@
     document.getElementById(`work-tab-${tab.id}`)?.focus({ preventScroll: true });
     document.getElementById(`work-tab-${tab.id}`)?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   }
+  async function restoreAll(source:RestoreSource):Promise<boolean>{
+    if(homeWorkspace.status.dirty || tabs.some(tab=>tab.status.dirty)){if(!await confirmDiscard())return false;}
+    nativePending=true;
+    try{if('name' in source)await restoreBackup(source.name);else await importBackup(source.encoded);window.location.reload();return true;}finally{nativePending=false;}
+  }
   function home() { void openTab({ view: 'dashboard' }); }
   async function requestClose(id: string) {
     if (locked || modalOpen() || id === homeId) return;
@@ -139,6 +146,7 @@
     }
     void getCurrentWindow().startDragging().catch(() => { /* Native title bar stays usable. */ });
   }
+  onMount(()=>{if(!desktopAvailable)return;const timer=setInterval(()=>{if(!nativePending && !locked)void automaticBackup().catch(()=>{});},60*60*1000);return()=>clearInterval(timer);});
   onMount(() => {
     const stopConfirmation = registerDiscardConfirmation(() => discardDialog.confirm());
     const hasUnsaved = () => homeWorkspace.status.dirty || tabs.some(tab => tab.status.dirty);
@@ -246,12 +254,12 @@
 <div class="workspace-frame" id="home-workspace" hidden={activeId !== homeId}>
   <Workspace initialRoute={homeWorkspace.initialRoute} pinned bind:language bind:theme bind:sidebarCollapsed {resolvedTheme} bind:tournaments
     bind:status={homeWorkspace.status} externalLocked={nativePending} active={activeId === homeId}
-    onopen={openTab} {wantsNewTab} bind:this={homeWorkspace.instance} />
+    onopen={openTab} onrestore={restoreAll} {wantsNewTab} bind:this={homeWorkspace.instance} />
 </div>
 {#each tabs as tab (tab.id)}
   <div class="workspace-frame" id={`work-panel-${tab.id}`} role="tabpanel" aria-labelledby={`work-tab-${tab.id}`} hidden={tab.id !== activeId}>
     <Workspace initialRoute={tab.initialRoute} bind:language bind:theme bind:sidebarCollapsed {resolvedTheme} bind:tournaments
-      bind:status={tab.status} externalLocked={nativePending} active={tab.id === activeId} onopen={openTab} {wantsNewTab} bind:this={tab.instance} />
+      bind:status={tab.status} externalLocked={nativePending} active={tab.id === activeId} onopen={openTab} onrestore={restoreAll} {wantsNewTab} bind:this={tab.instance} />
   </div>
 {/each}
 <DiscardDialog {language} bind:this={discardDialog} />

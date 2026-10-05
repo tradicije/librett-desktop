@@ -1,5 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use base64::Engine;
 use librett_application::{
     self as application, ApplicationError, CashRepository, CategoryEditorRepository,
     CategoryRepository, PlayerCashRepository, PlayerRepository, TournamentRepository,
@@ -9,7 +10,9 @@ use librett_domain::{
     EntryStatus, Player, PlayerProfile, Tournament,
 };
 use librett_storage_sqlite::SqliteTournamentRepository;
+use std::collections::HashMap;
 use std::sync::Mutex;
+struct PrintReports(Mutex<HashMap<String, String>>);
 use tauri::{Emitter, Manager};
 use uuid::Uuid;
 
@@ -152,7 +155,11 @@ fn main() {
             let directory = app.path().app_data_dir()?;
             std::fs::create_dir_all(&directory)?;
             let repository = SqliteTournamentRepository::open(directory.join("librett.sqlite"))?;
+            if let Err(error) = repository.automatic_backup(&directory.join("backups")) {
+                eprintln!("Automatic backup failed: {error:?}");
+            }
             app.manage(Database(Mutex::new(repository)));
+            app.manage(PrintReports(Mutex::new(HashMap::new())));
             Ok(())
         })
         .on_window_event(|window, event| {
@@ -170,6 +177,20 @@ fn main() {
             let _ = (window, event);
         })
         .invoke_handler(tauri::generate_handler![
+            list_backups,
+            create_backup,
+            automatic_backup,
+            restore_backup,
+            import_backup,
+            export_backup,
+            open_data_folder,
+            get_schedule,
+            get_match_tables,
+            change_schedule,
+            save_report,
+            open_print_report,
+            get_print_report,
+            print_report,
             exit_application,
             update_category_with_rules,
             create_category_with_rules,
@@ -189,6 +210,7 @@ fn main() {
             update_tournament_details,
             get_match_page,
             get_competition_state,
+            get_category_report,
             get_category_results,
             get_tournament_progress,
             change_completion,
@@ -686,4 +708,240 @@ fn change_completion(
         .lock()
         .map_err(|_| ApplicationError::Storage)?
         .change_completion(request)
+}
+
+fn data_directory(app: &tauri::AppHandle) -> Result<std::path::PathBuf, ApplicationError> {
+    app.path()
+        .app_data_dir()
+        .map_err(|_| ApplicationError::Storage)
+}
+fn exports_directory(app: &tauri::AppHandle) -> Result<std::path::PathBuf, ApplicationError> {
+    let directory = app
+        .path()
+        .download_dir()
+        .or_else(|_| app.path().app_data_dir())
+        .map_err(|_| ApplicationError::Storage)?
+        .join("LibreTT");
+    std::fs::create_dir_all(&directory).map_err(|_| ApplicationError::Storage)?;
+    Ok(directory)
+}
+#[tauri::command]
+fn list_backups(app: tauri::AppHandle) -> Result<Vec<application::BackupInfo>, ApplicationError> {
+    SqliteTournamentRepository::backups(&data_directory(&app)?.join("backups"))
+}
+#[tauri::command]
+fn create_backup(
+    app: tauri::AppHandle,
+    database: tauri::State<Database>,
+) -> Result<application::BackupInfo, ApplicationError> {
+    database
+        .0
+        .lock()
+        .map_err(|_| ApplicationError::Storage)?
+        .create_backup(&data_directory(&app)?.join("backups"), "manual")
+}
+#[tauri::command]
+fn automatic_backup(
+    app: tauri::AppHandle,
+    database: tauri::State<Database>,
+) -> Result<(), ApplicationError> {
+    database
+        .0
+        .lock()
+        .map_err(|_| ApplicationError::Storage)?
+        .automatic_backup(&data_directory(&app)?.join("backups"))
+}
+#[tauri::command]
+fn restore_backup(
+    app: tauri::AppHandle,
+    database: tauri::State<Database>,
+    name: String,
+) -> Result<(), ApplicationError> {
+    database
+        .0
+        .lock()
+        .map_err(|_| ApplicationError::Storage)?
+        .restore_backup(&data_directory(&app)?.join("backups"), &name)
+}
+#[tauri::command]
+fn import_backup(
+    app: tauri::AppHandle,
+    database: tauri::State<Database>,
+    encoded: String,
+) -> Result<(), ApplicationError> {
+    if encoded.len() > 360 * 1024 * 1024 {
+        return Err(ApplicationError::InvalidBackup);
+    }
+    let bytes = base64::engine::general_purpose::STANDARD
+        .decode(encoded)
+        .map_err(|_| ApplicationError::InvalidBackup)?;
+    database
+        .0
+        .lock()
+        .map_err(|_| ApplicationError::Storage)?
+        .import_backup(&data_directory(&app)?.join("backups"), &bytes)
+}
+#[tauri::command]
+fn export_backup(app: tauri::AppHandle, name: String) -> Result<String, ApplicationError> {
+    let source =
+        SqliteTournamentRepository::backup_path(&data_directory(&app)?.join("backups"), &name)?;
+    let target = exports_directory(&app)?.join(format!("librett-backup-{}.sqlite", Uuid::new_v4()));
+    std::fs::copy(source, &target).map_err(|_| ApplicationError::Storage)?;
+    Ok(target.to_string_lossy().into_owned())
+}
+#[tauri::command]
+fn open_data_folder(app: tauri::AppHandle, kind: String) -> Result<(), ApplicationError> {
+    let path = match kind.as_str() {
+        "backups" => data_directory(&app)?.join("backups"),
+        "exports" => exports_directory(&app)?,
+        _ => return Err(ApplicationError::NotFound),
+    };
+    std::fs::create_dir_all(&path).map_err(|_| ApplicationError::Storage)?;
+    #[cfg(target_os = "macos")]
+    let result = std::process::Command::new("open").arg(&path).spawn();
+    #[cfg(target_os = "windows")]
+    let result = std::process::Command::new("explorer.exe")
+        .arg(&path)
+        .spawn();
+    #[cfg(target_os = "linux")]
+    let result = std::process::Command::new("xdg-open").arg(&path).spawn();
+    result.map_err(|_| ApplicationError::Storage)?;
+    Ok(())
+}
+#[tauri::command]
+fn get_schedule(
+    database: tauri::State<Database>,
+    tournament_id: Uuid,
+) -> Result<application::ScheduleState, ApplicationError> {
+    database
+        .0
+        .lock()
+        .map_err(|_| ApplicationError::Storage)?
+        .schedule(tournament_id)
+}
+#[tauri::command]
+fn change_schedule(
+    database: tauri::State<Database>,
+    request: application::ScheduleRequest,
+) -> Result<application::ScheduleState, ApplicationError> {
+    database
+        .0
+        .lock()
+        .map_err(|_| ApplicationError::Storage)?
+        .change_schedule(request)
+}
+#[tauri::command]
+fn save_report(
+    app: tauri::AppHandle,
+    kind: String,
+    format: String,
+    content: String,
+) -> Result<String, ApplicationError> {
+    if !["groups", "draw", "results", "cash", "schedule"].contains(&kind.as_str())
+        || !["csv", "html"].contains(&format.as_str())
+        || content.len() > 20 * 1024 * 1024
+    {
+        return Err(ApplicationError::InvalidResult);
+    }
+    let path =
+        exports_directory(&app)?.join(format!("librett-{kind}-{}.{}", Uuid::new_v4(), format));
+    std::fs::write(&path, content.as_bytes()).map_err(|_| ApplicationError::Storage)?;
+    Ok(path.to_string_lossy().into_owned())
+}
+#[tauri::command]
+fn open_print_report(
+    app: tauri::AppHandle,
+    reports: tauri::State<PrintReports>,
+    content: String,
+) -> Result<(), ApplicationError> {
+    if content.len() > 20 * 1024 * 1024 {
+        return Err(ApplicationError::InvalidResult);
+    }
+    let token = Uuid::new_v4().to_string();
+    {
+        let mut items = reports.0.lock().map_err(|_| ApplicationError::Storage)?;
+        if items.len() >= 8 {
+            return Err(ApplicationError::Storage);
+        }
+        items.insert(token.clone(), content);
+    }
+    let label = format!("report-{token}");
+    let window = tauri::WebviewWindowBuilder::new(
+        &app,
+        &label,
+        tauri::WebviewUrl::App(format!("index.html?print={token}").into()),
+    )
+    .title("LibreTT — Print")
+    .inner_size(1000.0, 800.0)
+    .build();
+    let window = match window {
+        Ok(window) => window,
+        Err(_) => {
+            reports
+                .0
+                .lock()
+                .map_err(|_| ApplicationError::Storage)?
+                .remove(&token);
+            return Err(ApplicationError::Storage);
+        }
+    };
+    let handle = app.clone();
+    window.on_window_event(move |event| {
+        if matches!(event, tauri::WindowEvent::Destroyed) {
+            if let Ok(mut items) = handle.state::<PrintReports>().0.lock() {
+                items.remove(&token);
+            }
+        }
+    });
+    Ok(())
+}
+#[tauri::command]
+fn get_print_report(
+    window: tauri::WebviewWindow,
+    reports: tauri::State<PrintReports>,
+    token: String,
+) -> Result<String, ApplicationError> {
+    if window.label() != format!("report-{token}") {
+        return Err(ApplicationError::NotFound);
+    }
+    reports
+        .0
+        .lock()
+        .map_err(|_| ApplicationError::Storage)?
+        .get(&token)
+        .cloned()
+        .ok_or(ApplicationError::NotFound)
+}
+#[tauri::command]
+fn print_report(window: tauri::WebviewWindow) -> Result<(), ApplicationError> {
+    if !window.label().starts_with("report-") {
+        return Err(ApplicationError::NotFound);
+    }
+    window.print().map_err(|_| ApplicationError::Storage)
+}
+
+#[tauri::command]
+fn get_match_tables(
+    database: tauri::State<Database>,
+    tournament_id: Uuid,
+    draw_id: Uuid,
+) -> Result<HashMap<String, usize>, ApplicationError> {
+    database
+        .0
+        .lock()
+        .map_err(|_| ApplicationError::Storage)?
+        .match_tables(tournament_id, draw_id)
+}
+
+#[tauri::command]
+fn get_category_report(
+    database: tauri::State<Database>,
+    tournament_id: Uuid,
+    category_id: Uuid,
+) -> Result<application::CategoryReportData, ApplicationError> {
+    database
+        .0
+        .lock()
+        .map_err(|_| ApplicationError::Storage)?
+        .category_report(tournament_id, category_id)
 }

@@ -3,7 +3,7 @@
   "identifier": "main",
   "description": "Core desktop window capability; no filesystem or network access from the UI.",
   "windows": [
-    "main"
+    "main", "report-*"
   ],
   "permissions": [
     "core:default",

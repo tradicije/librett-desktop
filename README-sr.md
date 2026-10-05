@@ -160,3 +160,7 @@ LibreTT je licenciran pod **GNU Affero General Public License, verzija 3
 ili bilo koja kasnija verzija** (`AGPL-3.0-or-later`). Pogledaj [LICENSE](LICENSE).
 
 LibreTT se pruža bez garancije; puni uslovi nalaze se u licenci.
+
+### Rezervne kopije, stolovi i izveštaji
+
+U bočnom meniju otvori **Rezervne kopije** za dnevne/ručne snimke i vraćanje. Sto se dodeljuje ručno kroz **Mečevi → Uredi meč**. Grupe, Žreb, Rezultati i Blagajna nude pregled štampe/PDF-a i CSV/HTML izvoz.

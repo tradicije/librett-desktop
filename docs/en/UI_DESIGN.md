@@ -161,3 +161,5 @@ Enabling the Lucky loser switch reveals automatic or manual filling. Manual mode
 The bracket participant picker uses an inline dropdown whose list height adapts to the viewport; the list owns scrolling without expanding an absolutely positioned menu beyond the dialog.
 
 Player age numbers use the theme’s primary text color, with a muted year/years unit. Serbian uses godina for endings 1 and 5–9/0, godine for endings 2–4, and godina for 11–14.
+
+Backups are in the sidebar. Match editors expose a table number and independent save; report buttons are next to Groups/Draw, Results and Cash Desk. Print previews have a separate native window.
