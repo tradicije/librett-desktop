@@ -21,7 +21,7 @@
 <dialog class="confirm-dialog age-dialog" bind:this={dialog} aria-labelledby={`${uid}-title`} onclose={finish}>
   <h2 id={`${uid}-title`}>{language==='sr'?'Igrači van starosne grupe':'Players outside the age group'}</h2>
   <p>{language==='sr'?`Ova kategorija je za uzrast ${minimum}–${maximum} godina. Potvrdi prijavu kao izuzetak.`:`This category is for ages ${minimum}–${maximum}. Confirm registration as an exception.`}</p>
-  <ul>{#each players as player (player.id)}<li><span><PlayerName {player} /></span><small>{player.birth_year===null ? language==='sr'?'Godište nije uneto':'Birth year unknown' : `${year-player.birth_year} ${language==='sr'?'godina':'years'} · ${player.birth_year}`}</small></li>{/each}</ul>
+  <ul>{#each players as player (player.id)}<li><span><PlayerName {player} /></span><small>{player.birth_year===null ? language==='sr'?'Godište nije uneto':'Birth year unknown' : `${year-player.birth_year} ${language==='sr'?'godina':'years'}`}</small>{#if player.birth_year !== null}<small>{language==='sr'?'Godište':'Birth year'}: {player.birth_year}</small>{/if}</li>{/each}</ul>
   <p class="muted">{language==='sr'?`Starost se računa prema godini ${year}.`:`Age is calculated using year ${year}.`}</p>
   <div class="dialog-actions"><button type="button" class="secondary" onclick={()=>dialog.close()}>{language==='sr'?'Otkaži':'Cancel'}</button><button type="button" class="primary" onclick={()=>{accepted=true;dialog.close();}}>{language==='sr'?'Prijavi kao izuzetak':'Register as exception'}</button></div>
 </dialog>

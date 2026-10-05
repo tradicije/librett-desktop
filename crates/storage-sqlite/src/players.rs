@@ -110,6 +110,7 @@ impl PlayerRepository for SqliteTournamentRepository {
             .transaction()
             .map_err(|_| ApplicationError::Storage)?;
         for entry in entries {
+            super::completion::ensure_category_open(&transaction, entry.category_id)?;
             let active: bool = transaction
                 .query_row(
                     "SELECT EXISTS(SELECT 1 FROM categories WHERE id=?1 AND archived=0)",

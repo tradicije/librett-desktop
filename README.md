@@ -22,8 +22,8 @@ the sport. LibreTT is both the application name and the umbrella project identit
 
 **Status: early development.** We are currently building the tournament desktop
 application. Category draws, match scoring, group standings, qualification and
-knockout progression are available. Final placements and release installers
-are still in development. See the [development documentation](docs/en/DEVELOPMENT.md) to run it.
+knockout progression, final standings and confirmed category/tournament
+completion are available. Release installers are still in development. See the [development documentation](docs/en/DEVELOPMENT.md) to run it.
 
 ## Project philosophy
 
@@ -77,6 +77,7 @@ history must be part of the results workflow, rather than an afterthought.
 - Dedicated category editors with competition rules, participants and seeded automatic/manual layouts; visual groups, round-robin pairings and a scrollable knockout bracket.
 - Match results by set, retirement and walkover, with guarded corrections, group standings and knockout qualification/progression.
 - BYE or Lucky loser knockout filling, automatic candidate ranking and per-place manual player/BYE choices with guarded result corrections.
+- Final standings with shared third places, category/tournament completion and confirmed reopening with preserved history.
 - Required birth years, optional category age ranges and confirmed registration exceptions.
 - Tournament cards with optional 16:9 covers, registered player/category counts and a dedicated Add Tournament editor.
 - A shared local player directory with profiles, photos, and search.

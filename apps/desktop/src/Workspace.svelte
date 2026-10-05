@@ -1,4 +1,5 @@
 <script lang="ts">
+  import InfoRows from './InfoRows.svelte';
   import Select from './Select.svelte';
   import { confirmDiscard } from './confirmation';
   import { formatMoney } from './money';
@@ -7,6 +8,7 @@
   import CashDesk from './CashDesk.svelte';
   import CategoryEditor from './CategoryEditor.svelte';
   import TournamentEditor from './TournamentEditor.svelte';
+  import TournamentOverview from './TournamentOverview.svelte';
   import PlayerDirectory from './PlayerDirectory.svelte';
   import PlayerEditor from './PlayerEditor.svelte';
   import Icon from './Icon.svelte';
@@ -100,7 +102,13 @@
     : route.view === 'tournament' ? `${selected?.name ?? text.tournaments} | ${tournamentTabLabel(tournamentTab)}`
     : route.view === 'player-create' ? text.addPlayer : route.view === 'player-edit' ? text.editPlayer : pageLabel);
   $effect(() => { status = { title: workspaceTitle, context: workspaceContext, busy: busy || childBusy, dirty, view: route.view }; });
-  onMount(() => { if (route.view !== 'dashboard' && desktopAvailable) void load(); });
+  onMount(() => {
+    if (route.view !== 'dashboard' && desktopAvailable) void load();
+    let refreshVersion=0;
+    const refresh=async()=>{const version=++refreshVersion;try{const current=await listTournaments();if(version===refreshVersion)tournaments=current;}catch(cause){error=errorKey(cause);}};
+    window.addEventListener('librett-completion-updated',refresh);
+    return()=>{refreshVersion++;window.removeEventListener('librett-completion-updated',refresh);};
+  });
   let wasActive = untrack(() => active);
   $effect(() => { if (active && !wasActive && route.view === 'tournaments' && desktopAvailable && !navigationLocked && !dirty) void load(); wasActive = active; });
 
@@ -248,20 +256,17 @@
         {/each}
       </nav>
       {#if tournamentTab === 'overview'}
-        <div class="columns">
-          <section class="panel"><div class="section-heading"><h2>{text.tournamentOverview}</h2></div><p class="muted">{text.tournamentOverviewIntro}</p></section>
-          <section class="panel"><div class="section-heading"><h2>{text.categories}</h2><span class="pill">{activeCategories.length}</span></div><p class="muted">{activeCategories.length ? activeCategories.map(category => `${category.name} · ${text[category.discipline]}`).join(' / ') : text.noCategories}</p><button data-open-tab class="secondary" disabled={navigationLocked} onclick={() => openTournamentTab('categories')}>{text.openCategories}<Icon name="arrow-right" size={16} /></button></section>
-        </div>
+        {#key selected.id}<TournamentOverview {active} tournament={selected} {language} bind:busy={childBusy} oncategory={categoryId=>navigate({view:'category',id:selected.id,categoryId,categoryTab:'results'})} />{/key}
       {:else if tournamentTab === 'categories'}
         <section class="panel">
-          <div class="section-heading"><div class="icon-label"><h2>{text.categories}</h2><span class="pill">{activeCategories.length}</span></div><button data-open-tab class="primary" disabled={navigationLocked} onclick={() => navigate({ view: 'category-create', id: selected.id })}><Icon name="plus" />{text.addCategory}</button></div>
+          <div class="section-heading"><div class="icon-label"><h2>{text.categories}</h2><span class="pill">{activeCategories.length}</span></div><button data-open-tab class="primary" disabled={navigationLocked || selected.completed} onclick={() => navigate({ view: 'category-create', id: selected.id })}><Icon name="plus" />{text.addCategory}</button></div>
           {#if activeCategories.length === 0}<p class="muted">{text.noCategories}</p>{/if}
           {#each activeCategories as category (category.id)}
             <article class="player-profile category-list-row">
-              <button data-open-tab class="category-open" disabled={navigationLocked} onclick={() => navigate({ view: 'category', id: selected.id, categoryId: category.id, categoryTab: 'registrations' })}><span class="player-avatar" aria-hidden="true"><Icon name={category.discipline === 'singles' ? 'user' : 'users'} size={18} /></span><span class="category-details"><strong>{category.name}</strong><span>{text[category.discipline]} · {text[category.format]} · {formatMoney(category.fee_minor, language)} {text.feePerEntry}</span></span></button>
+              <button data-open-tab class="category-open" disabled={navigationLocked} onclick={() => navigate({ view: 'category', id: selected.id, categoryId: category.id, categoryTab: 'registrations' })}><span class="player-avatar" aria-hidden="true"><Icon name={category.discipline === 'singles' ? 'user' : 'users'} size={18} /></span><span class="category-details"><strong>{category.name}{#if category.completed}<span class="pill">{language==='sr'?'Završeno':'Completed'}</span>{/if}</strong><InfoRows items={[{label:text.discipline,value:text[category.discipline]},{label:text.format,value:text[category.format]},{label:language==='sr'?'Kotizacija':'Entry fee',value:`${formatMoney(category.fee_minor, language)} ${text.feePerEntry}`}]} /></span></button>
               <div class="player-actions">
-              <button data-open-tab class="secondary icon-label" disabled={navigationLocked} aria-label={`${text.editCategory}: ${category.name}`} onclick={() => navigate({ view: 'category-edit', id: selected.id, categoryId: category.id })}><Icon name="edit" size={18} />{text.editCategory}</button>
-              <button class="secondary icon-label" disabled={navigationLocked} aria-label={`${text.deleteCategory}: ${category.name} · ${text[category.discipline]}`} onclick={() => confirmCategory(category)}><Icon name="trash" size={18} />{text.deleteCategory}</button>
+              <button data-open-tab class="secondary icon-label" disabled={navigationLocked || selected.completed || category.completed} aria-label={`${text.editCategory}: ${category.name}`} onclick={() => navigate({ view: 'category-edit', id: selected.id, categoryId: category.id })}><Icon name="edit" size={18} />{text.editCategory}</button>
+              <button class="secondary icon-label" disabled={navigationLocked || selected.completed || category.completed} aria-label={`${text.deleteCategory}: ${category.name} · ${text[category.discipline]}`} onclick={() => confirmCategory(category)}><Icon name="trash" size={18} />{text.deleteCategory}</button>
               </div>
             </article>
           {/each}
@@ -283,7 +288,7 @@
             <div data-open-tab class="panel tournament-card" role="link" tabindex={navigationLocked ? -1 : 0} aria-disabled={navigationLocked} aria-label={tournament.name} onclick={() => { if (!navigationLocked) select(tournament.id); }} onkeydown={(event) => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); if (!navigationLocked) select(tournament.id); } }}>
               <span class="tournament-cover">{#if tournament.cover}<img src={tournament.cover} alt="" loading="lazy" />{:else}<Icon name="trophy" size={40} />{/if}</span>
               <div class="tournament-card-body">
-                <h2>{tournament.name}</h2>
+                <h2>{tournament.name}</h2>{#if tournament.completed}<span class="pill">{language==='sr'?'Završeno':'Completed'}</span>{/if}
                 <div class="tournament-card-meta">
                   <span><Icon name="users" size={16} />{tournament.registered_count} {text.tournamentPlayers.toLocaleLowerCase()}</span>
                   <span><Icon name="layer-group" size={16} />{text.categories}: {tournament.categories.filter(c => !c.archived).length}</span>
@@ -303,7 +308,7 @@
 </div>
 
 <dialog class="confirm-dialog" bind:this={categoryDialog} aria-labelledby={`${uid}-category-delete-title`} oncancel={(event) => { if (busy) event.preventDefault(); }} onclose={() => { pendingCategory = null; }}>
-  <h2 id={`${uid}-category-delete-title`}>{text.deleteCategory}</h2><p><strong>{pendingCategory?.name} · {pendingCategory ? text[pendingCategory.discipline] : ''}</strong></p><p>{text.deleteCategoryHint}</p>
+  <h2 id={`${uid}-category-delete-title`}>{text.deleteCategory}</h2><p><strong>{pendingCategory?.name}</strong></p><p class="muted">{pendingCategory ? text[pendingCategory.discipline] : ''}</p><p>{text.deleteCategoryHint}</p>
   <div class="dialog-actions"><button class="secondary" disabled={busy} onclick={() => categoryDialog.close()}>{text.cancelDelete}</button><button class="primary" disabled={busy} onclick={removeCategory}><Icon name="trash" size={16} />{text.deleteCategory}</button></div>
 </dialog>
 

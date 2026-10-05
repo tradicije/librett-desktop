@@ -41,8 +41,8 @@ Tab Igrači prikazuje zajedničku listu. Dodaj/Izmeni otvara zasebne ekrane za
 profile i fotografije, a čuvanje vraća na listu. Brisanje traži potvrdu i čuva
 igrače sa postojećim prijavama. Prijave unutar turnira koriste tu bazu i mogu
 da se povuku i vrate;
-dolazak igrača važi kroz sve kategorije istog turnira. Šema verzije 16 sadrži neizmenjive nacrte žreba i verzije pravila kategorije; pre migracije starijih baza pravi se konzistentan
-`pre-v16-<uuid>.sqlite` backup.
+dolazak igrača važi kroz sve kategorije istog turnira. Šema verzije 17 sadrži neizmenjive nacrte žreba i verzije pravila kategorije; pre migracije starijih baza pravi se konzistentan
+`pre-v17-<uuid>.sqlite` backup.
 
 Nazad/Napred prati istoriju aktivnog radnog taba. Home dugme u gornjoj traci
 vraća na stalni početni ekran koji nema bočni meni. Čuvanje zaključava navigaciju do završetka.
@@ -236,7 +236,7 @@ Sačuvaj nacrt upisuje novu verziju. Ručni nacrt može biti nepotpun. Sačuvaj 
 napuštanja ekrana: nesačuvane izmene postoje samo dok je ekran žreba otvoren.
 Učitaj trenutno stanje odbacuje lokalne izmene. Promena prijava zahteva novi
 nacrt. Sukob verzija odbija zastareli upis; neizvestan upis zadržava isti UUID i
-zaključava navigaciju do potvrde ponavljanjem. Pre migracije postoji pre-v16 backup.
+zaključava navigaciju do potvrde ponavljanjem. Pre migracije postoji pre-v17 backup.
 Potpun i važeći žreb određuje mečeve u tabu Mečevi. Unos rezultata i nokaut
 napredovanje, tabele grupa i kvalifikacije su dostupni; životni ciklus
 takmičenja ostaje u pripremi.
@@ -431,3 +431,41 @@ u [ADR 0016](../adr/0016-lucky-loser-knockout-filling.md).
 Turnir i same prijave nemaju fiksno ograničenje broja igrača. Žreb podržava
 2–4096 prijava u jednoj kategoriji; kod dubla prijava znači par. To je granica
 u kodu, bez potvrde performansi za maksimalan broj učesnika.
+
+## Konačni plasman i završavanje takmičenja
+
+Tab Rezultati prikazuje napredak i razloge zbog kojih kategorija još nije spremna.
+Potreban je važeći, potpun žreb, završene grupe sa razrešenim plasmanom,
+popunjeni prolaznici/LL mesta i svi potrebni nokaut rezultati, uključujući finale.
+
+Pobednik je prvi, poraženi finalista drugi, a poraženi polufinalisti dele treće
+mesto bez meča za bronzu. Ostali dele raspone po nokaut fazi, prema stvarnom
+broju prijava. Učesnici koji nisu prošli grupe dele preostali raspon; ne izmišlja
+se redosled između različitih grupa. Dubl se rangira po paru. Imena i oznake
+klubova koriste istorijski snimak učesnika iz žreba.
+
+Završi kategoriju traži potvrdu, čuva snimak konačnog plasmana i vreme završetka,
+pa zaključava prijave, pravila/podatke kategorije, žreb, ručni plasman grupa,
+LL izbore i rezultate. Rezultati ostaju dostupni za čitanje. Pregled turnira
+prikazuje napredak i pobednike kategorija. Završi turnir zahteva najmanje jednu
+aktivnu kategoriju i potvrđen završetak svake aktivne kategorije. Nekorišćene
+kategorije prethodno ukloni ili arhiviraj.
+
+Ponovno otvaranje traži zasebnu potvrdu. Prvo se otvara turnir, pa kategorija;
+otvaranje turnira ne otključava završene kategorije automatski. Istorija
+prethodnih završetaka i ispravki rezultata ostaje. Novo završavanje čuva novi
+snimak. Blagajna, globalni profili igrača i naziv/naslovna slika turnira ostaju
+dostupni; dolasci se zaključavaju nakon završetka celog turnira.
+
+`change_completion` koristi neizmenjivi UUID zahteva, očekivanu verziju statusa
+i deterministički token žreba/pravila/rezultata/grupnog plasmana/LL izbora i
+statusa roditelja. Turnirski token uključuje listu aktivnih kategorija i njihove
+verzije. Transakcija ponovo proverava uslove pre upisa; zastareli dijalog vraća
+`completion_conflict`. Ponavljanje istog zahteva vraća sačuvan odgovor, čak i
+posle kasnijih promena statusa. UI osvežava statuse kroz radne tabove, a backend
+štiti i stare otvorene editore.
+
+Šema 17 dodaje statuse, snimke i neizmenjivu tabelu `completion_history`.
+SQL trigger-i dodatno zaključavaju takmičarske podatke, a aplikaciona zaštita
+vraća `competition_closed`. Postojeći turniri/kategorije ostaju otvoreni nakon
+migracije. Vidi [ADR 0017](../adr/0017-final-standings-and-completion.md).

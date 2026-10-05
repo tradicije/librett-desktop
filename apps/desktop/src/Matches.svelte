@@ -1,4 +1,5 @@
 <script lang="ts">
+  import InfoRows from './InfoRows.svelte';
   import PlayerName from './PlayerName.svelte';
   import { playerLabel } from './player-label';
   import { onMount, untrack } from 'svelte';
@@ -9,6 +10,7 @@
   import { messages, errorKey, type Language, type MessageKey } from './i18n';
   let { active = true, tournament, category, language, busy = $bindable(false), dirty = $bindable(false), onsettings }: { active?: boolean; tournament: Tournament; category: Category; language: Language; busy?: boolean; dirty?: boolean; onsettings: () => void } = $props();
   let text = $derived(messages[language]);
+  let readOnly=$derived(category.completed || tournament.completed);
   let sr = $derived(language === 'sr');
   let data = $state<MatchPage | null>(null);
   let loading = $state(false); let saving = $state(false);
@@ -65,7 +67,7 @@
   $effect(() => { if (active && !wasActive && desktopAvailable && !selected && !pending) void load(); wasActive = active; });
   async function filterChanged(kind: 'group' | 'round' | 'stage') { if (kind !== 'round') round = '0'; page = 0; await load(); }
   function edit(item: ScheduledMatch) {
-    if (loading || selected || !data || data.stale || !item.first || !item.second || item.bye) return;
+    if (readOnly || loading || selected || !data || data.stale || !item.first || !item.second || item.bye) return;
     selected = item; outcome = item.result?.outcome ?? 'played'; winner = item.result?.winner ?? item.first;
     sets = item.result?.sets.map(set => ({ ...set })) ?? Array.from({ length: Math.floor(data.rules.best_of / 2) + 1 }, () => ({ first: undefined, second: undefined }));
     original = snapshot(); editorError = null; impact = null; confirmation = null;
@@ -96,7 +98,7 @@
     catch (cause) {
       const code = typeof cause === 'string' ? cause : '';
       if (code === 'result_impact') { impact = pending; pending = null; }
-      else { editorError = errorKey(cause); if (['invalid_result', 'match_conflict', 'not_found', 'invalid_draw', 'invalid_rules'].includes(code)) pending = null; }
+      else { editorError = errorKey(cause); if (['competition_closed', 'invalid_result', 'match_conflict', 'not_found', 'invalid_draw', 'invalid_rules'].includes(code)) pending = null; }
     } finally { saving = false; }
   }
   async function acceptImpact() { if (!impact) return; pending = { ...impact, request_id: crypto.randomUUID(), invalidate_downstream: true }; impact = null; await write(); }
@@ -109,7 +111,7 @@
   }, [0, 0]).join(' : ');
 </script>
 <div class="matches-view">
-  <div class="matches-toolbar"><div><h2>{text.matches}</h2><p class="muted">{data ? `${data.rules.best_of} ${sr ? 'setova' : 'sets'} · ${data.rules.points_to_win} ${sr ? 'poena' : 'points'} · +${data.rules.win_by}` : ''}</p></div><button class="secondary icon-label" disabled={loading || !!selected} onclick={load}><Icon name="restore" size={16} />{sr ? 'Osveži' : 'Refresh'}</button></div>
+  <div class="matches-toolbar"><div><h2>{text.matches}</h2>{#if data}<InfoRows items={[{label:language==='sr'?'Setova':'Sets',value:data.rules.best_of},{label:language==='sr'?'Poena':'Points',value:data.rules.points_to_win},{label:language==='sr'?'Razlika':'Win by',value:`+${data.rules.win_by}`}]} />{/if}</div><button class="secondary icon-label" disabled={loading || !!selected} onclick={load}><Icon name="restore" size={16} />{sr ? 'Osveži' : 'Refresh'}</button></div>
   {#if error}<p class="error" role="alert">{text[error]}</p>{/if}
   {#if !desktopAvailable}<p class="banner">{text.preview}</p>{:else if loading && !data}<p class="muted">{text.loading}</p>{:else if !data?.draw}<section class="panel"><p class="muted">{sr ? 'Prvo sačuvaj žreb u podešavanjima kategorije.' : 'Save the draw in category settings first.'}</p><button data-open-tab class="secondary" onclick={onsettings}>{text.settings}</button></section>{:else}
     {#if data.stale}<p class="banner" role="alert">{sr ? 'Žreb je nepotpun ili su prijave i pravila grupa promenjeni. Unos je zaključan dok ne sačuvaš važeći žreb.' : 'The draw is incomplete or registrations/group rules changed. Save a current draw before entering results.'}</p>{/if}
@@ -125,8 +127,8 @@
         <article class="panel match-card">
           <div class="match-label"><span class="eyebrow">{sr ? 'Meč' : 'Match'} {item.position + 1}</span><span class="pill">{item.bye ? 'BYE' : item.result ? (item.result.outcome === 'retired' ? sr ? 'Predaja' : 'Retired' : item.result.outcome === 'walkover' ? sr ? 'Nedolazak' : 'Walkover' : sr ? 'Završen' : 'Completed') : item.first && item.second ? sr ? 'Spreman' : 'Ready' : sr ? 'Čeka' : 'Pending'}</span></div>
           <div class="match-players"><div class:winner={item.result?.winner === item.first}><span><PlayerName label={item.first ? name(item.first) : item.bye ? 'BYE' : name(null)} /></span><b>{item.result ? score(item)?.split(' : ')[0] : '—'}</b></div><div class:winner={item.result?.winner === item.second}><span><PlayerName label={item.second ? name(item.second) : item.bye ? 'BYE' : name(null)} /></span><b>{item.result ? score(item)?.split(' : ')[1] : '—'}</b></div></div>
-          {#if item.result}<p class="match-set-summary muted">{item.result.sets.map(set => `${set.first}:${set.second}`).join(' · ')}{#if item.result.outcome !== 'played'} · {sr ? 'Pobednik' : 'Winner'}: <PlayerName label={name(item.result.winner)} />{/if}</p>{/if}
-          {#if !item.bye}<button class="secondary icon-label" disabled={loading || data.stale || !item.first || !item.second} onclick={() => edit(item)}><Icon name="edit" size={16} />{item.result ? sr ? 'Ispravi rezultat' : 'Edit result' : sr ? 'Unesi rezultat' : 'Enter result'}</button>{/if}
+          {#if item.result}<p class="match-set-summary muted"><span class="set-scores">{#each item.result.sets as set,index}<span class="set-score"><small>{sr?'Set':'Set'} {index+1}</small><strong>{set.first}:{set.second}</strong></span>{/each}</span>{#if item.result.outcome !== 'played'}<span class="metadata-line">{sr ? 'Pobednik' : 'Winner'}: <PlayerName label={name(item.result.winner)} /></span>{/if}</p>{/if}
+          {#if !item.bye}<button class="secondary icon-label" disabled={readOnly || loading || data.stale || !item.first || !item.second} onclick={() => edit(item)}><Icon name="edit" size={16} />{item.result ? sr ? 'Ispravi rezultat' : 'Edit result' : sr ? 'Unesi rezultat' : 'Enter result'}</button>{/if}
         </article>
       {/each}
     </div>
@@ -142,9 +144,9 @@
     {:else}
       {#if editorError}<p class="error" role="alert">{text[editorError]}</p>{/if}
       <form onsubmit={submit}>
-        <fieldset disabled={saving || pending !== null}>
-          <label>{sr ? 'Ishod' : 'Outcome'}<Select label={sr ? 'Ishod' : 'Outcome'} bind:value={() => outcome, (value) => changeOutcome(value as MatchOutcome)} disabled={saving || pending !== null} options={[{ value: 'played', label: sr ? 'Odigran meč' : 'Played match' }, { value: 'retired', label: sr ? 'Predaja' : 'Retired' }, { value: 'walkover', label: sr ? 'Nedolazak' : 'Walkover' }]} /></label>
-          {#if outcome !== 'played'}<label>{sr ? 'Pobednik' : 'Winner'}<Select playerLabels label={sr ? 'Pobednik' : 'Winner'} bind:value={winner} options={winnerOptions} disabled={saving || pending !== null} /></label>{/if}
+        <fieldset disabled={readOnly || saving || pending !== null}>
+          <label>{sr ? 'Ishod' : 'Outcome'}<Select label={sr ? 'Ishod' : 'Outcome'} bind:value={() => outcome, (value) => changeOutcome(value as MatchOutcome)} disabled={readOnly || saving || pending !== null} options={[{ value: 'played', label: sr ? 'Odigran meč' : 'Played match' }, { value: 'retired', label: sr ? 'Predaja' : 'Retired' }, { value: 'walkover', label: sr ? 'Nedolazak' : 'Walkover' }]} /></label>
+          {#if outcome !== 'played'}<label>{sr ? 'Pobednik' : 'Winner'}<Select playerLabels label={sr ? 'Pobednik' : 'Winner'} bind:value={winner} options={winnerOptions} disabled={readOnly || saving || pending !== null} /></label>{/if}
           {#if outcome !== 'walkover'}
             <p class="muted">{sr ? 'Unesi samo odigrane setove, redom. Kod predaje poslednji set može biti nezavršen.' : 'Enter only played sets, in order. For a retirement the last set may be incomplete.'}</p>
             <div class="set-head"><span>{sr ? 'Set' : 'Set'}</span><span><PlayerName label={name(selected.first)} /></span><span><PlayerName label={name(selected.second)} /></span><span></span></div>
@@ -155,7 +157,7 @@
         </fieldset>
         <div class="dialog-actions">
           {#if editorError === 'match_conflict'}<button type="button" class="secondary" onclick={() => confirmation = 'reload'}>{sr ? 'Učitaj ponovo' : 'Reload'}</button>{/if}
-          <button type="button" class="secondary" disabled={saving || pending !== null} onclick={cancel}>{sr ? 'Otkaži' : 'Cancel'}</button><button class="primary" disabled={saving}>{saving ? text.saving : pending ? text.retry : sr ? 'Sačuvaj rezultat' : 'Save result'}</button>
+          <button type="button" class="secondary" disabled={saving || pending !== null} onclick={cancel}>{sr ? 'Otkaži' : 'Cancel'}</button><button class="primary" disabled={(readOnly && !pending) || saving}>{saving ? text.saving : pending ? text.retry : sr ? 'Sačuvaj rezultat' : 'Save result'}</button>
         </div>
       </form>
     {/if}
@@ -164,7 +166,7 @@
 <style>
   .matches-view { display: grid; gap: 20px; }
   .matches-toolbar, .match-filters, .match-label, .match-pagination { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-  .matches-toolbar h2 { margin: 0; } .matches-toolbar p { margin: 8px 0 0; }
+  .matches-toolbar h2 { margin: 0; }
   .match-filters { justify-content: flex-start; flex-wrap: wrap; }
   .match-filters label { display: flex; align-items: center; gap: 10px; }
   .match-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }

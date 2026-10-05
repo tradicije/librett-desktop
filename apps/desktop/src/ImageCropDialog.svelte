@@ -72,7 +72,7 @@
   onDestroy(() => { disposed = true; result = null; finish(); });
 </script>
 <dialog class="confirm-dialog crop-dialog" bind:this={dialog} aria-labelledby={`${uid}-title`} onclose={finish}>
-  <div class="crop-heading"><div><h2 id={`${uid}-title`}>{language === 'sr' ? 'Kropovanje slike' : 'Crop image'}</h2><p class="muted">{cover ? '16:9' : '1:1'} · {language === 'sr' ? 'Pomeri sliku i podesi zum.' : 'Drag the image and adjust the zoom.'}</p></div><button type="button" class="icon-button" aria-label={language === 'sr' ? 'Zatvori' : 'Close'} onclick={() => dialog.close()}><Icon name="close" /></button></div>
+  <div class="crop-heading"><div><h2 id={`${uid}-title`}>{language === 'sr' ? 'Kropovanje slike' : 'Crop image'}</h2><p class="muted"><span class="metadata-line">{cover ? '16:9' : '1:1'}</span><span class="metadata-line">{language === 'sr' ? 'Pomeri sliku i podesi zum.' : 'Drag the image and adjust the zoom.'}</span></p></div><button type="button" class="icon-button" aria-label={language === 'sr' ? 'Zatvori' : 'Close'} onclick={() => dialog.close()}><Icon name="close" /></button></div>
   <div class="crop-preview" class:cover>
     <canvas bind:this={canvas} aria-label={language === 'sr' ? 'Pregled isečene slike' : 'Cropped image preview'} onpointerdown={(event) => { canvas.setPointerCapture(event.pointerId); drag = { id: event.pointerId, x: event.clientX, y: event.clientY, horizontal, vertical }; }} onpointermove={move} onpointerup={() => drag = null} onpointercancel={() => drag = null} onlostpointercapture={() => drag = null}></canvas>
     <div class="crop-grid" aria-hidden="true"><span></span><span></span><span></span><span></span></div>

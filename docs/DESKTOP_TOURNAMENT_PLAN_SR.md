@@ -352,10 +352,16 @@ Kalendar i procene dajemo nakon faze 0 i provere platformi. Najvažniji kriterij
 prve verzije je pouzdano završen turnir u sali, uključujući greške i oporavak.
 
 
-## Trenutni napredak žreba
+## Trenutni napredak takmičarskog toka
 
-Implementirani su nacrti po kategoriji: automatski/ručni režim, ručno poređani
-nosioci, približno jednake grupe, broj grupa i prolaznika, nokaut pozicije i bye
-najjačim nosiocima. Nacrti se ručno uređuju i čuvaju kao neizmenjive verzije u
-SQLite šemi 10. Slede potvrđivanje rasporeda, pravljenje mečeva, unos rezultata,
-rangiranje po dogovorenoj mini-tabeli i prolazak u nokaut.
+Implementirani su automatski/ručni nacrti po kategoriji, nosioci, grupe i nokaut,
+rezultati po setovima, predaja/nedolazak, mini-tabele za izjednačene, prolaznici,
+BYE i automatski/ručni Lucky loser. Rezultati prikazuju konačan plasman sa
+zajedničkim trećim mestima i rasponima prema fazi ispadanja.
+
+Završavanje kategorije/turnira proverava uslove, čuva potvrđeni snimak rezultata
+i zaključava takmičarske izmene. Ponovno otvaranje traži potvrdu, uz očuvanje
+istorije. Šema 17 čuva statuse i završetke. Slede stolovi/raspored, korisnički
+backup/restore, izvoz/štampa, drugi ekran i kvalifikacija kompletnog toka na svim
+podržanim sistemima. Meč za bronzu i precizno rangiranje svih učesnika koji
+ispadnu u istoj fazi nisu uvedeni.

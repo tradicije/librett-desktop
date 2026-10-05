@@ -379,3 +379,9 @@ input[type="file"]:hover:enabled::file-selector-button { background: var(--surfa
 .tournament-card[role="link"] { cursor: pointer; }
 .tournament-card[role="link"]:hover { border-color: var(--text-muted); }
 .tournament-card[role="link"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.metadata-line { display: block; line-height: 1.6; }
+.set-scores { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 6px; }
+.set-score { display: grid; gap: 3px; padding: 6px 10px; background: var(--surface); border-radius: 4px; text-align: center; }
+.set-score small { font-size: 10px; color: var(--text-muted); }
+.set-score strong { font-size: 12px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }

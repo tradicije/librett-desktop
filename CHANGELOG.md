@@ -4,7 +4,26 @@ Notable changes to LibreTT are recorded here in English.
 
 ## Unreleased
 
+- Reorganized category, player, scoring and progress metadata into labeled rows; set scores use separate compact tiles instead of dot-separated summaries.
+
 ### Changed
+
+- Implemented category Results with winner/finalist/bronze summaries, complete
+  standings and progress/blocker explanations. Losing semifinalists share third
+  place; other knockout losers share elimination-stage ranges. Group
+  non-qualifiers share the remaining range without invented cross-group ranks.
+- Categories can be completed only after valid draws, resolved groups/qualifiers
+  and all required knockout results, including the final. Confirmation stores
+  a frozen standings snapshot and completion timestamp.
+- Tournament Overview shows category progress, winners and completed counts.
+  Tournament completion requires at least one active category and confirmation
+  of every active category. Unused categories can be removed beforehand.
+- Completion makes sporting operations read-only in both UI and SQLite guards.
+  Reopening requires confirmation; reopen a tournament before reopening its
+  categories. Cash operations and global player profiles remain available.
+- Completion requests use immutable write identities and version guards; stale
+  confirmations reject and uncertain writes retry safely. Completion/reopen
+  history is append-only. Schema 17 upgrades create a pre-v17 SQLite backup.
 
 - macOS Dock icons now use an 824px artwork region centered on a transparent
   1024px canvas, preventing full-bleed source artwork from appearing oversized.

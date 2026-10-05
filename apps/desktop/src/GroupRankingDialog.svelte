@@ -19,7 +19,7 @@
     if(!pending)pending={request_id:crypto.randomUUID(),tournament_id:tournament.id,category_id:category.id,draw_id:source.draw_id,group,expected_revision:source.order_revisions[group],expected_result_version:source.result_versions[group],order:automatic ? null : [...order],invalidate_downstream:false};
     await write();
   }
-  async function write(){if(!pending || saving)return;saving=true;error=null;try{await saveGroupOrder(pending);close();window.dispatchEvent(new CustomEvent('librett-results-updated',{detail:category.id}));await onreload();}catch(cause){if(cause==='result_impact'){impact=pending;pending=null;}else{error=errorKey(cause);if(['match_conflict','invalid_result','not_found'].includes(String(cause)))pending=null;}}finally{saving=false;}}
+  async function write(){if(!pending || saving)return;saving=true;error=null;try{await saveGroupOrder(pending);close();window.dispatchEvent(new CustomEvent('librett-results-updated',{detail:category.id}));await onreload();}catch(cause){if(cause==='result_impact'){impact=pending;pending=null;}else{error=errorKey(cause);if(['competition_closed','match_conflict','invalid_result','not_found'].includes(String(cause)))pending=null;}}finally{saving=false;}}
   async function confirmImpact(){if(!impact)return;pending={...impact,request_id:crypto.randomUUID(),invalidate_downstream:true};impact=null;await write();}
 </script>
 <dialog class="confirm-dialog ranking-dialog" bind:this={dialog} aria-labelledby={`${uid}-title`} oncancel={event=>{event.preventDefault();cancel();}}>

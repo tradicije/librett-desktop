@@ -2,8 +2,8 @@ import { invoke, isTauri } from '@tauri-apps/api/core';
 
 export type Discipline = 'singles' | 'doubles';
 export type CompetitionFormat = 'knockout' | 'groups_knockout';
-export interface Category { archived: boolean; fee_minor: number; id: string; name: string; discipline: Discipline; format: CompetitionFormat }
-export interface Tournament { cover: string | null; registered_count: number; id: string; name: string; categories: Category[] }
+export interface Category { completed: boolean; archived: boolean; fee_minor: number; id: string; name: string; discipline: Discipline; format: CompetitionFormat }
+export interface Tournament { completed: boolean; cover: string | null; registered_count: number; id: string; name: string; categories: Category[] }
 export interface PlayerProfile { birth_year: number | null; city: string; country: string; email: string; phone: string; notes: string; photo: string | null }
 export interface Player extends PlayerProfile { id: string; name: string; club: string }
 export type EntryStatus = 'registered' | 'withdrawn';
@@ -93,3 +93,12 @@ export type FillerChoice = { kind: 'bye' } | { kind: 'entry'; entry_id: string }
 export interface LuckyLoserCandidate { group: number; place: number; standing: StandingRow }
 export interface SaveFillersRequest { expected_match_version: number; request_id: string; tournament_id: string; category_id: string; draw_id: string; expected_revision: number; rules_revision: number; order_revisions: number[]; result_versions: number[]; fillers: Record<string,FillerChoice>; invalidate_downstream: boolean }
 export const saveKnockoutFillers = (request: SaveFillersRequest) => invoke<CompetitionState>('save_knockout_fillers', { request });
+
+export interface CompletionState { revision: number; completed_at: string | null }
+export interface FinalPlacement { entry_id: string; place: number; place_end: number; stage: 'winner' | 'finalist' | 'knockout' | 'groups'; round: number | null }
+export interface CategoryResults { category_id: string; category_name: string; completion: CompletionState; tournament_completion: CompletionState; version: string; draw: CategoryDraw | null; ready: boolean; blockers: string[]; group_completed: number; group_total: number; knockout_completed: number; knockout_total: number; placements: FinalPlacement[] }
+export interface TournamentProgress { tournament_id: string; completion: CompletionState; version: string; ready: boolean; categories: CategoryResults[] }
+export interface CompletionRequest { request_id: string; tournament_id: string; category_id: string | null; expected_revision: number; expected_version: string; complete: boolean }
+export const getCategoryResults = (tournamentId: string, categoryId: string) => invoke<CategoryResults>('get_category_results', { tournamentId, categoryId });
+export const getTournamentProgress = (tournamentId: string) => invoke<TournamentProgress>('get_tournament_progress', { tournamentId });
+export const changeCompletion = (request: CompletionRequest) => invoke<TournamentProgress>('change_completion', { request });

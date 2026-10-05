@@ -1,4 +1,5 @@
 <script lang="ts">
+  import InfoRows from './InfoRows.svelte';
   import { onMount, untrack } from 'svelte';
   import Icon from './Icon.svelte';
   import KnockoutBracket from './KnockoutBracket.svelte';
@@ -42,7 +43,7 @@
 </script>
 <div class="draw-view">
   <div class="draw-toolbar">
-    <div class="draw-heading"><h2>{view === 'groups' ? text.groups : text.draw}</h2><p class="muted">{rules.best_of} {language === 'sr' ? 'setova' : 'sets'} · {rules.points_to_win} {language === 'sr' ? 'poena' : 'points'} · +{rules.win_by}</p></div>
+    <div class="draw-heading"><h2>{view === 'groups' ? text.groups : text.draw}</h2><InfoRows items={[{label:language==='sr'?'Setova':'Sets',value:rules.best_of},{label:language==='sr'?'Poena':'Points',value:rules.points_to_win},{label:language==='sr'?'Razlika':'Win by',value:`+${rules.win_by}`}]} /></div>
     <div class="draw-actions"><button class="icon-button" disabled={loading || busy} onclick={load} aria-label={language === 'sr' ? 'Osveži' : 'Refresh'} title={language === 'sr' ? 'Osveži' : 'Refresh'}><Icon name="restore" size={18} /></button><button data-open-tab class="secondary icon-label" disabled={busy} onclick={onsettings} aria-label={text.settings} title={text.settings}><Icon name="edit" size={16} />{language === 'sr' ? 'Uredi' : 'Edit'}</button></div>
   </div>
   {#if error}<p class="error" role="alert">{text[error]}</p>{/if}
@@ -67,8 +68,7 @@
   .draw-toolbar, .draw-actions { display: flex; align-items: center; gap: 12px; }
   .draw-toolbar { justify-content: space-between; flex-wrap: wrap; }
   .draw-toolbar h2 { margin: 0; }
-  .draw-heading { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
-  .draw-toolbar p { margin: 0; font-size: 11px; }
+  .draw-heading { display: grid; gap: 4px; }
   .knockout-column { min-width: 0; }
   .bracket-tools { display: flex; align-items: center; gap: 12px; color: var(--text-muted); font-size: 11px; }
   .scroll-hint { margin-left: auto; display: flex; align-items: center; gap: 3px; color: var(--text-muted); font-size: 10px; }

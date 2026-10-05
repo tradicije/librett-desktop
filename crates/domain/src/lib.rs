@@ -19,6 +19,8 @@ pub use matches::{
     group_round_matches, knockout_from_slots, knockout_matches, MatchOutcome, MatchResult,
     ScheduledMatch, SetScore, StoredMatchResult,
 };
+mod results;
+pub use results::{final_placements, FinalPlacement, PlacementStage};
 mod draw;
 pub use draw::{create_draw, validate_draw, CategoryDraw, DrawMode, DrawSettings};
 
@@ -39,6 +41,8 @@ pub enum CompetitionFormat {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Category {
     #[serde(default)]
+    pub completed: bool,
+    #[serde(default)]
     pub archived: bool,
     #[serde(default)]
     pub fee_minor: i64,
@@ -50,6 +54,8 @@ pub struct Category {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Tournament {
+    #[serde(default)]
+    pub completed: bool,
     #[serde(default)]
     pub registered_count: usize,
     #[serde(default)]
@@ -87,6 +93,7 @@ fn validated_name(name: &str) -> Result<String, DomainError> {
 impl Tournament {
     pub fn new(name: &str) -> Result<Self, DomainError> {
         Ok(Self {
+            completed: false,
             registered_count: 0,
             cover: None,
             id: Uuid::new_v4(),
@@ -110,6 +117,7 @@ impl Tournament {
             return Err(DomainError::DuplicateCategory);
         }
         self.categories.push(Category {
+            completed: false,
             archived: false,
             fee_minor: 0,
             id: Uuid::new_v4(),

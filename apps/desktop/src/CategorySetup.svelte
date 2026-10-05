@@ -7,6 +7,7 @@
   import { messages, errorKey, type Language, type MessageKey } from './i18n';
   let { active = true, tournament, category, language, busy = $bindable(false), dirty = $bindable(false), onview }: { active?: boolean; tournament: Tournament; category: Category; language: Language; busy?: boolean; dirty?: boolean; onview: () => void } = $props();
   let text = $derived(messages[language]);
+  let readOnly=$derived(category.completed || tournament.completed);
   let rules = $state(defaultCategoryRules());
   let savedRules = $state(defaultCategoryRules());
   let baseline = $state('');
@@ -44,7 +45,7 @@
       window.dispatchEvent(new CustomEvent('librett-results-updated',{detail:category.id}));
     } catch (cause) {
       if(cause==='result_impact'){impact=true;impactDialog.showModal();}else error = errorKey(cause);
-      if (cause === 'invalid_rules' || cause === 'draw_conflict' || cause === 'not_found') pending = null;
+      if (cause === 'competition_closed' || cause === 'invalid_rules' || cause === 'draw_conflict' || cause === 'not_found') pending = null;
     } finally { saving = false; }
   }
 </script>
@@ -55,15 +56,15 @@
     {#if loading}<p>{text.loading}</p>
     {:else if baseline}
       <form onsubmit={event=>save(event)}>
-        <CategoryRulesFields {language} format={category.format} bind:rules disabled={busy || fillDirty || drawDirty} />
-        <div class="rule-save"><button class="primary" disabled={saving || drawBusy || fillBusy || impact || (!pending && !rulesDirty)}>{saving ? text.saving : pending ? text.retry : language === 'sr' ? 'Sačuvaj pravila' : 'Save rules'}</button>
+        <CategoryRulesFields {language} format={category.format} bind:rules disabled={readOnly || busy || fillDirty || drawDirty} />
+        <div class="rule-save"><button class="primary" disabled={(readOnly && !pending) || saving || drawBusy || fillBusy || impact || (!pending && !rulesDirty)}>{saving ? text.saving : pending ? text.retry : language === 'sr' ? 'Sačuvaj pravila' : 'Save rules'}</button>
           {#if rulesDirty}<span class="muted">{language === 'sr' ? 'Sačuvaj pravila pre pravljenja rasporeda.' : 'Save rules before creating an arrangement.'}</span>{/if}</div>
       </form>
     {/if}
   </section>
   {#if baseline}
-    <DrawSetup {active} {tournament} {category} {language} rules={savedRules} externalLocked={rulesDirty || saving || pending !== null || fillBusy || fillDirty || impact} bind:busy={drawBusy} bind:dirty={drawDirty} {onview} />
-    {#if category.format==='groups_knockout' && savedRules.knockout_filling==='lucky_loser'}<KnockoutFillSetup {active} {tournament} {category} {language} rulesRevision={revision} externalLocked={rulesDirty || saving || pending!==null || drawBusy || drawDirty || impact} bind:busy={fillBusy} bind:dirty={fillDirty} />{/if}
+    <DrawSetup {active} {tournament} {category} {language} rules={savedRules} externalLocked={readOnly || rulesDirty || saving || pending !== null || fillBusy || fillDirty || impact} bind:busy={drawBusy} bind:dirty={drawDirty} {onview} />
+    {#if category.format==='groups_knockout' && savedRules.knockout_filling==='lucky_loser'}<KnockoutFillSetup {active} {tournament} {category} {language} rulesRevision={revision} externalLocked={readOnly || rulesDirty || saving || pending!==null || drawBusy || drawDirty || impact} bind:busy={fillBusy} bind:dirty={fillDirty} />{/if}
   {/if}
 </div>
 <dialog class="confirm-dialog" bind:this={impactDialog} aria-labelledby={`${uid}-impact`} oncancel={event=>{event.preventDefault();impact=false;pending=null;impactDialog.close();}}><h2 id={`${uid}-impact`}>{language==='sr'?'Promena prolaznika':'Change qualifiers'}</h2><p>{language==='sr'?'Promena pravila poništiće nokaut rezultate koji zavise od promenjenih učesnika. Istorija ostaje sačuvana.':'Changing rules clears knockout results that depend on changed participants. History is retained.'}</p><div class="dialog-actions"><button class="secondary" onclick={()=>{impact=false;pending=null;impactDialog.close();}}>{language==='sr'?'Vrati se':'Back'}</button><button class="primary" onclick={()=>{impact=false;impactDialog.close();void save(undefined,true);}}>{language==='sr'?'Potvrdi promenu':'Confirm change'}</button></div></dialog>

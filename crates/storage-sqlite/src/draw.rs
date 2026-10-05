@@ -37,6 +37,7 @@ impl DrawRepository for SqliteTournamentRepository {
                 Err(ApplicationError::DrawConflict)
             };
         }
+        super::completion::ensure_category_open(&tx, draw.category_id)?;
         let revision: u32 = tx
             .query_row(
                 "SELECT COALESCE(MAX(revision),0) FROM category_draws WHERE category_id=?1",

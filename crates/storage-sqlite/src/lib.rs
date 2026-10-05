@@ -8,6 +8,7 @@ mod cash;
 mod category_rules;
 #[cfg(test)]
 mod category_tests;
+mod completion;
 mod draw;
 mod matches;
 #[cfg(test)]
@@ -63,9 +64,9 @@ impl SqliteTournamentRepository {
         let path = path.as_ref();
         let connection = Connection::open(path)?;
         let version: i64 = connection.query_row("PRAGMA user_version", [], |row| row.get(0))?;
-        if (1..16).contains(&version) {
+        if (1..17).contains(&version) {
             // VACUUM INTO creates a consistent SQLite snapshot before changing an existing schema.
-            let backup = path.with_extension(format!("pre-v16-{}.sqlite", Uuid::new_v4()));
+            let backup = path.with_extension(format!("pre-v17-{}.sqlite", Uuid::new_v4()));
             connection.execute("VACUUM INTO ?1", [backup.to_string_lossy().as_ref()])?;
         }
         Self::initialize(connection)
@@ -75,7 +76,7 @@ impl SqliteTournamentRepository {
         connection.busy_timeout(Duration::from_secs(5))?;
         connection.execute_batch("PRAGMA foreign_keys = ON;")?;
         let version: i64 = connection.query_row("PRAGMA user_version", [], |row| row.get(0))?;
-        if version > 16 {
+        if version > 17 {
             return Err(rusqlite::Error::InvalidQuery);
         }
         if version == 0 {
@@ -185,6 +186,11 @@ impl SqliteTournamentRepository {
             transaction.execute_batch(include_str!("../migrations/016_knockout_fillers.sql"))?;
             transaction.commit()?;
         }
+        if version < 17 {
+            let transaction = connection.transaction()?;
+            transaction.execute_batch(include_str!("../migrations/017_completion.sql"))?;
+            transaction.commit()?;
+        }
         Ok(Self { connection })
     }
 
@@ -212,6 +218,13 @@ impl SqliteTournamentRepository {
             let (id, name, discipline, format, fee_minor, archived) =
                 row.map_err(|_| ApplicationError::Storage)?;
             Ok(Category {
+                completed: completion::state(
+                    &self.connection,
+                    "categories",
+                    Uuid::parse_str(&id).map_err(|_| ApplicationError::Storage)?,
+                )?
+                .completed_at
+                .is_some(),
                 archived,
                 fee_minor,
                 id: Uuid::parse_str(&id).map_err(|_| ApplicationError::Storage)?,
@@ -251,6 +264,9 @@ impl TournamentRepository for SqliteTournamentRepository {
             let (id, name, cover) = row.map_err(|_| ApplicationError::Storage)?;
             let id = Uuid::parse_str(&id).map_err(|_| ApplicationError::Storage)?;
             Ok(Tournament {
+                completed: completion::state(&self.connection, "tournaments", id)?
+                    .completed_at
+                    .is_some(),
                 registered_count: self.registered_count(id)?,
                 cover,
                 id,
@@ -273,6 +289,9 @@ impl TournamentRepository for SqliteTournamentRepository {
             .map_err(|_| ApplicationError::Storage)?
             .ok_or(ApplicationError::NotFound)?;
         Ok(Tournament {
+            completed: completion::state(&self.connection, "tournaments", id)?
+                .completed_at
+                .is_some(),
             registered_count: self.registered_count(id)?,
             cover,
             id,
@@ -296,6 +315,7 @@ impl TournamentRepository for SqliteTournamentRepository {
         tournament_id: Uuid,
         category: &Category,
     ) -> Result<(), ApplicationError> {
+        completion::ensure_tournament_open(&self.connection, tournament_id)?;
         let discipline = match category.discipline {
             Discipline::Singles => "singles",
             Discipline::Doubles => "doubles",
@@ -384,6 +404,7 @@ impl librett_application::CategoryRepository for SqliteTournamentRepository {
         tournament_id: Uuid,
         category_id: Uuid,
     ) -> Result<(), ApplicationError> {
+        completion::ensure_category_open(&self.connection, category_id)?;
         let tx = self
             .connection
             .transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)

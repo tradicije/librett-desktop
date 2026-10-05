@@ -117,3 +117,13 @@ Statistika kandidata je u tabeli koja se otvara po potrebi. Kratka poruka objaš
 izjednačenje na granici ili nevažeći ručni izbor. Promene zavisnih rezultata traže
 potvrdu i objašnjavaju da istorija ostaje. Kostur pokazuje LL C3 ispred imena,
 uz isti manji sivi prikaz kluba.
+
+Rezultati imaju ravan prikaz napretka/statusa, kratak spisak nedovršenih koraka,
+kartice pobednika/finaliste/zajedničkih trećih mesta i tabelu plasmana. Završetak
+je ispod rezultata, a ponovno otvaranje ima zasebnu potvrdu. Pregled turnira ima
+najviše tri kartice kategorija po redu, brojač završetaka i linkove do rezultata.
+Završeno takmičenje onemogućava izmene, uz dostupnu navigaciju i blagajnu.
+Kartice kategorija i turnira imaju oznaku Završeno.
+
+
+Podaci kategorija, igrača i pravila prikazuju se u zasebnim označenim redovima. Napredak grupa i nokauta prikazan je odvojeno, a svaki odigrani set ima zasebnu oznaku rezultata.

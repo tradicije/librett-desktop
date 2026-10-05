@@ -40,6 +40,7 @@ impl CategoryRulesRepository for SqliteTournamentRepository {
             .connection
             .transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)
             .map_err(|_| ApplicationError::Storage)?;
+        super::completion::ensure_tournament_open(&tx, tournament_id)?;
         let discipline = match category.discipline {
             Discipline::Singles => "singles",
             Discipline::Doubles => "doubles",
@@ -102,6 +103,7 @@ impl CategoryRulesRepository for SqliteTournamentRepository {
         let row: Option<(String,String,String,i64,bool)> = tx.query_row("SELECT name,discipline,format,fee_minor,EXISTS(SELECT 1 FROM entries WHERE category_id=c.id) FROM categories c WHERE id=?1 AND tournament_id=?2 AND archived=0",params![category.id.to_string(),tournament_id.to_string()],|r|Ok((r.get(0)?,r.get(1)?,r.get(2)?,r.get(3)?,r.get(4)?))).optional().map_err(|_|ApplicationError::Storage)?;
         let (name, old_discipline, old_format, fee, used) =
             row.ok_or(ApplicationError::NotFound)?;
+        super::completion::ensure_tournament_open(&tx, tournament_id)?;
         let discipline = match category.discipline {
             Discipline::Singles => "singles",
             Discipline::Doubles => "doubles",
@@ -146,6 +148,7 @@ impl CategoryRulesRepository for SqliteTournamentRepository {
         let revision = revision
             .checked_add(1)
             .ok_or(ApplicationError::DrawConflict)?;
+        super::completion::ensure_category_open(&tx, category.id)?;
         super::matches::guard_rules_change(
             &tx,
             tournament_id,
@@ -170,11 +173,11 @@ impl librett_application::CategoryEditorRepository for SqliteTournamentRepositor
         tournament_id: Uuid,
         category_id: Uuid,
     ) -> Result<librett_application::CategoryEditorState, ApplicationError> {
-        self.connection.query_row("SELECT c.name,c.discipline,c.format,c.fee_minor,COALESCE(r.revision,0),r.payload,EXISTS(SELECT 1 FROM entries WHERE category_id=c.id) FROM categories c LEFT JOIN category_configurations r ON r.category_id=c.id WHERE c.id=?1 AND c.tournament_id=?2 AND c.archived=0", params![category_id.to_string(), tournament_id.to_string()], |row| {
+        self.connection.query_row("SELECT c.name,c.discipline,c.format,c.fee_minor,COALESCE(r.revision,0),r.payload,EXISTS(SELECT 1 FROM entries WHERE category_id=c.id),c.completed_at IS NOT NULL FROM categories c LEFT JOIN category_configurations r ON r.category_id=c.id WHERE c.id=?1 AND c.tournament_id=?2 AND c.archived=0", params![category_id.to_string(), tournament_id.to_string()], |row| {
             let discipline: String = row.get(1)?; let format: String = row.get(2)?; let payload: Option<String> = row.get(5)?;
             let rules = payload.map(|json| serde_json::from_str(&json).map_err(|_| rusqlite::Error::InvalidQuery)).transpose()?.unwrap_or_default();
             Ok(librett_application::CategoryEditorState {
-                category: Category { id: category_id, name: row.get(0)?, discipline: match discipline.as_str() { "singles" => Discipline::Singles, "doubles" => Discipline::Doubles, _ => return Err(rusqlite::Error::InvalidQuery) }, format: match format.as_str() { "knockout" => CompetitionFormat::Knockout, "groups_knockout" => CompetitionFormat::GroupsKnockout, _ => return Err(rusqlite::Error::InvalidQuery) }, fee_minor: row.get(3)?, archived: false },
+                category: Category { completed: row.get(8)?, id: category_id, name: row.get(0)?, discipline: match discipline.as_str() { "singles" => Discipline::Singles, "doubles" => Discipline::Doubles, _ => return Err(rusqlite::Error::InvalidQuery) }, format: match format.as_str() { "knockout" => CompetitionFormat::Knockout, "groups_knockout" => CompetitionFormat::GroupsKnockout, _ => return Err(rusqlite::Error::InvalidQuery) }, fee_minor: row.get(3)?, archived: false },
                 configuration: CategoryConfiguration { category_id, revision: row.get(4)?, rules }, used: row.get(6)?,
             })
         }).optional().map_err(|_| ApplicationError::Storage)?.ok_or(ApplicationError::NotFound)
@@ -222,6 +225,7 @@ impl SqliteTournamentRepository {
         if revision != expected_revision {
             return Err(ApplicationError::DrawConflict);
         }
+        super::completion::ensure_category_open(&tx, category_id)?;
         rules.validate(snapshot_format(&tx, tournament_id, category_id)?)?;
         super::matches::guard_rules_change(
             &tx,

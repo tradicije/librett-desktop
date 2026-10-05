@@ -14,7 +14,7 @@
   } = $props();
   const labels = {
     sr: {
-      title: 'Nosioci i raspored', intro: 'Poređaj nosioce, napravi raspored i po potrebi ručno odredi ko sa kim igra.',
+      closed:'Kategorija je završena. Ponovo je otvori u Rezultatima.', title: 'Nosioci i raspored', intro: 'Poređaj nosioce, napravi raspored i po potrebi ručno odredi ko sa kim igra.',
       automatic: 'Automatski', manual: 'Ručno', groupCount: 'Broj grupa', qualifiers: 'Prolaznika iz svake grupe',
       seeds: 'Nosioci, od najjačeg', addSeed: 'Dodaj nosioca', choose: 'Izaberi prijavu', up: 'Pomeri gore', down: 'Pomeri dole', remove: 'Ukloni',
       generate: 'Napravi raspored', replace: 'Zameni trenutni nacrt', replaceHint: 'Novi raspored će zameniti trenutni nacrt. Sačuvana prethodna verzija ostaje u istoriji.',
@@ -26,7 +26,7 @@
       hint: 'Izbor već raspoređene prijave menja njeno mesto sa ovom pozicijom. Prazna pozicija je bye tek kada je ceo kostur popunjen.',
     },
     en: {
-      title: 'Seeds and arrangement', intro: 'Order seeds, create a layout and adjust group membership or first-round opponents manually.',
+      closed:'Category completed. Reopen it in Results.', title: 'Seeds and arrangement', intro: 'Order seeds, create a layout and adjust group membership or first-round opponents manually.',
       automatic: 'Automatic', manual: 'Manual', groupCount: 'Number of groups', qualifiers: 'Qualifiers per group',
       seeds: 'Seeds, strongest first', addSeed: 'Add seed', choose: 'Choose an entry', up: 'Move up', down: 'Move down', remove: 'Remove',
       generate: 'Create arrangement', replace: 'Replace current draft', replaceHint: 'The new arrangement replaces this draft. The previous saved revision stays in history.',
@@ -52,7 +52,7 @@
   let saved = $state(false);
   let loading = $state(true);
   let action = $state(false);
-  let error = $state<'invalid' | 'conflict' | 'stale' | 'uncertain' | 'error' | null>(null);
+  let error = $state<'invalid' | 'conflict' | 'stale' | 'uncertain' | 'error' | 'closed' | null>(null);
   let pending = $state<{ draw: CategoryDraw; revision: number } | null>(null);
   let stale = $derived(!!draft && (category.format === 'groups_knockout' && (draft.settings.group_count !== groupCount || draft.settings.qualifiers_per_group !== qualifiers) || draft.participants.length !== entries.length || draft.participants.some(e => !entries.some(active => active.id === e.id))));
   let placed = $derived(new Set(draft?.sections.flat().filter((id): id is string => id !== null) ?? []));
@@ -133,8 +133,8 @@
       draft = result; revision = result.revision; pending = null; dirty = false; saved = true;
       window.dispatchEvent(new CustomEvent('librett-results-updated',{detail:category.id}));
     } catch (cause) {
-      if (cause === 'invalid_draw' || cause === 'invalid_rules' || cause === 'draw_conflict' || cause === 'not_found') {
-        error = cause === 'draw_conflict' ? 'conflict' : cause === 'invalid_draw' ? 'invalid' : 'stale'; pending = null;
+      if (cause === 'competition_closed' || cause === 'invalid_draw' || cause === 'invalid_rules' || cause === 'draw_conflict' || cause === 'not_found') {
+        error = cause === 'competition_closed' ? 'closed' : cause === 'draw_conflict' ? 'conflict' : cause === 'invalid_draw' ? 'invalid' : 'stale'; pending = null;
       } else error = 'uncertain';
     } finally { action = false; busy = pending !== null; }
   }
@@ -172,7 +172,7 @@
     {#if draft}
       <section class="layout-editor">
         <div class="section-heading layout-heading"><h3>{language === 'sr' ? 'Raspored učesnika' : 'Entry arrangement'}</h3><div class="layout-status"><span class="pill">{t.revision}: {revision}</span><span class="pill">{dirty ? t.unsaved : t.saved}</span><span class="pill">{t.missing}: {missing}</span></div></div>
-        {#if draft.format === 'groups_knockout'}<p class="field-hint">{t.groupCount}: {draft.settings.group_count} · {t.qualifiers}: {draft.settings.qualifiers_per_group}</p>{/if}
+        {#if draft.format === 'groups_knockout'}<p class="field-hint"><span class="metadata-line">{t.groupCount}: {draft.settings.group_count}</span><span class="metadata-line">{t.qualifiers}: {draft.settings.qualifiers_per_group}</span></p>{/if}
         <p class="field-hint">{t.hint}</p>
         <div class="draw-sections" class:knockout-layout={category.format === 'knockout'}>
           {#each draft.sections as section, group}
@@ -180,14 +180,14 @@
               <h3>{category.format === 'groups_knockout' ? `${t.group} ${groupName(group)}` : text.bracket}</h3>
               {#each section as id, slot}
                 <label class:pair-start={category.format === 'knockout' && slot % 2 === 0}>
-                  <span>{category.format === 'knockout' ? `${t.pair} ${Math.floor(slot / 2) + 1} · ${t.position} ${slot % 2 + 1}` : `${t.position} ${slot + 1}`}</span>
+                  <span>{#if category.format === 'knockout'}<span class="metadata-line">{t.pair} {Math.floor(slot / 2) + 1}</span><small class="metadata-line muted">{t.position} {slot % 2 + 1}</small>{:else}{t.position} {slot + 1}{/if}</span>
                   <Select playerLabels label={`${category.format === 'groups_knockout' ? `${t.group} ${groupName(group)}` : text.bracket} · ${t.position} ${slot + 1}`} bind:value={() => id ?? '', value => assign(group, slot, value)} disabled={locked || stale} options={category.format === 'knockout' && missing === 0 && section[slot ^ 1] ? byeOptions : emptyOptions} />
                 </label>
               {/each}
             </section>
           {/each}
         </div>
-        <div class="form-actions layout-actions"><button class="primary" disabled={externalLocked || action || loading || (!pending && (stale || !dirty))} onclick={save}><Icon name="check-circle" size={18} />{action ? text.saving : pending ? t.retry : t.save}</button><button class="secondary icon-label" disabled={busy || dirty} onclick={onview}><Icon name="arrow-right" size={18} />{text.draw}</button></div>
+        <div class="form-actions layout-actions"><button class="primary" disabled={(externalLocked && !pending) || action || loading || (!pending && (stale || !dirty))} onclick={save}><Icon name="check-circle" size={18} />{action ? text.saving : pending ? t.retry : t.save}</button><button class="secondary icon-label" disabled={busy || dirty} onclick={onview}><Icon name="arrow-right" size={18} />{text.draw}</button></div>
       </section>
     {/if}
   {/if}

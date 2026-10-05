@@ -9,6 +9,11 @@ impl RegistrationRepository for SqliteTournamentRepository {
         entry_id: Uuid,
         status: EntryStatus,
     ) -> Result<(), ApplicationError> {
+        let category: String = self.connection.query_row("SELECT e.category_id FROM entries e JOIN categories c ON c.id=e.category_id WHERE e.id=?1 AND c.tournament_id=?2", params![entry_id.to_string(),tournament_id.to_string()], |r|r.get(0)).optional().map_err(|_|ApplicationError::Storage)?.ok_or(ApplicationError::NotFound)?;
+        super::completion::ensure_category_open(
+            &self.connection,
+            Uuid::parse_str(&category).map_err(|_| ApplicationError::Storage)?,
+        )?;
         let status = match status {
             EntryStatus::Registered => "registered",
             EntryStatus::Withdrawn => "withdrawn",
@@ -26,6 +31,7 @@ impl RegistrationRepository for SqliteTournamentRepository {
         player_id: Uuid,
         checked_in: bool,
     ) -> Result<(), ApplicationError> {
+        super::completion::ensure_tournament_open(&self.connection, tournament_id)?;
         // INSERT ... SELECT checks membership and writes in one statement.
         let changed = self.connection.execute("INSERT INTO player_attendance (tournament_id, player_id, checked_in) SELECT ?1, ?2, ?3 WHERE EXISTS (SELECT 1 FROM entry_members em JOIN categories c ON c.id = em.category_id WHERE c.tournament_id = ?1 AND em.player_id = ?2) ON CONFLICT (tournament_id, player_id) DO UPDATE SET checked_in = excluded.checked_in, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')", params![tournament_id.to_string(), player_id.to_string(), checked_in]).map_err(|_| ApplicationError::Storage)?;
         if changed == 0 {
@@ -265,7 +271,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(files.len(), 2);
         let backup = files.iter().find(|p| **p != path).unwrap();
-        assert!(backup.to_string_lossy().contains("pre-v16"));
+        assert!(backup.to_string_lossy().contains("pre-v17"));
         let connection = Connection::open(backup).unwrap();
         assert_eq!(
             connection

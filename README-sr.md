@@ -21,7 +21,9 @@ klubovima, organizatorima, igračima i zajednici koja gradi ovaj sport.
 LibreTT je naziv aplikacije i krovni identitet projekta.
 
 **Status: rani razvoj.** Trenutno razvijamo desktop aplikaciju za turnire.
-Žreb, unos rezultata mečeva i nokaut napredovanje su dostupni. Tabele grupa i kvalifikacije su dostupni; konačan plasman i instaleri su još u razvoju. Uputstvo za
+Žreb, rezultati mečeva, tabele grupa, prolaznici i nokaut napredovanje su dostupni.
+Dostupni su i konačan plasman, završavanje kategorija/turnira i ponovno otvaranje.
+Instaleri su još u razvoju. Uputstvo za
 pokretanje nalazi se u [razvojnoj dokumentaciji](docs/sr/DEVELOPMENT.md).
 
 ## Filozofija projekta
@@ -73,6 +75,7 @@ biti deo funkcionalnosti za rezultate, a ne naknadni dodatak.
 - Poseban editor kategorija sa pravilima, učesnicima i automatskim/ručnim rasporedom nosilaca; pregled grupa, round-robin parova i nokaut kostura sa skrolom.
 - Unos rezultata po setovima, predaja i nedolazak, uz zaštićene ispravke, tabele grupa, kvalifikacije i nokaut napredovanje.
 - BYE ili Lucky loser popunjavanje kostura, automatsko rangiranje kandidata i ručni izbor igrača/BYE po mestu, uz potvrdu promena rezultata.
+- Konačan plasman sa zajedničkim trećim mestima, završavanje kategorija/turnira i potvrđeno ponovno otvaranje uz očuvanje istorije.
 - Obavezno godište, opcioni starosni raspon kategorije i potvrda izuzetaka pri prijavi.
 - Kartice turnira sa opcionim naslovnim slikama 16:9, brojem prijavljenih i kategorija i posebnim editorom Dodaj turnir.
 - Zajednička lokalna baza igrača sa profilima, fotografijama i pretragom.

@@ -6,8 +6,8 @@ use librett_domain::{
 };
 use std::collections::{HashMap, HashSet};
 
-struct Snapshot {
-    draw: Option<CategoryDraw>,
+pub(super) struct Snapshot {
+    pub(super) draw: Option<CategoryDraw>,
     rules: CategoryRules,
     revision: u32,
     stale: bool,
@@ -17,7 +17,7 @@ struct Snapshot {
     fillers: HashMap<usize, librett_domain::FillerChoice>,
     filler_revision: u32,
 }
-fn snapshot(
+pub(super) fn snapshot(
     conn: &Connection,
     tournament: Uuid,
     category: Uuid,
@@ -152,7 +152,7 @@ fn snapshot(
         order_revisions,
     })
 }
-fn competition(state: &Snapshot) -> CompetitionState {
+pub(super) fn competition(state: &Snapshot) -> CompetitionState {
     let Some(draw) = &state.draw else {
         return CompetitionState {
             match_version: state.results.values().map(|r| u64::from(r.revision)).sum(),
@@ -353,6 +353,7 @@ impl SqliteTournamentRepository {
                 Err(ApplicationError::MatchConflict)
             };
         }
+        super::completion::ensure_category_open(&tx, request.category_id)?;
         let mut state = snapshot(&tx, request.tournament_id, request.category_id, None)?;
         let current = competition(&state);
         if state.stale
@@ -440,6 +441,7 @@ impl SqliteTournamentRepository {
                 Err(ApplicationError::MatchConflict)
             };
         }
+        super::completion::ensure_category_open(&tx, request.category_id)?;
         let mut state = snapshot(&tx, request.tournament_id, request.category_id, None)?;
         let current = competition(&state);
         let group = current
@@ -563,6 +565,7 @@ impl SqliteTournamentRepository {
             };
         }
         let (group, round, _position) = key_parts(&request.key)?;
+        super::completion::ensure_category_open(&tx, request.category_id)?;
         let mut state = snapshot(
             &tx,
             request.tournament_id,

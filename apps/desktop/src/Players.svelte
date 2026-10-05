@@ -11,6 +11,7 @@
 
   let { active = true, tournament, category, language, busy = $bindable(false), dirty = $bindable(false) }: { active?: boolean; tournament: Tournament; category: Category; language: Language; busy?: boolean; dirty?: boolean } = $props();
   let text = $derived(messages[language]);
+  let readOnly=$derived(category.completed || tournament.completed);
   let players = $state<Player[]>([]);
   let entries = $state<Entry[]>([]);
   let search = $state('');
@@ -94,12 +95,12 @@
     finally { busy = false; }
   }
   function toggle(id: string) {
-    if (busy) return;
+    if (readOnly || busy) return;
     checked = checked.includes(id) ? checked.filter(item => item !== id) : [...checked, id];
   }
   function addPair() { if (checked.length === 2) { pairs = [...pairs, [...checked]]; checked = []; } }
   async function changeStatus(entry: Entry) {
-    if (busy) return;
+    if (readOnly || busy) return;
     const next: EntryStatus = entry.status === 'withdrawn' ? 'registered' : 'withdrawn';
     busy = true; error = null; notice = null;
     try {
@@ -116,7 +117,7 @@
     finally { busy = false; }
   }
   async function changeAttendance(member: Entry['members'][number]) {
-    if (busy) return;
+    if (readOnly || busy) return;
     const checkedIn = !member.checked_in;
     busy = true; error = null; notice = null;
     try {
@@ -146,11 +147,11 @@
           <div class="entry-heading"><h3><PlayerName label={entry.members.map(playerLabel).join(' / ')} /></h3><span class="pill" class:status-active={entry.status !== 'withdrawn'}>{entry.status === 'withdrawn' ? text.withdrawnRegistrations : text.activeRegistrations}</span></div>
           <p class="muted">{entry.members.map(p => p.club).filter(Boolean).join(' / ')}</p>
           {#each entry.members as member (member.id)}
-            <div class="attendance-row"><span><PlayerName player={member} /> · {member.checked_in ? text.arrived : text.notArrived}</span>
-              <button class="secondary icon-label" disabled={busy || !desktopAvailable} aria-label={`${member.checked_in ? text.markAbsent : text.markArrived}: ${playerLabel(member)}`} onclick={() => changeAttendance(member)}><Icon name={member.checked_in ? 'restore' : 'check-circle'} size={18} />{member.checked_in ? text.markAbsent : text.markArrived}</button>
+            <div class="attendance-row"><span><PlayerName player={member} /><small class="metadata-line muted">{member.checked_in ? text.arrived : text.notArrived}</small></span>
+              <button class="secondary icon-label" disabled={readOnly || busy || !desktopAvailable} aria-label={`${member.checked_in ? text.markAbsent : text.markArrived}: ${playerLabel(member)}`} onclick={() => changeAttendance(member)}><Icon name={member.checked_in ? 'restore' : 'check-circle'} size={18} />{member.checked_in ? text.markAbsent : text.markArrived}</button>
             </div>
           {/each}
-          <button class="secondary icon-label" disabled={busy || !desktopAvailable} onclick={() => changeStatus(entry)}><Icon name={entry.status === 'withdrawn' ? 'restore' : 'withdraw'} size={18} />{entry.status === 'withdrawn' ? text.restoreEntry : text.withdrawEntry}</button>
+          <button class="secondary icon-label" disabled={readOnly || busy || !desktopAvailable} onclick={() => changeStatus(entry)}><Icon name={entry.status === 'withdrawn' ? 'restore' : 'withdraw'} size={18} />{entry.status === 'withdrawn' ? text.restoreEntry : text.withdrawEntry}</button>
         </article>
       {/each}
     </section>
@@ -161,17 +162,17 @@
         {#each filtered as player (player.id)}
           {@const registered = entries.some(e => e.members.some(m => m.id === player.id))}
           {@const inPair = queued.includes(player.id)}
-          <label class="picker-row"><input type="checkbox" checked={registered || inPair || checked.includes(player.id)} onchange={() => toggle(player.id)} disabled={busy || !entriesLoaded || registered || inPair || (category.discipline === 'doubles' && checked.length >= 2 && !checked.includes(player.id))} /><span><strong><PlayerName {player} /></strong><small>{player.club}</small></span>{#if registered}<span class="pill">{text.alreadyInCategory}</span>{/if}</label>
+          <label class="picker-row"><input type="checkbox" checked={registered || inPair || checked.includes(player.id)} onchange={() => toggle(player.id)} disabled={readOnly || busy || !entriesLoaded || registered || inPair || (category.discipline === 'doubles' && checked.length >= 2 && !checked.includes(player.id))} /><span><strong><PlayerName {player} /></strong><small>{player.club}</small></span>{#if registered}<span class="pill">{text.alreadyInCategory}</span>{/if}</label>
         {/each}
         {#if !filtered.length}<p class="muted">{text.noPlayers}</p>{/if}
       </div>
       {#if category.discipline === 'doubles'}
-        <button type="button" class="secondary icon-label" onclick={addPair} disabled={busy || checked.length !== 2}><Icon name="users" size={16} />{text.addPair}</button>
+        <button type="button" class="secondary icon-label" onclick={addPair} disabled={readOnly || busy || checked.length !== 2}><Icon name="users" size={16} />{text.addPair}</button>
         {#each pairs as pair, index}
-          <div class="pair-row"><span><PlayerName label={pair.map(id => playerLabel(players.find(p => p.id === id))).join(' / ')} /></span><button type="button" class="icon-button" aria-label={`${text.removePair}: ${index + 1}`} disabled={busy} onclick={() => { pairs = pairs.filter((_, i) => i !== index); }}><Icon name="trash" size={16} /></button></div>
+          <div class="pair-row"><span><PlayerName label={pair.map(id => playerLabel(players.find(p => p.id === id))).join(' / ')} /></span><button type="button" class="icon-button" aria-label={`${text.removePair}: ${index + 1}`} disabled={readOnly || busy} onclick={() => { pairs = pairs.filter((_, i) => i !== index); }}><Icon name="trash" size={16} /></button></div>
         {/each}
       {/if}
-      <button class="primary" disabled={busy || !desktopAvailable || !playersLoaded || !entriesLoaded || !groups.length}><Icon name="check-circle" size={18} />{busy ? text.saving : text.registerSelected} ({groups.length})</button>
+      <button class="primary" disabled={readOnly || busy || !desktopAvailable || !playersLoaded || !entriesLoaded || !groups.length}><Icon name="check-circle" size={18} />{busy ? text.saving : text.registerSelected} ({groups.length})</button>
     </form></section>
   </div>
 </section>

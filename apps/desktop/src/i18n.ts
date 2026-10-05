@@ -1,4 +1,7 @@
 const sr = {
+  competition_closed: 'Takmičenje je završeno. Prvo ponovo otvori turnir i kategoriju u Rezultatima/Pregledu.',
+  completion_conflict: 'Status ili rezultati su promenjeni. Učitaj trenutno stanje pre potvrde.',
+  competition_incomplete: 'Takmičenje nije spremno za završetak. Završi mečeve i razreši plasman.',
   addTournament: 'Dodaj turnir', tournamentPlayers: 'Prijavljenih',
   player_conflict: 'Profil je promenjen u drugom editoru. Učitaj trenutno stanje pre ponovnog čuvanja.',
   cash_conflict: 'Iznos je promenjen. Stanje je osveženo; proveri iznos i ponovi akciju.',
@@ -96,6 +99,9 @@ const sr = {
 };
 type Messages = typeof sr;
 const en: Messages = {
+  competition_closed: 'The competition is closed. Reopen the tournament and category in Overview/Results first.',
+  completion_conflict: 'The status or results changed. Reload before confirming.',
+  competition_incomplete: 'The competition is not ready to close. Complete the matches and resolve standings.',
   addTournament: 'Add tournament', tournamentPlayers: 'Registered players',
   player_conflict: 'This profile changed in another editor. Reload the current state before saving.',
   cash_conflict: 'The amount changed. Balances were refreshed; review the amount and try again.',
@@ -195,7 +201,7 @@ export type Language = 'sr' | 'en';
 export const messages = { sr, en };
 export type MessageKey = keyof Messages;
 export function errorKey(error: unknown): MessageKey {
-  return typeof error === 'string' && ['birth_year_required', 'invalid_result', 'match_conflict', 'result_impact', 'player_conflict', 'cash_conflict', 'invalid_rules', 'draw_conflict', 'invalid_cash', 'player_in_use', 'invalid_profile', 'name_required', 'name_too_long', 'duplicate_category', 'not_found', 'storage', 'invalid_members', 'already_registered'].includes(error)
+  return typeof error === 'string' && ['competition_closed', 'completion_conflict', 'competition_incomplete', 'birth_year_required', 'invalid_result', 'match_conflict', 'result_impact', 'player_conflict', 'cash_conflict', 'invalid_rules', 'draw_conflict', 'invalid_cash', 'player_in_use', 'invalid_profile', 'name_required', 'name_too_long', 'duplicate_category', 'not_found', 'storage', 'invalid_members', 'already_registered'].includes(error)
     ? error as MessageKey : 'error';
 }
 export function savedLanguage(): Language {

@@ -1,0 +1,40 @@
+ALTER TABLE categories ADD COLUMN completed_at TEXT;
+ALTER TABLE categories ADD COLUMN completion_revision INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE categories ADD COLUMN completion_snapshot TEXT;
+ALTER TABLE tournaments ADD COLUMN completed_at TEXT;
+ALTER TABLE tournaments ADD COLUMN completion_revision INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE tournaments ADD COLUMN completion_snapshot TEXT;
+CREATE TABLE completion_history (
+ entity_kind TEXT NOT NULL CHECK(entity_kind IN ('category','tournament')),
+ entity_id TEXT NOT NULL,
+ revision INTEGER NOT NULL CHECK(revision > 0),
+ payload TEXT NOT NULL,
+ recorded_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+ PRIMARY KEY(entity_kind,entity_id,revision)
+);
+CREATE TRIGGER completion_history_no_update BEFORE UPDATE ON completion_history BEGIN SELECT RAISE(ABORT,'Completion history is immutable'); END;
+CREATE TRIGGER completion_history_no_delete BEFORE DELETE ON completion_history BEGIN SELECT RAISE(ABORT,'Completion history is immutable'); END;
+CREATE TRIGGER entries_closed_insert BEFORE INSERT ON entries WHEN EXISTS(SELECT 1 FROM categories c JOIN tournaments t ON t.id=c.tournament_id WHERE c.id=NEW.category_id AND (c.completed_at IS NOT NULL OR t.completed_at IS NOT NULL)) BEGIN SELECT RAISE(ABORT,'competition_closed'); END;
+CREATE TRIGGER entries_closed_update BEFORE UPDATE ON entries WHEN EXISTS(SELECT 1 FROM categories c JOIN tournaments t ON t.id=c.tournament_id WHERE c.id=NEW.category_id AND (c.completed_at IS NOT NULL OR t.completed_at IS NOT NULL)) BEGIN SELECT RAISE(ABORT,'competition_closed'); END;
+CREATE TRIGGER entries_closed_delete BEFORE DELETE ON entries WHEN EXISTS(SELECT 1 FROM categories c JOIN tournaments t ON t.id=c.tournament_id WHERE c.id=OLD.category_id AND (c.completed_at IS NOT NULL OR t.completed_at IS NOT NULL)) BEGIN SELECT RAISE(ABORT,'competition_closed'); END;
+CREATE TRIGGER entry_members_closed_insert BEFORE INSERT ON entry_members WHEN EXISTS(SELECT 1 FROM categories c JOIN tournaments t ON t.id=c.tournament_id WHERE c.id=NEW.category_id AND (c.completed_at IS NOT NULL OR t.completed_at IS NOT NULL)) BEGIN SELECT RAISE(ABORT,'competition_closed'); END;
+CREATE TRIGGER entry_members_closed_update BEFORE UPDATE ON entry_members WHEN EXISTS(SELECT 1 FROM categories c JOIN tournaments t ON t.id=c.tournament_id WHERE c.id=NEW.category_id AND (c.completed_at IS NOT NULL OR t.completed_at IS NOT NULL)) BEGIN SELECT RAISE(ABORT,'competition_closed'); END;
+CREATE TRIGGER entry_members_closed_delete BEFORE DELETE ON entry_members WHEN EXISTS(SELECT 1 FROM categories c JOIN tournaments t ON t.id=c.tournament_id WHERE c.id=OLD.category_id AND (c.completed_at IS NOT NULL OR t.completed_at IS NOT NULL)) BEGIN SELECT RAISE(ABORT,'competition_closed'); END;
+CREATE TRIGGER category_configurations_closed_insert BEFORE INSERT ON category_configurations WHEN EXISTS(SELECT 1 FROM categories c JOIN tournaments t ON t.id=c.tournament_id WHERE c.id=NEW.category_id AND (c.completed_at IS NOT NULL OR t.completed_at IS NOT NULL)) BEGIN SELECT RAISE(ABORT,'competition_closed'); END;
+CREATE TRIGGER category_configurations_closed_update BEFORE UPDATE ON category_configurations WHEN EXISTS(SELECT 1 FROM categories c JOIN tournaments t ON t.id=c.tournament_id WHERE c.id=NEW.category_id AND (c.completed_at IS NOT NULL OR t.completed_at IS NOT NULL)) BEGIN SELECT RAISE(ABORT,'competition_closed'); END;
+CREATE TRIGGER category_configurations_closed_delete BEFORE DELETE ON category_configurations WHEN EXISTS(SELECT 1 FROM categories c JOIN tournaments t ON t.id=c.tournament_id WHERE c.id=OLD.category_id AND (c.completed_at IS NOT NULL OR t.completed_at IS NOT NULL)) BEGIN SELECT RAISE(ABORT,'competition_closed'); END;
+CREATE TRIGGER category_draws_closed_insert BEFORE INSERT ON category_draws WHEN EXISTS(SELECT 1 FROM categories c JOIN tournaments t ON t.id=c.tournament_id WHERE c.id=NEW.category_id AND (c.completed_at IS NOT NULL OR t.completed_at IS NOT NULL)) BEGIN SELECT RAISE(ABORT,'competition_closed'); END;
+CREATE TRIGGER match_results_closed_insert BEFORE INSERT ON match_results WHEN EXISTS(SELECT 1 FROM categories c JOIN tournaments t ON t.id=c.tournament_id WHERE c.id=(SELECT category_id FROM category_draws WHERE id=NEW.draw_id) AND (c.completed_at IS NOT NULL OR t.completed_at IS NOT NULL)) BEGIN SELECT RAISE(ABORT,'competition_closed'); END;
+CREATE TRIGGER group_orders_closed_insert BEFORE INSERT ON group_orders WHEN EXISTS(SELECT 1 FROM categories c JOIN tournaments t ON t.id=c.tournament_id WHERE c.id=(SELECT category_id FROM category_draws WHERE id=NEW.draw_id) AND (c.completed_at IS NOT NULL OR t.completed_at IS NOT NULL)) BEGIN SELECT RAISE(ABORT,'competition_closed'); END;
+CREATE TRIGGER group_orders_closed_update BEFORE UPDATE ON group_orders WHEN EXISTS(SELECT 1 FROM categories c JOIN tournaments t ON t.id=c.tournament_id WHERE c.id=(SELECT category_id FROM category_draws WHERE id=NEW.draw_id) AND (c.completed_at IS NOT NULL OR t.completed_at IS NOT NULL)) BEGIN SELECT RAISE(ABORT,'competition_closed'); END;
+CREATE TRIGGER group_orders_closed_delete BEFORE DELETE ON group_orders WHEN EXISTS(SELECT 1 FROM categories c JOIN tournaments t ON t.id=c.tournament_id WHERE c.id=(SELECT category_id FROM category_draws WHERE id=OLD.draw_id) AND (c.completed_at IS NOT NULL OR t.completed_at IS NOT NULL)) BEGIN SELECT RAISE(ABORT,'competition_closed'); END;
+CREATE TRIGGER knockout_fillers_closed_insert BEFORE INSERT ON knockout_fillers WHEN EXISTS(SELECT 1 FROM categories c JOIN tournaments t ON t.id=c.tournament_id WHERE c.id=(SELECT category_id FROM category_draws WHERE id=NEW.draw_id) AND (c.completed_at IS NOT NULL OR t.completed_at IS NOT NULL)) BEGIN SELECT RAISE(ABORT,'competition_closed'); END;
+CREATE TRIGGER knockout_fillers_closed_update BEFORE UPDATE ON knockout_fillers WHEN EXISTS(SELECT 1 FROM categories c JOIN tournaments t ON t.id=c.tournament_id WHERE c.id=(SELECT category_id FROM category_draws WHERE id=NEW.draw_id) AND (c.completed_at IS NOT NULL OR t.completed_at IS NOT NULL)) BEGIN SELECT RAISE(ABORT,'competition_closed'); END;
+CREATE TRIGGER knockout_fillers_closed_delete BEFORE DELETE ON knockout_fillers WHEN EXISTS(SELECT 1 FROM categories c JOIN tournaments t ON t.id=c.tournament_id WHERE c.id=(SELECT category_id FROM category_draws WHERE id=OLD.draw_id) AND (c.completed_at IS NOT NULL OR t.completed_at IS NOT NULL)) BEGIN SELECT RAISE(ABORT,'competition_closed'); END;
+CREATE TRIGGER categories_closed_edit BEFORE UPDATE OF name,name_key,discipline,format,fee_minor,archived,tournament_id ON categories WHEN EXISTS(SELECT 1 FROM categories c JOIN tournaments t ON t.id=c.tournament_id WHERE c.id=OLD.id AND (c.completed_at IS NOT NULL OR t.completed_at IS NOT NULL)) BEGIN SELECT RAISE(ABORT,'competition_closed'); END;
+CREATE TRIGGER categories_closed_delete BEFORE DELETE ON categories WHEN EXISTS(SELECT 1 FROM categories c JOIN tournaments t ON t.id=c.tournament_id WHERE c.id=OLD.id AND (c.completed_at IS NOT NULL OR t.completed_at IS NOT NULL)) BEGIN SELECT RAISE(ABORT,'competition_closed'); END;
+CREATE TRIGGER categories_closed_insert BEFORE INSERT ON categories WHEN EXISTS(SELECT 1 FROM tournaments WHERE id=NEW.tournament_id AND completed_at IS NOT NULL) BEGIN SELECT RAISE(ABORT,'competition_closed'); END;
+CREATE TRIGGER player_attendance_closed_insert BEFORE INSERT ON player_attendance WHEN EXISTS(SELECT 1 FROM tournaments WHERE id=NEW.tournament_id AND completed_at IS NOT NULL) BEGIN SELECT RAISE(ABORT,'competition_closed'); END;
+CREATE TRIGGER player_attendance_closed_update BEFORE UPDATE ON player_attendance WHEN EXISTS(SELECT 1 FROM tournaments WHERE id=NEW.tournament_id AND completed_at IS NOT NULL) BEGIN SELECT RAISE(ABORT,'competition_closed'); END;
+CREATE TRIGGER player_attendance_closed_delete BEFORE DELETE ON player_attendance WHEN EXISTS(SELECT 1 FROM tournaments WHERE id=OLD.tournament_id AND completed_at IS NOT NULL) BEGIN SELECT RAISE(ABORT,'competition_closed'); END;
+PRAGMA user_version = 17;

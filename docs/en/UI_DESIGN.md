@@ -139,3 +139,13 @@ places actions. Candidate statistics live in an expandable table. A short notice
 explains pending cutoff ties or invalidated manual choices. Result-impact dialogs
 require explicit confirmation and explain preservation of result history.
 Bracket origins display LL C3 before the player name, keeping club typography.
+
+Results uses a flat progress/status strip, concise blocker list, winner/finalist/
+shared-bronze cards and a standings table. Completion lives below the standings;
+reopening uses a separate explicit confirmation. Tournament Overview shows up
+to three category cards per row, completion counts and result links. Closed
+sporting forms disable mutation controls, while navigation and the cash desk
+remain available. Completed badges appear on category and tournament cards.
+
+
+Category, player and scoring metadata use separate labeled rows. Group and knockout progress are shown independently, and each played set has its own score tile.

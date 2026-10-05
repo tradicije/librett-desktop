@@ -41,8 +41,8 @@ The Players tab shows the shared directory. Add/Edit opens dedicated profile
 screens, including photos, and returns to the list after saving. Delete asks for
 confirmation and protects profiles with existing registrations. Tournament
 registration uses that directory. Entries can be withdrawn/restored, and player
-attendance is shared across categories in a tournament. Schema version 16 includes immutable draw drafts and versioned category rules; older on-disk databases receive a consistent
-`pre-v16-<uuid>.sqlite` backup before migration.
+attendance is shared across categories in a tournament. Schema version 17 includes immutable draw drafts and versioned category rules; older on-disk databases receive a consistent
+`pre-v17-<uuid>.sqlite` backup before migration.
 
 Back/Forward follows the active workspace’s screen history. The top Home button
 returns to the pinned mode-selection workspace. The mode chooser has no sidebar. Saves lock navigation until
@@ -243,7 +243,7 @@ to the open draw screen. Reload discards local edits and fetches current entries
 
 A changed registration list requires regeneration. Concurrent revisions reject
 a stale save. An uncertain write keeps its request UUID and blocks navigation
-until a retry confirms the outcome. Existing databases receive a pre-v16 backup.
+until a retry confirms the outcome. Existing databases receive a pre-v17 backup.
 Complete current draws supply the Matches tab. Set results and knockout
 advancement, group standings and qualification are implemented; explicit
 competition lifecycle remains pending.
@@ -440,3 +440,44 @@ are documented in [ADR 0016](../adr/0016-lucky-loser-knockout-filling.md).
 Tournament totals and registration do not have a fixed player cap. A draw
 supports 2–4096 entries in one category (a doubles entry is a pair), independently
 of other categories. This is a code limit, not a performance qualification.
+
+## Final standings and completion
+
+Category Results replaces the former placeholder. A complete, current draw,
+finished/resolved group standings, settled qualifier/LL slots and all required
+knockout results including the final are required. Results explains missing
+steps and shows group/knockout progress before final standings are available.
+
+Placements are derived from confirmed match results. The winner is first and
+the losing finalist second; losing semifinalists share third place without a
+bronze match. Other knockout losers share ranges by elimination round, using
+actual entry counts. Group non-qualifiers share the remaining range; no
+unsupported order across different groups is invented. Doubles are ranked as
+entries/pairs. Participant labels use the saved draw's name/club snapshots.
+
+Complete category opens a confirmation, stores the exact standings snapshot
+and timestamp, and locks registrations, rules/category metadata, draws,
+group orders, LL choices and match writes. Results remains readable. Tournament
+Overview shows category progress/winners; Complete tournament requires at least
+one active category and all active categories already completed. Remove or
+archive unused categories before completing a tournament.
+
+Reopen requires a separate confirmation. A closed tournament must be reopened
+before reopening a category; reopening a tournament does not automatically
+unlock completed categories. Earlier completion snapshots and result revisions
+remain in history. Reclosing captures a new snapshot. Cash collection/refunds,
+global player profiles and tournament name/cover metadata remain available;
+closed-tournament attendance is locked.
+
+`change_completion` uses an immutable request UUID, expected completion
+revision and a deterministic version token covering draw/rules/results/group
+orders/LL choices and parent status. Tournament tokens also cover the active
+category list and each category's version. The transaction recomputes readiness
+before writing; stale dialogs return `completion_conflict`. Replays return their
+stored response, even after subsequent status changes. UI refreshes completion
+flags across workspaces; write guards protect stale editors too.
+
+Schema 17 stores completion columns/snapshots and immutable `completion_history`.
+Sporting tables have SQL triggers as an additional lock, and application guards
+return `competition_closed`. Existing categories/tournaments remain open after
+migration. See [ADR 0017](../adr/0017-final-standings-and-completion.md).

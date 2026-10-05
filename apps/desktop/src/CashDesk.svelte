@@ -126,7 +126,7 @@
     <!-- svelte-ignore a11y_no_noninteractive_tabindex (Keyboard users need a focusable container to scroll the category matrix horizontally.) -->
     <div class="cash-table-scroll" role="region" aria-label={text.cashDesk} tabindex="0">
       <table class="cash-player-table" style:min-width={`${380 + cashCategories.length * 170}px`}>
-        <thead><tr><th scope="col">{text.firstPlayer}</th>{#each cashCategories as category (category.id)}<th scope="col">{category.name}<small>{text[category.discipline]}{category.archived ? ` · ${text.archivedCategory}` : ''}</small></th>{/each}<th scope="col">{text.outstanding}</th><th scope="col">{text.cashActions}</th></tr></thead>
+        <thead><tr><th scope="col">{text.firstPlayer}</th>{#each cashCategories as category (category.id)}<th scope="col">{category.name}<small>{text[category.discipline]}</small>{#if category.archived}<small>{text.archivedCategory}</small>{/if}</th>{/each}<th scope="col">{text.outstanding}</th><th scope="col">{text.cashActions}</th></tr></thead>
         <tbody>
           {#each filtered as row (row.id)}
             <tr class="cash-player-row" class:is-paid={row.remaining === 0}>

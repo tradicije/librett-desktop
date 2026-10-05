@@ -99,7 +99,11 @@ fn main() {
     {
         // Development runs a bare Cargo executable rather than a named .app.
         // Set its display name before AppKit initializes the application UI.
-        let name = context.config().product_name.as_deref().unwrap_or("LibreTT");
+        let name = context
+            .config()
+            .product_name
+            .as_deref()
+            .unwrap_or("LibreTT");
         objc2_foundation::NSProcessInfo::processInfo()
             .setProcessName(&objc2_foundation::NSString::from_str(name));
     }
@@ -122,7 +126,13 @@ fn main() {
     #[cfg(target_os = "linux")]
     {
         glib::set_prgname(Some(&context.config().identifier));
-        glib::set_application_name(context.config().product_name.as_deref().unwrap_or("LibreTT"));
+        glib::set_application_name(
+            context
+                .config()
+                .product_name
+                .as_deref()
+                .unwrap_or("LibreTT"),
+        );
     }
 
     let app = tauri::Builder::default()
@@ -179,6 +189,9 @@ fn main() {
             update_tournament_details,
             get_match_page,
             get_competition_state,
+            get_category_results,
+            get_tournament_progress,
+            change_completion,
             save_group_order,
             save_knockout_fillers,
             save_match_result,
@@ -638,4 +651,39 @@ fn save_knockout_fillers(
         .lock()
         .map_err(|_| ApplicationError::Storage)?
         .save_knockout_fillers(request)
+}
+
+#[tauri::command]
+fn get_category_results(
+    database: tauri::State<Database>,
+    tournament_id: Uuid,
+    category_id: Uuid,
+) -> Result<application::CategoryResults, ApplicationError> {
+    database
+        .0
+        .lock()
+        .map_err(|_| ApplicationError::Storage)?
+        .category_results(tournament_id, category_id)
+}
+#[tauri::command]
+fn get_tournament_progress(
+    database: tauri::State<Database>,
+    tournament_id: Uuid,
+) -> Result<application::TournamentProgress, ApplicationError> {
+    database
+        .0
+        .lock()
+        .map_err(|_| ApplicationError::Storage)?
+        .tournament_progress(tournament_id)
+}
+#[tauri::command]
+fn change_completion(
+    database: tauri::State<Database>,
+    request: application::CompletionRequest,
+) -> Result<application::TournamentProgress, ApplicationError> {
+    database
+        .0
+        .lock()
+        .map_err(|_| ApplicationError::Storage)?
+        .change_completion(request)
 }
