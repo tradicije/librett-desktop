@@ -26,14 +26,33 @@ pub fn final_placements(
     matches: &[ScheduledMatch],
     qualifying: &HashSet<Uuid>,
 ) -> Vec<FinalPlacement> {
-    let Some(final_match) = matches.last() else {
+    final_placements_with_rule(draw, matches, qualifying, crate::ThirdPlaceRule::Shared)
+}
+pub fn final_placements_with_rule(
+    draw: &CategoryDraw,
+    matches: &[ScheduledMatch],
+    qualifying: &HashSet<Uuid>,
+    rule: crate::ThirdPlaceRule,
+) -> Vec<FinalPlacement> {
+    let Some(final_match) = matches
+        .iter()
+        .filter(|m| m.position == 0)
+        .max_by_key(|m| m.round)
+    else {
         return vec![];
     };
     let Some(final_result) = &final_match.result else {
         return vec![];
     };
+    let bronze = matches
+        .iter()
+        .find(|m| m.round == final_match.round && m.position == 1);
+    if bronze.is_some_and(|m| m.result.is_none()) {
+        return vec![];
+    }
     if qualifying.len() < 2
-        || matches.iter().filter(|m| m.result.is_some()).count() != qualifying.len() - 1
+        || matches.iter().filter(|m| m.result.is_some()).count()
+            != qualifying.len() - 1 + usize::from(bronze.is_some())
     {
         return vec![];
     }
@@ -68,6 +87,39 @@ pub fn final_placements(
     }
     let mut next = 3;
     for (round, ids) in rounds.into_iter().rev() {
+        if ids.len() == 2 && round + 1 == final_match.round && rule != crate::ThirdPlaceRule::Shared
+        {
+            let third = if rule == crate::ThirdPlaceRule::BronzeMatch {
+                let Some(result) = bronze.and_then(|m| m.result.as_ref()) else {
+                    return vec![];
+                };
+                result.winner
+            } else {
+                let Some(semi) = matches.iter().find(|m| {
+                    m.round == round
+                        && m.result
+                            .as_ref()
+                            .is_some_and(|r| r.winner == final_result.winner)
+                }) else {
+                    return vec![];
+                };
+                loser(semi.result.as_ref().unwrap())
+            };
+            for place in [3, 4] {
+                let Some(id) = ids.iter().find(|id| (**id == third) == (place == 3)) else {
+                    return vec![];
+                };
+                placements.push(FinalPlacement {
+                    entry_id: *id,
+                    place,
+                    place_end: place,
+                    stage: PlacementStage::Knockout,
+                    round: Some(round),
+                });
+            }
+            next = 5;
+            continue;
+        }
         let end = next + ids.len() - 1;
         for id in ids {
             placements.push(FinalPlacement {

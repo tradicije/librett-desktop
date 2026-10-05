@@ -390,41 +390,58 @@ pub fn filled_qualification_slots(
     choices: &HashMap<usize, FillerChoice>,
 ) -> Vec<QualificationSlot> {
     let mut slots = qualification_slots(draw, groups);
-    if mode == crate::KnockoutFilling::Bye {
-        return slots;
-    }
     let ready = groups.len() == draw.settings.group_count
         && groups.iter().all(|g| g.complete && g.resolved);
     let candidates = lucky_loser_candidates(draw, groups);
-    let mut used = HashSet::new();
-    let mut automatic = Vec::new();
+    let base = slots.clone();
+    let mut used: HashSet<_> = choices
+        .values()
+        .filter_map(|choice| match choice {
+            FillerChoice::Entry(id) => Some(*id),
+            FillerChoice::Bye => None,
+        })
+        .collect();
     for (index, slot) in slots.iter_mut().enumerate() {
-        if !slot.bye {
-            continue;
-        }
-        slot.lucky_loser = true;
-        match choices.get(&index) {
-            Some(FillerChoice::Bye) => {}
-            Some(FillerChoice::Entry(id)) => {
-                slot.bye = false;
-                if let Some(c) = candidates
-                    .iter()
-                    .find(|c| c.standing.entry_id == *id && !used.contains(id))
-                {
-                    slot.entry_id = Some(*id);
-                    slot.group = Some(c.group);
-                    slot.place = Some(c.place);
-                    used.insert(*id);
+        if let Some(choice) = choices.get(&index) {
+            slot.lucky_loser = base[index].bye;
+            slot.entry_id = None;
+            slot.group = None;
+            slot.place = None;
+            slot.bye = matches!(choice, FillerChoice::Bye);
+            if ready {
+                if let FillerChoice::Entry(id) = choice {
+                    for (group, standing) in groups.iter().enumerate() {
+                        if let Some(position) =
+                            standing.rows.iter().position(|row| row.entry_id == *id)
+                        {
+                            slot.entry_id = Some(*id);
+                            slot.group = Some(group);
+                            slot.place = Some(position + 1);
+                            slot.lucky_loser = position + 1 > draw.settings.qualifiers_per_group;
+                            break;
+                        }
+                    }
                 }
-                // A formerly eligible manual choice must be reviewed, never silently replaced.
             }
-            None => {
+        } else if let Some(id) = slot.entry_id {
+            if !used.insert(id) {
+                slot.entry_id = None;
                 slot.bye = false;
-                automatic.push(index);
             }
         }
     }
-    if !ready {
+    if mode == crate::KnockoutFilling::Bye {
+        return slots;
+    }
+    let mut automatic = Vec::new();
+    for (index, slot) in slots.iter_mut().enumerate() {
+        if base[index].bye && !choices.contains_key(&index) {
+            slot.lucky_loser = true;
+            slot.bye = false;
+            automatic.push(index);
+        }
+    }
+    if !ready || mode == crate::KnockoutFilling::LuckyLoserManual {
         return slots;
     }
     let available: Vec<_> = candidates

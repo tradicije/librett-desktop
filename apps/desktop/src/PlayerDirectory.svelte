@@ -1,5 +1,4 @@
 <script lang="ts">
-  import InfoRows from './InfoRows.svelte';
   import PlayerName from './PlayerName.svelte';
   import { playerLabel } from './player-label';
   import { onMount, tick, untrack } from 'svelte';
@@ -58,7 +57,7 @@
   {#each filtered as player (player.id)}
     <article class="player-profile">
       {#if player.photo}<img class="player-photo" src={player.photo} alt={playerLabel(player)} />{:else}<span class="player-avatar" aria-hidden="true">{player.name.split(/\s+/).slice(0, 2).map(part => part[0]).join('').toLocaleUpperCase()}</span>{/if}
-      <div class="player-details"><h3><PlayerName {player} /></h3><InfoRows items={[{label:language==='sr'?'Klub':'Club',value:player.club},{label:text.birthYear,value:player.birth_year},{label:language==='sr'?'Grad':'City',value:player.city},{label:language==='sr'?'Država':'Country',value:player.country},{label:language==='sr'?'E-pošta':'Email',value:player.email},{label:language==='sr'?'Telefon':'Phone',value:player.phone}]} />
+      <div class="player-details"><h3><PlayerName {player} /></h3>{#if player.birth_year !== null}<p class="birth-year"><span>{text.birthYear}</span><strong>{player.birth_year}</strong></p>{/if}
       </div>
       <div class="player-actions">
         <button class="secondary icon-label" disabled={busy} data-open-tab onclick={() => onedit(player.id)} aria-label={`${text.editPlayer}: ${playerLabel(player)}`}><Icon name="edit" size={18} />{text.editPlayer}</button>
@@ -76,3 +75,9 @@
     <button class="primary" disabled={busy} onclick={remove}><Icon name="trash" size={18} />{busy ? text.saving : text.deletePlayer}</button>
   </div>
 </dialog>
+
+<style>
+  .birth-year { display:flex; gap:8px; align-items:baseline; }
+  .birth-year > span { color:var(--text-muted); }
+  .birth-year > strong { color:var(--text-primary); font-weight:500; font-variant-numeric:tabular-nums; }
+</style>

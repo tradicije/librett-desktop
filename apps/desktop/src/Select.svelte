@@ -2,9 +2,9 @@
   import PlayerName from './PlayerName.svelte';
   import { tick } from 'svelte';
   import { IconChevronDown } from '@tabler/icons-svelte';
-  let { value = $bindable(), options, label, placeholder = '', disabled = false, playerLabels = false }: {
+  let { value = $bindable(), options, label, placeholder = '', disabled = false, playerLabels = false, inline = false }: {
     value: T; options: { value: T; label: string }[]; label: string;
-    placeholder?: string; disabled?: boolean; playerLabels?: boolean;
+    placeholder?: string; disabled?: boolean; playerLabels?: boolean; inline?: boolean;
   } = $props();
   const id = $props.id();
   let root: HTMLDivElement;
@@ -25,16 +25,18 @@
     open = true;
     void reveal(Math.max(0, options.findIndex(option => option.value === value)));
   }
-  function choose(index: number) {
+  async function choose(index: number) {
     if (!options[index]) return;
-    value = options[index].value;
     open = false;
-    trigger.focus();
+    value = options[index].value;
+    await tick();
+    trigger?.focus({ preventScroll: true });
   }
   function keydown(event: KeyboardEvent) {
     if (event.key === 'Tab' || event.key === 'Escape') { open = false; return; }
     if (['ArrowDown', 'ArrowUp', 'Home', 'End', 'Enter', ' '].includes(event.key)) {
       event.preventDefault();
+      event.stopPropagation();
       if (!open) { show(); return; }
       if (event.key === 'Enter' || event.key === ' ') choose(active);
       else void reveal(event.key === 'Home' ? 0 : event.key === 'End' ? options.length - 1 : active + (event.key === 'ArrowDown' ? 1 : -1));
@@ -55,16 +57,21 @@
   <button type="button" class="select-trigger" bind:this={trigger} role="combobox"
     aria-label={label} aria-expanded={open} aria-haspopup="listbox" aria-controls={id}
     aria-activedescendant={open ? `${id}-${active}` : undefined}
-    disabled={disabled || !options.length} onkeydown={keydown} onclick={() => open ? open = false : show()}>
+    disabled={disabled || !options.length} onkeydown={keydown} onclick={(event) => { event.stopPropagation(); if(open)open=false;else show(); }}>
     <span>{#if playerLabels}<PlayerName label={selected?.label ?? placeholder} />{:else}{selected?.label ?? placeholder}{/if}</span><IconChevronDown size={18} stroke={1.75} aria-hidden="true" />
   </button>
   {#if open}
-    <div class="select-menu" id={id} role="listbox" aria-label={label} tabindex="-1">
+    <div class="select-menu" class:inline-menu={inline} id={id} role="listbox" aria-label={label} tabindex="-1">
       {#each options as option, index (option.value)}
         <button type="button" id={`${id}-${index}`} role="option" tabindex="-1"
           aria-selected={option.value === value} class:highlighted={index === active}
-          onpointerdown={(event) => event.preventDefault()} onclick={() => choose(index)}>{#if playerLabels}<PlayerName label={option.label} />{:else}{option.label}{/if}</button>
+          onpointerdown={(event) => { event.preventDefault(); event.stopPropagation(); }} onclick={(event) => { event.preventDefault(); event.stopPropagation(); void choose(index); }}>{#if playerLabels}<PlayerName label={option.label} />{:else}{option.label}{/if}</button>
       {/each}
     </div>
   {/if}
 </div>
+
+<style>
+  .select-menu.inline-menu { position:static; min-width:0; width:100%; max-width:100%; max-height:min(260px,max(48px,calc(100dvh - 360px))); margin-top:6px; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; box-shadow:none; }
+  .select-menu.inline-menu button { white-space:normal; overflow-wrap:anywhere; }
+</style>

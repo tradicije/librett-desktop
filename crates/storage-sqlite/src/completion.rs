@@ -109,7 +109,17 @@ fn category_results(
     } else {
         projection.slots.iter().filter(|s| !s.bye).count()
     };
-    let knockout_total = expected_entries.saturating_sub(1);
+    let knockout_total = expected_entries.saturating_sub(1)
+        + usize::from(projection.matches.iter().any(|m| {
+            m.position == 1
+                && projection
+                    .matches
+                    .iter()
+                    .filter(|m| m.position == 0)
+                    .map(|m| m.round)
+                    .max()
+                    == Some(m.round)
+        }));
     let knockout_completed = projection
         .matches
         .iter()
@@ -118,13 +128,21 @@ fn category_results(
     let placements = source
         .draw
         .as_ref()
-        .map(|draw| librett_domain::final_placements(draw, &projection.matches, &qualifying))
+        .map(|draw| {
+            librett_domain::final_placements_with_rule(
+                draw,
+                &projection.matches,
+                &qualifying,
+                source.rules.third_place,
+            )
+        })
         .unwrap_or_default();
     if source.draw.is_some() && (placements.is_empty() || knockout_completed != knockout_total) {
         blockers.push("knockout_matches".into());
     }
     let ready = blockers.is_empty() && !placements.is_empty();
     Ok(CategoryResults {
+        third_place: source.rules.third_place,
         category_id: category,
         category_name: name,
         completion,

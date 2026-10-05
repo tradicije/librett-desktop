@@ -8,6 +8,14 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Changed
 
+- Draw → Edit now keeps the bracket visible and lets organizers select opening-round participants or BYE by clicking a slot. Existing participants swap positions; group knockout overrides support any registered category entry after resolved groups, with guarded result invalidation.
+- Category creation/settings show age, Lucky loser/BYE and third-place switches in one responsive row. Enabling Lucky loser reveals automatic versus manual filling; manual mode leaves places unresolved until chosen. Third place can be shared, decided by a bronze match, or awarded to the semifinalist beaten by the eventual champion.
+- Bronze matches appear in Draw and Matches, affect final standings and must finish before category completion when both semifinal losers exist.
+- Player directory cards now show only the name with club suffix and birth year underneath (muted label, primary text for the year); contact/location details remain in the player profile.
+- The bracket participant picker keeps its dropdown inside the dialog with one bounded, independently scrolling list instead of nested dialog/list scrollbars.
+- Champion cards emphasize the player name with a smaller caption and muted club suffix. Dropdown selection closes the menu and isolates selection events from surrounding controls.
+
+
 - Implemented category Results with winner/finalist/bronze summaries, complete
   standings and progress/blocker explanations. Losing semifinalists share third
   place; other knockout losers share elimination-stage ranges. Group

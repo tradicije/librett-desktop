@@ -481,3 +481,11 @@ Schema 17 stores completion columns/snapshots and immutable `completion_history`
 Sporting tables have SQL triggers as an additional lock, and application guards
 return `competition_closed`. Existing categories/tournaments remain open after
 migration. See [ADR 0017](../adr/0017-final-standings-and-completion.md).
+
+## Bracket editing and third place
+
+Open a category’s **Draw → Edit**, then click a player or BYE in the opening round. Choose from this category’s registrations; selecting an already placed participant swaps positions. Save changes explicitly. Later rounds follow match winners and cannot be assigned independently. Direct knockout edits create a new draw revision, retaining previous results in history. Group knockout edits are available after all groups finish and their standings are resolved; changes that invalidate dependent results require confirmation.
+
+Category creation/settings display three switches in one row (stacked on narrow windows): age group, Lucky loser/BYE, and a single third place. Lucky loser is available for groups → knockout; direct knockout uses BYE. With the third-place switch off, semifinalists share third place. With it on, choose a bronze match or award third to the semifinalist beaten by the eventual champion. The other semifinalist is fourth. A bronze match is shown beside the final round in Matches and below the bracket; completion waits for its result. If there is only one semifinal loser because of BYEs, that participant is third without an extra match.
+
+Enabling the Lucky loser switch reveals automatic or manual filling. Manual mode leaves vacant places awaiting a participant or BYE. Player directory cards show only name/club and birth year; other details are in the profile.

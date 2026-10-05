@@ -47,7 +47,7 @@ export function bracketSlots(draw: CategoryDraw | null, rules: CategoryRules, fo
   const qualified: BracketSlot[] = [];
   for (let place = 1; place <= rules.qualifiers_per_group; place++) for (let group = 0; group < rules.group_count; group++) qualified.push({ kind: 'qualifier', group, place, label: language === 'sr' ? 'Čeka prolaznika' : 'Awaiting qualifier' });
   const size = 2 ** Math.ceil(Math.log2(count));
-  const slots = seedPositions(size).map(rank => qualified[rank - 1] ?? (rules.knockout_filling === 'lucky_loser' ? {kind: 'qualifier', lucky_loser:true, label: language==='sr'?'Čeka Lucky loser':'Awaiting lucky loser'} as BracketSlot : empty('bye')));
+  const slots = seedPositions(size).map(rank => qualified[rank - 1] ?? (rules.knockout_filling !== 'bye' ? {kind: 'qualifier', lucky_loser:true, label: language==='sr'?'Čeka Lucky loser':'Awaiting lucky loser'} as BracketSlot : empty('bye')));
   // Separate qualifiers from the same group in the opening round where possible.
   // This is a structural preview, never a claim about actual qualified players.
   for (let i = 0; i < slots.length; i += 2) {

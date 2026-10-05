@@ -219,3 +219,48 @@ pub fn group_round_matches(
         })
         .collect()
 }
+
+/// Bronze participants are the losers of the two semifinals, never their winners.
+pub fn append_bronze_match(
+    matches: &mut Vec<ScheduledMatch>,
+    rules: &CategoryRules,
+    results: &HashMap<String, StoredMatchResult>,
+) {
+    if rules.third_place != crate::ThirdPlaceRule::BronzeMatch {
+        return;
+    }
+    let Some(final_match) = matches.last() else {
+        return;
+    };
+    let final_round = final_match.round;
+    if final_round == 0 {
+        return;
+    }
+    let semifinals: Vec<_> = matches
+        .iter()
+        .filter(|m| m.round + 1 == final_round)
+        .collect();
+    if semifinals.len() != 2 || semifinals.iter().any(|m| m.bye) {
+        return;
+    }
+    let loser = |m: &ScheduledMatch| {
+        m.result.as_ref().map(|r| {
+            if r.winner == r.first {
+                r.second
+            } else {
+                r.first
+            }
+        })
+    };
+    let first = loser(semifinals[0]);
+    let second = loser(semifinals[1]);
+    matches.push(scheduled(
+        format!("ko:{final_round}:1"),
+        final_round,
+        1,
+        first,
+        second,
+        false,
+        results,
+    ));
+}

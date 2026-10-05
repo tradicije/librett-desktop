@@ -757,6 +757,8 @@ pub struct CompletionState {
 }
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct CategoryResults {
+    #[serde(default)]
+    pub third_place: librett_domain::ThirdPlaceRule,
     pub category_id: Uuid,
     pub category_name: String,
     pub completion: CompletionState,

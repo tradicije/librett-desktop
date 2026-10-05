@@ -56,10 +56,11 @@ export const previewCategoryDraw = (tournamentId: string, categoryId: string, mo
 export const saveCategoryDraw = (tournamentId: string, draw: CategoryDraw, expectedRevision: number) => invoke<CategoryDraw>('save_category_draw', { tournamentId, draw, expectedRevision });
 
 export type RankingCriterion = 'head_to_head' | 'set_ratio' | 'point_ratio';
-export type KnockoutFilling = 'bye' | 'lucky_loser';
-export interface CategoryRules { knockout_filling: KnockoutFilling; age_enabled: boolean; age_min: number | null; age_max: number | null; group_count: number; qualifiers_per_group: number; best_of: number; points_to_win: number; win_by: number; ranking: RankingCriterion[] }
+export type ThirdPlaceRule = 'shared' | 'bronze_match' | 'champion_semifinalist';
+export type KnockoutFilling = 'bye' | 'lucky_loser' | 'lucky_loser_manual';
+export interface CategoryRules { third_place: ThirdPlaceRule; knockout_filling: KnockoutFilling; age_enabled: boolean; age_min: number | null; age_max: number | null; group_count: number; qualifiers_per_group: number; best_of: number; points_to_win: number; win_by: number; ranking: RankingCriterion[] }
 export interface CategoryConfiguration { category_id: string; revision: number; rules: CategoryRules }
-export const defaultCategoryRules = (): CategoryRules => ({ knockout_filling: 'bye', age_enabled: false, age_min: null, age_max: null, group_count: 2, qualifiers_per_group: 2, best_of: 5, points_to_win: 11, win_by: 2, ranking: ['head_to_head', 'set_ratio', 'point_ratio'] });
+export const defaultCategoryRules = (): CategoryRules => ({ third_place: 'shared', knockout_filling: 'bye', age_enabled: false, age_min: null, age_max: null, group_count: 2, qualifiers_per_group: 2, best_of: 5, points_to_win: 11, win_by: 2, ranking: ['head_to_head', 'set_ratio', 'point_ratio'] });
 export const createCategoryWithRules = (tournamentId: string, categoryId: string, name: string, discipline: Discipline, format: CompetitionFormat, feeMinor: number, rules: CategoryRules) => invoke<Tournament>('create_category_with_rules', { tournamentId, categoryId, name, discipline, format, feeMinor, rules });
 export const getCategoryRules = (tournamentId: string, categoryId: string) => invoke<CategoryConfiguration>('get_category_rules', { tournamentId, categoryId });
 export const saveCategoryRules = (tournamentId: string, categoryId: string, rules: CategoryRules, expectedRevision: number, invalidateDownstream = false) => invoke<CategoryConfiguration>('save_category_rules', { tournamentId, categoryId, rules, expectedRevision, invalidateDownstream });
@@ -96,7 +97,7 @@ export const saveKnockoutFillers = (request: SaveFillersRequest) => invoke<Compe
 
 export interface CompletionState { revision: number; completed_at: string | null }
 export interface FinalPlacement { entry_id: string; place: number; place_end: number; stage: 'winner' | 'finalist' | 'knockout' | 'groups'; round: number | null }
-export interface CategoryResults { category_id: string; category_name: string; completion: CompletionState; tournament_completion: CompletionState; version: string; draw: CategoryDraw | null; ready: boolean; blockers: string[]; group_completed: number; group_total: number; knockout_completed: number; knockout_total: number; placements: FinalPlacement[] }
+export interface CategoryResults { third_place: ThirdPlaceRule; category_id: string; category_name: string; completion: CompletionState; tournament_completion: CompletionState; version: string; draw: CategoryDraw | null; ready: boolean; blockers: string[]; group_completed: number; group_total: number; knockout_completed: number; knockout_total: number; placements: FinalPlacement[] }
 export interface TournamentProgress { tournament_id: string; completion: CompletionState; version: string; ready: boolean; categories: CategoryResults[] }
 export interface CompletionRequest { request_id: string; tournament_id: string; category_id: string | null; expected_revision: number; expected_version: string; complete: boolean }
 export const getCategoryResults = (tournamentId: string, categoryId: string) => invoke<CategoryResults>('get_category_results', { tournamentId, categoryId });

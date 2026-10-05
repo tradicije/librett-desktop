@@ -15,10 +15,22 @@ pub enum KnockoutFilling {
     #[default]
     Bye,
     LuckyLoser,
+    LuckyLoserManual,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ThirdPlaceRule {
+    #[default]
+    Shared,
+    BronzeMatch,
+    ChampionSemifinalist,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CategoryRules {
+    #[serde(default)]
+    pub third_place: ThirdPlaceRule,
     #[serde(default)]
     pub age_enabled: bool,
     #[serde(default)]
@@ -37,6 +49,7 @@ pub struct CategoryRules {
 impl Default for CategoryRules {
     fn default() -> Self {
         Self {
+            third_place: ThirdPlaceRule::Shared,
             age_enabled: false,
             knockout_filling: KnockoutFilling::Bye,
             age_min: None,

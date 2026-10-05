@@ -8,7 +8,7 @@ pub use cash::{
 mod players;
 pub use players::{Entry, EntryMember, EntryStatus, Player, PlayerProfile};
 mod category_rules;
-pub use category_rules::{CategoryRules, KnockoutFilling, RankingCriterion};
+pub use category_rules::{CategoryRules, KnockoutFilling, RankingCriterion, ThirdPlaceRule};
 mod standings;
 pub use standings::{
     filled_qualification_slots, group_standings, lucky_loser_candidates, qualification_slots,
@@ -16,11 +16,11 @@ pub use standings::{
 };
 mod matches;
 pub use matches::{
-    group_round_matches, knockout_from_slots, knockout_matches, MatchOutcome, MatchResult,
-    ScheduledMatch, SetScore, StoredMatchResult,
+    append_bronze_match, group_round_matches, knockout_from_slots, knockout_matches, MatchOutcome,
+    MatchResult, ScheduledMatch, SetScore, StoredMatchResult,
 };
 mod results;
-pub use results::{final_placements, FinalPlacement, PlacementStage};
+pub use results::{final_placements, final_placements_with_rule, FinalPlacement, PlacementStage};
 mod draw;
 pub use draw::{create_draw, validate_draw, CategoryDraw, DrawMode, DrawSettings};
 

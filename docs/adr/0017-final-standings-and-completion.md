@@ -6,11 +6,14 @@ Status: accepted
 
 Final standings derive from the same knockout projection used by Draw/Matches.
 A valid/current draw, completed and resolved groups, settled qualifier/LL slots
-and N−1 valid knockout results for N actual entrants are required, with a played,
+and N−1 valid knockout results for N actual entrants, plus a configured bronze
+match when two semifinal losers exist, are required, with a played,
 retired or walkover final. Participant coverage and uniqueness are checked.
 
 The winner is first, the losing finalist second, and losing semifinalists share
-third place. No unplayed bronze match is invented. Other elimination rounds
+third place by default. Category rules can instead require a bronze match or
+award third place to the semifinalist beaten by the eventual champion; the
+other semifinalist is fourth. No unplayed result is invented. Other elimination rounds
 share ranges based on actual loser counts. Group non-qualifiers share the
 remaining range; no cross-group ranking policy is invented for final standings.
 Doubles are entries/pairs. Names/clubs come from the immutable draw snapshot.
@@ -51,5 +54,5 @@ views; mutation controls become read-only without blocking navigation.
 
 ## Deferred
 
-Optional bronze/consolation matches, exact ordering within shared ranges, export,
+Consolation matches, exact ordering within shared ranges, export,
 printing, table scheduling and release installers remain separate work.

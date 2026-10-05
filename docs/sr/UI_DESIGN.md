@@ -127,3 +127,15 @@ Kartice kategorija i turnira imaju oznaku Završeno.
 
 
 Kratki sažeci kategorija i pravila ostaju u jednom redu i prelamaju se na uskim prozorima. Detalji igrača i napredak grupa/nokauta koriste zasebne označene redove gde to olakšava čitanje. Svaki odigrani set ima zasebnu oznaku rezultata.
+
+## Uređivanje kostura i treće mesto
+
+U kategoriji otvori **Žreb → Uredi**, pa klikni na igrača ili BYE u prvoj rundi. Biraj između prijava te kategorije; izbor već raspoređenog učesnika menja njihova mesta. Izmene se čuvaju posebno. Naredne runde prate pobednike mečeva i ne menjaju se nezavisno. Izmene direktnog nokauta prave novu verziju žreba i zadržavaju prethodne rezultate u istoriji. Nokaut posle grupa uređuje se kada su sve grupe završene i plasman razrešen; poništavanje zavisnih rezultata traži potvrdu.
+
+Pravljenje i podešavanja kategorije imaju tri prekidača u jednom redu (na uskim prozorima jedan ispod drugog): starosna grupa, Lucky loser/BYE i jedno treće mesto. Lucky loser je dostupan za grupe → nokaut, dok direktni nokaut koristi BYE. Isključen prekidač trećeg mesta znači zajedničko treće mesto. Uključen otvara izbor meča za bronzu ili dodelu trećeg mesta polufinalisti koji je izgubio od kasnijeg pobednika; drugi poraženi polufinalista je četvrti. Meč za bronzu je u završnoj rundi Mečeva i ispod kostura; kategorija čeka njegov rezultat. Ako zbog BYE postoji samo jedan poraženi polufinalista, on je treći bez dodatnog meča.
+
+Uključen Lucky loser prekidač otvara automatsko ili ručno popunjavanje. U ručnom režimu prazna mesta čekaju izbor učesnika ili BYE. Kartice baze igrača prikazuju samo ime/klub i godište; ostali podaci su u profilu.
+
+Izbor učesnika u kosturu koristi dropdown unutar toka dijaloga. Visina liste prilagođava se prozoru; lista se skroluje bez širenja apsolutno postavljenog menija izvan dijaloga.
+
+Oznaka godišta je siva, a sama godina koristi glavnu boju teksta teme.

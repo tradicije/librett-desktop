@@ -8,7 +8,7 @@ use std::collections::{HashMap, HashSet};
 
 pub(super) struct Snapshot {
     pub(super) draw: Option<CategoryDraw>,
-    rules: CategoryRules,
+    pub(super) rules: CategoryRules,
     revision: u32,
     stale: bool,
     results: HashMap<String, StoredMatchResult>,
@@ -170,6 +170,8 @@ pub(super) fn competition(state: &Snapshot) -> CompetitionState {
         };
     };
     if draw.format == CompetitionFormat::Knockout {
+        let mut matches = knockout_matches(draw, &state.results);
+        librett_domain::append_bronze_match(&mut matches, &state.rules, &state.results);
         return CompetitionState {
             match_version: state.results.values().map(|r| u64::from(r.revision)).sum(),
             filler_revision: state.filler_revision,
@@ -180,7 +182,7 @@ pub(super) fn competition(state: &Snapshot) -> CompetitionState {
             stale: state.stale,
             groups: vec![],
             slots: vec![],
-            matches: knockout_matches(draw, &state.results),
+            matches,
             order_revisions: vec![],
             result_versions: vec![],
         };
@@ -192,13 +194,14 @@ pub(super) fn competition(state: &Snapshot) -> CompetitionState {
         state.rules.knockout_filling,
         &state.fillers,
     );
-    let matches = librett_domain::knockout_from_slots(
+    let mut matches = librett_domain::knockout_from_slots(
         slots
             .iter()
             .map(|s| (s.entry_id, s.bye || s.entry_id.is_some()))
             .collect(),
         &state.results,
     );
+    librett_domain::append_bronze_match(&mut matches, &state.rules, &state.results);
     let order_revisions = (0..groups.len())
         .map(|g| state.order_revisions.get(&g).copied().unwrap_or(0))
         .collect();
@@ -366,22 +369,15 @@ impl SqliteTournamentRepository {
         {
             return Err(ApplicationError::MatchConflict);
         }
-        if state.rules.knockout_filling != librett_domain::KnockoutFilling::LuckyLoser
-            || current.groups.is_empty()
-            || current.groups.iter().any(|g| !g.complete || !g.resolved)
-        {
+        if current.groups.is_empty() || current.groups.iter().any(|g| !g.complete || !g.resolved) {
             return Err(ApplicationError::InvalidResult);
         }
         let draw = state.draw.as_ref().ok_or(ApplicationError::InvalidResult)?;
         let base = librett_domain::qualification_slots(draw, &current.groups);
-        let eligible: HashSet<_> = current
-            .candidates
-            .iter()
-            .map(|c| c.standing.entry_id)
-            .collect();
+        let eligible: HashSet<_> = draw.participants.iter().map(|entry| entry.id).collect();
         let mut used = HashSet::new();
         for (index, choice) in &request.fillers {
-            if !base.get(*index).is_some_and(|s| s.bye) {
+            if *index >= base.len() {
                 return Err(ApplicationError::InvalidResult);
             }
             if let librett_domain::FillerChoice::Entry(id) = choice {
