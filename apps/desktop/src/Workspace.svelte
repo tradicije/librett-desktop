@@ -26,6 +26,9 @@
     onopen: (route: Route) => void; wantsNewTab: () => boolean;
   } = $props();
   const uid = $props.id();
+  const platformName = /Win/.test(navigator.platform) ? 'Windows'
+    : /Mac/.test(navigator.platform) ? 'MacOS'
+    : /Linux/.test(navigator.platform) ? 'Linux' : null;
   let text = $derived(messages[language]);
   const tournamentTabs: TournamentTab[] = ['settings', 'overview', 'categories', 'cash'];
   let history = $state<Route[]>([untrack(() => initialRoute)]);
@@ -166,7 +169,13 @@
       <button data-open-tab class="nav-item" class:active={!inPlayers} aria-current={!inPlayers ? 'page' : undefined} disabled={navigationLocked} aria-label={text.tournaments} title={text.tournaments} onclick={openTournaments}><Icon name="trophy" />{#if !sidebarCollapsed}<span>{text.tournaments}</span>{/if}</button>
       <button data-open-tab class="nav-item" class:active={inPlayers} aria-current={inPlayers ? 'page' : undefined} disabled={navigationLocked} aria-label={text.playerTab} title={text.playerTab} onclick={() => navigate({ view: 'players' })}><Icon name="users" />{#if !sidebarCollapsed}<span>{text.playerTab}</span>{/if}</button>
     </nav>
-    <div class="sidebar-bottom"><span class="icon-label" title={text.local}><Icon name="desktop" size={16} />{#if !sidebarCollapsed}{text.local}{/if}</span>{#if !sidebarCollapsed}<small>© 2026 Aleksa Dimitrijević</small>{/if}</div>
+    <div class="sidebar-bottom">
+      <span class="icon-label" title={text.local}><Icon name="desktop" size={16} />{#if !sidebarCollapsed}{text.local}{/if}</span>
+      {#if !sidebarCollapsed}
+        {#if platformName}<small>LibreTT for {platformName}</small>{/if}
+        <small>© 2026 Aleksa Dimitrijević</small>
+      {/if}
+    </div>
   </aside>{/if}
   <main>
     <header class="app-toolbar">

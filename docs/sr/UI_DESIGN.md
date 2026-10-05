@@ -59,6 +59,10 @@ brenda prema temi kao dugme za proširenje i navigacija samo ikonicama, sa
 pristupačnim nazivima/opisima. Slike brenda ne vode na Home.
 Zajednički izbor širine pamti se kroz radne tabove i restart aplikacije.
 
+U dnu proširenog menija, ispod oznake Lokalni rad i iznad copyright-a, prikazuje
+se LibreTT for Windows, LibreTT for MacOS ili LibreTT for Linux prema platformi.
+Tekst je isti na oba jezika interfejsa i sakriven je u suženom meniju.
+
 
 Kartice kategorija koriste iste razmake, veličinu ikonice, tipografiju i prilagodljivi
 raspored akcija kao kartice igrača. Izmeni/Obriši imaju iste sekundarne dugmiće

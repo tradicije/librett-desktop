@@ -79,6 +79,11 @@ brand icon as the expansion button and icon-only navigation with accessible
 names/tooltips. Brand images do not navigate to Home. The shared
 layout preference persists across workspaces and restarts.
 
+The expanded sidebar footer shows LibreTT for Windows, LibreTT for MacOS or
+LibreTT for Linux according to the platform, between the local-work label and
+the copyright. This label keeps the same wording in both interface languages
+and is hidden in compact mode.
+
 
 Category rows share player profile card spacing, avatar size, typography and
 responsive action layouts. Edit/Delete use the same icon-labeled secondary buttons.

@@ -6,6 +6,10 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Changed
 
+- The expanded sidebar footer shows LibreTT for Windows, LibreTT for MacOS or
+  LibreTT for Linux according to the platform, below the local-work label and
+  above the copyright. The platform label is hidden in compact mode.
+
 - Added a theme-colored 1px Linux window outline, hidden when maximized/fullscreen.
   Window controls use smaller Tabler icons, compact rounded buttons and consistent
   hover, pressed and keyboard-focus states.
