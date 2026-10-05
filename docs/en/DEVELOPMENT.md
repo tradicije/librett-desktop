@@ -341,3 +341,25 @@ Dependent knockout results are cleared only after confirmation.
 Schema 15 stores guarded manual group orders. See
 [ADR 0015](../adr/0015-group-standings-and-qualification.md) for ranking
 statistics, non-played endings, qualification, correction and refresh behavior.
+
+## Category age groups
+
+Player create/edit forms require a birth year; the guarded desktop save command
+returns `birth_year_required` for missing years. Existing profiles without a year
+remain readable and can be completed when edited. Legacy internal Rust helpers
+retain their compatibility behavior; they are not exposed as desktop commands.
+
+`CategoryRules` includes `age_enabled`, `age_min` and `age_max`. The switch is
+off by default (all ages); enabled ranges require inclusive integer bounds
+0–130 with minimum ≤ maximum. Disabled ranges have null bounds. The shared rules
+form exposes the switch and From/To fields in category creation, editing and
+settings. JSON defaults keep old rules, draws and result snapshots compatible;
+there is no schema migration or backfill of invented birth years.
+
+Registration refreshes category rules and player profiles before submitting the
+selected singles/pairs. Age uses the local current calendar year minus birth year,
+not a birthday or tournament date. `AgeWarningDialog` lists out-of-range and
+unknown-year players and allows a confirmed exception. Cancel preserves the
+selection. Restoring withdrawn registrations follows the same warning flow.
+The backend intentionally does not reject entries based on age, and changing a
+category age range does not remove existing entries.

@@ -59,7 +59,7 @@
       pending = null; baseline = snapshot(); dirty = false; busy = false; await tick(); onsaved();
     } catch (cause) {
       error = errorKey(cause);
-      if (['player_conflict', 'not_found', 'name_required', 'name_too_long', 'invalid_profile'].includes(String(cause))) pending = null;
+      if (['birth_year_required', 'player_conflict', 'not_found', 'name_required', 'name_too_long', 'invalid_profile'].includes(String(cause))) pending = null;
     } finally { action = false; busy = pending !== null; }
   }
 </script>
@@ -75,7 +75,7 @@
       <fieldset class="form-group"><legend>{text.profileDetails}</legend><div class="form-fields">
       <label>{text.playerName}<input bind:value={name} required maxlength="120" disabled={busy} /></label>
       <label>{text.club}<input bind:value={club} maxlength="120" disabled={busy} /></label>
-      <label>{text.birthYear}<input type="number" bind:value={birthYear} min="1900" max={currentYear} step="1" disabled={busy} /></label>
+      <label>{text.birthYear}<input type="number" bind:value={birthYear} min="1900" max={currentYear} step="1" required disabled={busy} /></label>
       <label>{text.city}<input bind:value={city} maxlength="2000" disabled={busy} /></label>
       <label>{text.country}<input bind:value={country} maxlength="2000" disabled={busy} /></label>
       </div></fieldset>

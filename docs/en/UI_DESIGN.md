@@ -124,3 +124,7 @@ lines provide structure; player club codes appear only beside names.
 
 The Draw toolbar uses a short rules summary, icon-only Refresh and Edit.
 A brief pending-qualifier notice replaces duplicate headings and explanatory copy.
+
+Category age restrictions use an off-by-default switch and inline From/To
+fields. Out-of-range registration uses one confirmation dialog for the selected
+players, with their club labels, ages and an explicit Register as exception action.

@@ -11,6 +11,12 @@ pub enum RankingCriterion {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CategoryRules {
+    #[serde(default)]
+    pub age_enabled: bool,
+    #[serde(default)]
+    pub age_min: Option<u8>,
+    #[serde(default)]
+    pub age_max: Option<u8>,
     pub group_count: usize,
     pub qualifiers_per_group: usize,
     pub best_of: u8,
@@ -21,6 +27,9 @@ pub struct CategoryRules {
 impl Default for CategoryRules {
     fn default() -> Self {
         Self {
+            age_enabled: false,
+            age_min: None,
+            age_max: None,
             group_count: 2,
             qualifiers_per_group: 2,
             best_of: 5,
@@ -36,7 +45,10 @@ impl Default for CategoryRules {
 }
 impl CategoryRules {
     pub fn validate(&self, format: CompetitionFormat) -> Result<(), DomainError> {
-        if self.best_of == 0
+        if (self.age_enabled
+            && !matches!((self.age_min, self.age_max), (Some(min), Some(max)) if min <= max && max <= 130))
+            || (!self.age_enabled && (self.age_min.is_some() || self.age_max.is_some()))
+            || self.best_of == 0
             || self.best_of > 9
             || self.best_of % 2 == 0
             || !(1..=99).contains(&self.points_to_win)

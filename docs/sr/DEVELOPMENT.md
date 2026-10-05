@@ -338,3 +338,20 @@ poništavanja tih rezultata. Nokaut kola nose nazive faza, umesto brojeva.
 Šema 15 čuva ručni plasman grupa. Obračun statistike predaje/nedolaska,
 zaštita upisa i osvežavanje prikaza opisani su u
 [ADR 0015](../adr/0015-group-standings-and-qualification.md).
+
+## Starosne grupe kategorija
+
+Godište je obavezno u formi igrača i pri čuvanju kroz desktop komandu. Stari
+profili bez godišta ostaju čitljivi; godište se dopunjava pri uređivanju.
+Pravila kategorije čuvaju `age_enabled`, `age_min` i `age_max`. Prekidač je
+podrazumevano isključen (sva godišta). Uključivanjem se otvaraju obavezna polja
+Od/Do: cele godine 0–130, sa uključenim granicama i Od ≤ Do. Isključen prekidač
+čuva prazne granice. Pravila su dostupna pri dodavanju, izmeni i u podešavanjima.
+Stara JSON pravila dobijaju podrazumevane vrednosti bez migracije baze.
+
+Pre prijave osvežavaju se pravila i profili. Starost se računa kao tekuća lokalna
+kalendarska godina minus godište, bez datuma rođendana ili datuma turnira.
+Upozorenje navodi igrače van raspona i one bez poznatog godišta, uključujući oba
+člana dubla. Organizator može da potvrdi izuzetak; otkazivanje zadržava izbor.
+Ista provera važi za vraćanje povučene prijave. Backend ne zabranjuje izuzetke,
+a promena raspona ne briše postojeće prijave.

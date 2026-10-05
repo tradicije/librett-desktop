@@ -5,6 +5,7 @@ use uuid::Uuid;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ApplicationError {
+    BirthYearRequired,
     InvalidResult,
     MatchConflict,
     ResultImpact,
@@ -576,6 +577,9 @@ pub fn save_player_checked(
     let mut player = librett_domain::Player::new(name, club)?;
     player.id = player_id;
     player.profile = profile.validated()?;
+    if player.profile.birth_year.is_none() {
+        return Err(ApplicationError::BirthYearRequired);
+    }
     if expected
         .as_ref()
         .is_some_and(|previous| previous.id != player_id)

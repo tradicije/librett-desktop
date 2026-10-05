@@ -1,10 +1,12 @@
 <script lang="ts">
+  import AgeWarningDialog from './AgeWarningDialog.svelte';
+  let ageDialog:AgeWarningDialog;
   import PlayerName from './PlayerName.svelte';
   import { playerLabel } from './player-label';
   import Select from './Select.svelte';
   import { onMount, untrack } from 'svelte';
   import Icon from './Icon.svelte';
-  import { desktopAvailable, listEntries, listPlayers, registerEntries, setEntryStatus, setPlayerAttendance, type EntryStatus, type Entry, type Player, type Tournament, type Category } from './api';
+  import { desktopAvailable, getCategoryRules, listEntries, listPlayers, registerEntries, setEntryStatus, setPlayerAttendance, type EntryStatus, type Entry, type Player, type Tournament, type Category } from './api';
   import { errorKey, messages, type Language, type MessageKey } from './i18n';
 
   let { active = true, tournament, category, language, busy = $bindable(false), dirty = $bindable(false) }: { active?: boolean; tournament: Tournament; category: Category; language: Language; busy?: boolean; dirty?: boolean } = $props();
@@ -72,7 +74,13 @@
     event.preventDefault(); if (!category) return;
     busy = true; error = null; notice = null;
     try {
-      const saved = await registerEntries(tournament.id, category.id, groups);
+      const selectedGroups=groups.map(group=>[...group]);
+      const [configuration,directory]=await Promise.all([getCategoryRules(tournament.id,category.id),listPlayers()]);
+      players=directory;
+      const selectedIds=new Set(selectedGroups.flat());
+      const selectedPlayers=directory.filter(player=>selectedIds.has(player.id));
+      if(!await ageDialog.confirm(selectedPlayers,configuration.rules))return;
+      const saved = await registerEntries(tournament.id, category.id, selectedGroups);
       entries = [...entries, ...saved]; checked = []; pairs = []; notice = 'entrySaved';
     } catch (cause) {
       error = errorKey(cause);
@@ -95,6 +103,12 @@
     const next: EntryStatus = entry.status === 'withdrawn' ? 'registered' : 'withdrawn';
     busy = true; error = null; notice = null;
     try {
+      if(next==='registered'){
+        const [configuration,directory]=await Promise.all([getCategoryRules(tournament.id,category.id),listPlayers()]);
+        players=directory;
+        const ids=new Set(entry.members.map(member=>member.id));
+        if(!await ageDialog.confirm(directory.filter(player=>ids.has(player.id)),configuration.rules))return;
+      }
       await setEntryStatus(tournament.id, entry.id, next);
       entries = entries.map(item => item.id === entry.id ? { ...item, status: next } : item);
       notice = 'registrationUpdated';
@@ -114,6 +128,7 @@
   }
 
 </script>
+<AgeWarningDialog {language} bind:this={ageDialog} />
 
 <section class="players-section">
   {#if error}<p class="error" role="alert">{text[error]}<button disabled={loading || busy} onclick={() => { reload += 1; void loadPlayers(); }}>{text.retry}</button></p>{/if}

@@ -102,3 +102,7 @@ Klub se prikazuje samo kao oznaka pored imena, bez ponovljenog podnaslova.
 
 Žreb ima kratak sažetak pravila, ikonicu za osvežavanje i dugme Uredi.
 Kratka poruka o prolaznicima zamenjuje duplirane naslove i duga objašnjenja.
+
+Starosna grupa koristi podrazumevano isključen prekidač i polja Od/Do u istoj
+formi. Prijava van raspona ima jedan dijalog sa imenima, oznakama klubova,
+starostima i eksplicitnim dugmetom Prijavi kao izuzetak.

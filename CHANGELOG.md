@@ -6,6 +6,15 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Changed
 
+- Player create/edit screens and guarded desktop profile saves require a birth
+  year. Existing profiles without a year remain readable.
+- Categories can enable an inclusive minimum/maximum age range (0–130) through
+  a switch, disabled by default. Age rules are saved with versioned category
+  rules and appear in create/edit and category settings.
+- Registration and restoration warn about out-of-range players or unknown birth
+  years in restricted categories. Organizers can confirm exceptions; both doubles
+  partners are checked. Age is the current calendar year minus birth year.
+
 - Windows now shares the 48px workspace title bar with tabs, Info and
   application-drawn minimize/maximize/close controls styled for Windows.
   Native actions preserve guarded close, title-bar dragging, double-click

@@ -76,6 +76,7 @@ history must be part of the results workflow, rather than an afterthought.
   competition formats.
 - Dedicated category editors with competition rules, participants and seeded automatic/manual layouts; visual groups, round-robin pairings and a scrollable knockout bracket.
 - Match results by set, retirement and walkover, with guarded corrections, group standings and knockout qualification/progression.
+- Required birth years, optional category age ranges and confirmed registration exceptions.
 - Tournament cards with optional 16:9 covers, registered player/category counts and a dedicated Add Tournament editor.
 - A shared local player directory with profiles, photos, and search.
 - Category workspaces with checkbox batch singles registration and explicit doubles

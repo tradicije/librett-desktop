@@ -10,7 +10,8 @@ const sr = {
   invalid_result: 'Proveri poene, redosled setova i pobednika. Set mora da se završi čim su ispunjeni uslovi, a meč nakon potrebnog broja osvojenih setova.',
   match_conflict: 'Meč, žreb ili pravila su promenjeni. Učitaj najnovije podatke pre novog unosa.',
   result_impact: 'Ispravka utiče na naredne rezultate i zahteva potvrdu.',
-  invalid_rules: 'Proveri grupe, prolaznike, neparan broj setova i tri različita kriterijuma rangiranja.',
+  birth_year_required: 'Godište je obavezno.',
+  invalid_rules: 'Proveri starosni raspon (0–130), grupe, prolaznike, neparan broj setova i tri različita kriterijuma rangiranja.',
   draw_conflict: 'Podaci su promenjeni u drugom radnom prostoru. Učitaj trenutno stanje.',
 
   collapseSidebar: 'Suzi levi meni', expandSidebar: 'Proširi levi meni',
@@ -60,7 +61,7 @@ const sr = {
   goBack: 'Nazad', goForward: 'Napred', goHome: 'Home', playerTab: 'Igrači',
   playerDirectoryIntro: 'Upravljaj zajedničkom bazom igrača za sva takmičenja.',
   registrationDirectoryHint: 'Izaberi igrače iz baze. Nove profile dodaj u tabu Igrači.',
-  birthYear: 'Godište (opciono)', city: 'Grad (opciono)', country: 'Država (opciono)',
+  birthYear: 'Godište', city: 'Grad (opciono)', country: 'Država (opciono)',
   email: 'E-pošta (opciono)', phone: 'Telefon (opciono)', notes: 'Beleške (opciono)',
   photo: 'Fotografija (opciono)', photoHint: 'JPEG, PNG ili WebP, do 10 MB. Izaberi kvadratni kadar pomeranjem i zumiranjem. Fotografija se čuva lokalno u profilu.',
   removePhoto: 'Ukloni fotografiju', editPlayer: 'Izmeni profil', savePlayer: 'Sačuvaj igrača', cancelEdit: 'Otkaži izmenu',
@@ -106,7 +107,8 @@ const en: Messages = {
   invalid_result: 'Check points, set order and winner. Sets must end as soon as their winning conditions are met; matches end once a player wins the required sets.',
   match_conflict: 'The match, draw or rules changed. Reload the latest data before entering a result.',
   result_impact: 'The correction affects later results and needs confirmation.',
-  invalid_rules: 'Check groups, qualifiers, odd best-of sets and three distinct ranking criteria.',
+  birth_year_required: 'Birth year is required.',
+  invalid_rules: 'Check the age range (0–130), groups, qualifiers, odd best-of sets and three distinct ranking criteria.',
   draw_conflict: 'Data changed in another workspace. Reload the current state.',
 
   collapseSidebar: 'Collapse sidebar', expandSidebar: 'Expand sidebar',
@@ -156,7 +158,7 @@ const en: Messages = {
   goBack: 'Back', goForward: 'Forward', goHome: 'Home', playerTab: 'Players',
   playerDirectoryIntro: 'Manage the shared player directory for all competitions.',
   registrationDirectoryHint: 'Select players from the directory. Add new profiles in the Players tab.',
-  birthYear: 'Birth year (optional)', city: 'City (optional)', country: 'Country (optional)',
+  birthYear: 'Birth year', city: 'City (optional)', country: 'Country (optional)',
   email: 'Email (optional)', phone: 'Phone (optional)', notes: 'Notes (optional)',
   photo: 'Photo (optional)', photoHint: 'JPEG, PNG or WebP, up to 10 MB. Move and zoom to choose a square crop. Photos are stored locally in the profile.',
   removePhoto: 'Remove photo', editPlayer: 'Edit profile', savePlayer: 'Save player', cancelEdit: 'Cancel editing',
@@ -193,7 +195,7 @@ export type Language = 'sr' | 'en';
 export const messages = { sr, en };
 export type MessageKey = keyof Messages;
 export function errorKey(error: unknown): MessageKey {
-  return typeof error === 'string' && ['invalid_result', 'match_conflict', 'result_impact', 'player_conflict', 'cash_conflict', 'invalid_rules', 'draw_conflict', 'invalid_cash', 'player_in_use', 'invalid_profile', 'name_required', 'name_too_long', 'duplicate_category', 'not_found', 'storage', 'invalid_members', 'already_registered'].includes(error)
+  return typeof error === 'string' && ['birth_year_required', 'invalid_result', 'match_conflict', 'result_impact', 'player_conflict', 'cash_conflict', 'invalid_rules', 'draw_conflict', 'invalid_cash', 'player_in_use', 'invalid_profile', 'name_required', 'name_too_long', 'duplicate_category', 'not_found', 'storage', 'invalid_members', 'already_registered'].includes(error)
     ? error as MessageKey : 'error';
 }
 export function savedLanguage(): Language {
