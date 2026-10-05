@@ -10,6 +10,7 @@
     "check": "npm run check --workspace @librett/desktop",
     "build": "npm run build --workspace @librett/desktop",
     "desktop:install-icon": "node scripts/install-linux-dev-icon.mjs",
+    "desktop:generate-icons": "node scripts/generate-desktop-icons.mjs",
     "desktop": "npm run tauri --workspace @librett/desktop --",
     "test:core": "cargo test --workspace --exclude librett-desktop"
   }

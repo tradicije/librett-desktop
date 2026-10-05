@@ -57,7 +57,19 @@ i rade offline.
 
 Izvor desktop ikonice je `assets/img/app-icon.png`. Tauri PNG, ICO i ICNS
 varijante su u `apps/desktop/src-tauri/icons/`: to su aplikacioni resursi,
-a ne razvojni keš. Za promenu ikonice prozora restartuj desktop aplikaciju.
+a ne razvojni keš. Posle izmene izvorne slike, iz korena projekta pokreni:
+
+```sh
+npm run desktop:generate-icons
+```
+
+Komanda koristi instalirani Tauri CLI i kopira samo desktop PNG/ICO/ICNS
+resurse u projekat. Zamena izvornog PNG-a sama ne ažurira ove fajlove.
+macOS u razvojnom režimu koristi `icons/icon.icns` za ikonicu u Dock-u;
+ikonice prozora koriste generisane PNG slike. Potpuno zaustavi desktop proces
+(Ctrl+C u terminalu gde je pokrenut), pa ponovo pokreni `npm run desktop -- dev`.
+Frontend hot reload ne ažurira ugrađene native ikonice. Za distribuiranu `.app`
+aplikaciju potreban je ponovni build sa novim ikonicama.
 
 Na Linuxu/Wayland-u sistem pronalazi ikonicu preko `.desktop` zapisa koji odgovara
 identitetu `org.librett.desktop`, umesto preko slike ugrađene u prozor. Uključena je

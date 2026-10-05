@@ -57,7 +57,20 @@ are bundled into the application, so logos work offline.
 
 The desktop icon source is `assets/img/app-icon.png`. Tauri-generated PNG, ICO,
 and ICNS files live in `apps/desktop/src-tauri/icons/` and are application assets,
-not development caches. The native window icon requires restarting the desktop.
+not development caches. After changing the source image, regenerate them from
+the repository root:
+
+```sh
+npm run desktop:generate-icons
+```
+
+The helper uses the installed Tauri CLI and copies only desktop PNG/ICO/ICNS
+assets into the project. Replacing the source PNG alone does not update these
+files. macOS development uses `icons/icon.icns` for the Dock icon; native window
+icons use the generated PNGs. Fully stop the running desktop process (Ctrl+C in
+the development terminal) and start `npm run desktop -- dev` again. Frontend
+hot reload does not update embedded native icons. Distributed `.app` bundles
+must be rebuilt to include changed icon assets.
 
 On Linux/Wayland the shell resolves the icon through a `.desktop` entry matching
 `org.librett.desktop`, rather than the embedded window image. GTK application ID

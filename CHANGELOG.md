@@ -6,6 +6,12 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Changed
 
+- Regenerated desktop PNG, ICO and ICNS assets from the updated application
+  icon. Added `npm run desktop:generate-icons` to refresh desktop assets from
+  `assets/img/app-icon.png` without adding generated mobile icon folders.
+- Documented icon regeneration and full native-app restart, including the
+  macOS development Dock icon's use of `icons/icon.icns`.
+
 - Categories with groups can choose BYE or Lucky loser for spare knockout
   places. Automatic selection waits for all groups to finish and resolves
   candidates by group place, win percentage, set ratio and point ratio.
