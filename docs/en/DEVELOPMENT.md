@@ -69,7 +69,9 @@ assets into the project. Replacing the source PNG alone does not update these
 files. macOS development uses `icons/icon.icns` for the Dock icon; native window
 icons use the generated PNGs. Fully stop the running desktop process (Ctrl+C in
 the development terminal) and start `npm run desktop -- dev` again. Frontend
-hot reload does not update embedded native icons. Distributed `.app` bundles
+hot reload does not update embedded native icons. The native `build.rs` tracks
+the generated `icons` directory, ensuring Cargo recompiles embedded icon
+resources when these files change. Distributed `.app` bundles
 must be rebuilt to include changed icon assets.
 
 On Linux/Wayland the shell resolves the icon through a `.desktop` entry matching

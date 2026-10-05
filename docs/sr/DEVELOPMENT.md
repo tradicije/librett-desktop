@@ -68,7 +68,9 @@ resurse u projekat. Zamena izvornog PNG-a sama ne ažurira ove fajlove.
 macOS u razvojnom režimu koristi `icons/icon.icns` za ikonicu u Dock-u;
 ikonice prozora koriste generisane PNG slike. Potpuno zaustavi desktop proces
 (Ctrl+C u terminalu gde je pokrenut), pa ponovo pokreni `npm run desktop -- dev`.
-Frontend hot reload ne ažurira ugrađene native ikonice. Za distribuiranu `.app`
+Frontend hot reload ne ažurira ugrađene native ikonice. Native `build.rs` prati
+generisani folder `icons`, tako da Cargo ponovo kompajlira ugrađene ikonice
+kada se ti fajlovi promene. Za distribuiranu `.app`
 aplikaciju potreban je ponovni build sa novim ikonicama.
 
 Na Linuxu/Wayland-u sistem pronalazi ikonicu preko `.desktop` zapisa koji odgovara

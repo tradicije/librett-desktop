@@ -6,6 +6,10 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Changed
 
+- The native build explicitly tracks the generated `icons` directory so changing
+  desktop icons recompiles Tauri's embedded icon resources instead of reusing
+  a stale executable after a development restart.
+
 - Regenerated desktop PNG, ICO and ICNS assets from the updated application
   icon. Added `npm run desktop:generate-icons` to refresh desktop assets from
   `assets/img/app-icon.png` without adding generated mobile icon folders.
