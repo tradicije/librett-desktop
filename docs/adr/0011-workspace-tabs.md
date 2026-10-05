@@ -40,13 +40,16 @@ initial same-document popstate and leave startup navigation permanently locked.
 The 48px workspace row is fixed. Content/sidebar height subtracts that row so
 short pages do not force a scrollbar. macOS Overlay/hiddenTitle keep native window
 buttons alongside tabs; their actual AppKit frames are centered using coordinate
-conversion at startup and on resize/focus. Linux uses application-drawn minimize/maximize/close buttons in the workspace
-strip, with native Tauri window actions. Its system decorations are disabled
-before GTK creates the window. Empty title-bar regions support native dragging
+conversion at startup and on resize/focus. Linux and Windows use shared
+application-drawn minimize/maximize/close buttons in the workspace strip, with
+native Tauri window actions. Their system decorations are disabled before
+window creation. Windows uses rectangular controls on the right of the row.
+Empty title-bar regions support native dragging
 and double-click maximize; narrow edge/corner regions start native resizing.
 Close uses CloseRequested and keeps the existing unsaved-work confirmation.
 These buttons are LibreTT controls, not KDE decoration widgets. Their capabilities
-are restricted to Linux and the main window. Windows retains native chrome.
+are restricted to Linux/Windows and the main window. Windows 11's native
+maximize-button hover Snap Layout menu is not provided by these HTML controls.
 The Linux native surface remains opaque. Both transparent-corner attempts
 produced invisible or hover-only rendering on the tested NVIDIA/Wayland setup,
 including when using the DMABUF workaround. Transparent backgrounds, clip-path masks and rounded root containment are

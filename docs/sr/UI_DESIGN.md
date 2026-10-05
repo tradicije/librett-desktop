@@ -44,7 +44,9 @@ sistemska navigacija vraća trenutnu poziciju istorije pre promene ekrana.
 Fiksna traka od 48px počinje stalnim Home dugmetom, pa nezavisnim radnim tabovima
 sa kratkim nazivom strane i punim kontekstom na zadržavanje miša. Nazad/Napred
 ostaju u traci ispod. Home nije običan tab. macOS sistemski dugmići dele isti red
-i centriraju se AppKit koordinatama. Ostali sistemi zadržavaju naslovnu traku.
+i centriraju se AppKit koordinatama. Linux i Windows koriste dugmad aplikacije
+u istom redu koja pozivaju sistemske akcije prozora. Windows dugmad su
+pravougaona i poravnata desno.
 Visina sadržaja uzima ovu traku u obzir; skrol postoji tek kada sadržaj ne staje.
 Sakriveni radni prostori čuvaju lokalno stanje.
 

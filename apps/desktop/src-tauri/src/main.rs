@@ -95,11 +95,11 @@ fn center_window_controls(window: &tauri::WebviewWindow) -> tauri::Result<()> {
 
 fn main() {
     let context = tauri::generate_context!();
-    #[cfg(target_os = "linux")]
+    #[cfg(any(target_os = "linux", target_os = "windows"))]
     let context = {
         let mut context = context;
-        // The workspace strip owns Linux window controls. Configure this before
-        // creating GTK windows so a second system title bar never flashes.
+        // The workspace strip owns Linux and Windows window controls. Configure
+        // this before creating windows so a second system title bar never flashes.
         for window in &mut context.config_mut().app.windows {
             window.decorations = false;
             // Transparent surfaces fail to repaint on the tested NVIDIA/Wayland

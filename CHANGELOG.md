@@ -6,6 +6,12 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Changed
 
+- Windows now shares the 48px workspace title bar with tabs, Info and
+  application-drawn minimize/maximize/close controls styled for Windows.
+  Native actions preserve guarded close, title-bar dragging, double-click
+  maximize and edge/corner resizing. Linux and Windows share the controls
+  component and platform-scoped permissions; macOS keeps native AppKit buttons.
+
 - The expanded sidebar footer shows LibreTT for Windows, LibreTT for MacOS or
   LibreTT for Linux according to the platform, below the local-work label and
   above the copyright. The platform label is hidden in compact mode.

@@ -45,6 +45,7 @@
 html, body { height: 100%; overflow: hidden; overscroll-behavior-y: none; }
 body { margin: 0; }
 html.linux-window { --window-radius: 0px; }
+html.windows-window { --window-radius: 0px; }
 button, input, textarea, select { font: inherit; }
 button { cursor: pointer; }
 button:disabled { cursor: default; opacity: .45; }

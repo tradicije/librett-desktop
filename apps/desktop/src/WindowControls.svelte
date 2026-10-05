@@ -4,7 +4,7 @@
   import Icon from './Icon.svelte';
   import type { Language } from './i18n';
 
-  let { language }: { language: Language } = $props();
+  let { language, platform }: { language: Language; platform: 'linux' | 'windows' } = $props();
   const window = getCurrentWindow();
   let maximized = $state(false);
   let fullscreen = $state(false);
@@ -21,14 +21,14 @@
     document.documentElement.classList.toggle('window-flush', maximized || fullscreen);
   });
   onMount(() => {
-    document.documentElement.classList.add('linux-window');
+    document.documentElement.classList.add(`${platform}-window`);
     let disposed = false;
     let stop: (() => void) | undefined;
     void refresh().catch(() => { error = true; });
     void window.onResized(() => { void refresh().catch(() => { error = true; }); })
       .then(unlisten => { if (disposed) unlisten(); else stop = unlisten; })
       .catch(() => { error = true; });
-    return () => { disposed = true; stop?.(); document.documentElement.classList.remove('linux-window', 'window-flush'); };
+    return () => { disposed = true; stop?.(); document.documentElement.classList.remove(`${platform}-window`, 'window-flush'); };
   });
   async function act(action: 'minimize' | 'maximize' | 'close') {
     if (working) return;
@@ -48,7 +48,7 @@
   }
 </script>
 
-<div class="window-controls" role="group" aria-label={sr ? 'Kontrole prozora' : 'Window controls'}>
+<div class="window-controls" class:windows-controls={platform === 'windows'} role="group" aria-label={sr ? 'Kontrole prozora' : 'Window controls'}>
   <button disabled={working} aria-label={sr ? 'Minimizuj prozor' : 'Minimize window'} title={sr ? 'Minimizuj prozor' : 'Minimize window'} onclick={() => act('minimize')}><Icon name="minimize" size={14} /></button>
   <button disabled={working || fullscreen} aria-label={maximizeLabel} title={maximizeLabel} onclick={() => act('maximize')}><Icon name={maximized ? 'restore-window' : 'maximize'} size={13} /></button>
   <button class="window-close" disabled={working} aria-label={sr ? 'Zatvori prozor' : 'Close window'} title={sr ? 'Zatvori prozor' : 'Close window'} onclick={() => act('close')}><Icon name="close" size={15} /></button>
@@ -69,6 +69,9 @@
   .window-controls .window-close:hover:enabled { background: #C73E4D; border-color: #C73E4D; color: #FFFFFF; }
   .window-controls .window-close:active:enabled { background: #AE303E; border-color: #AE303E; color: #FFFFFF; }
   .window-controls button:focus-visible { outline-offset: 1px; }
+  .windows-controls { gap: 0; padding: 0; border-left: 0; }
+  .windows-controls button { width: 46px; height: 100%; min-height: 28px; border: 0; border-radius: 0; }
+  .windows-controls button:focus-visible { outline-offset: -3px; }
   .window-outline { position: fixed; inset: 0; border: 1px solid var(--border); border-radius: var(--window-radius); z-index: 115; pointer-events: none; }
   :global(.window-flush) .window-outline { display: none; }
   .window-control-error { position: fixed; top: 52px; right: 12px; z-index: 110; margin: 0; padding: 10px 14px; background: var(--surface); color: var(--text-primary); border: 1px solid var(--border); border-radius: 6px; font-size: 12px; }

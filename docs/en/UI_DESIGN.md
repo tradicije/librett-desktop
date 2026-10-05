@@ -64,8 +64,10 @@ Pending writes restore the current history position before changing the screen.
 The fixed 48px row starts with pinned Home, followed by independent working tabs
 with short page labels and full-context tooltips. Back/Forward stays in the toolbar
 below. Home never appears as an ordinary tab. macOS native window controls share
-the row and are centered using AppKit coordinates. Other platforms retain their
-native title bar. Content heights account for this row, with overflow only when
+the row and are centered using AppKit coordinates. Linux and Windows use
+application-drawn controls in the same row, invoking native window actions.
+Windows controls are aligned on the right with rectangular buttons.
+Content heights account for this row, with overflow only when
 content exceeds the viewport. Hidden workspaces preserve their local state.
 
 Working tabs are a fixed 180px wide regardless of label length. Labels fade at the
