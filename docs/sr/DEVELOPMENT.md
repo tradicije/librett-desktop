@@ -91,6 +91,12 @@ generisani folder `icons`, tako da Cargo ponovo kompajlira ugrađene ikonice
 kada se ti fajlovi promene. Za distribuiranu `.app`
 aplikaciju potreban je ponovni build sa novim ikonicama.
 
+Generator za macOS ICNS dodaje transparentnu marginu od 100px sa svake strane
+slike 1024px: motiv zauzima 824px, oko 80% širine. Time motiv koji u izvornom
+PNG-u ide do ivica ne izgleda preveliko u Dock-u. Privremeni SVG koristi originalni
+PNG, a margina se ponovo primenjuje pri svakoj zameni `app-icon.png` i generisanju.
+Linux/Windows resursi koriste izvornu veličinu motiva.
+
 Na Linuxu/Wayland-u sistem pronalazi ikonicu preko `.desktop` zapisa koji odgovara
 identitetu `org.librett.desktop`, umesto preko slike ugrađene u prozor. Uključena je
 registracija GTK identiteta i GLib naziv pre inicijalizacije GTK-a, tako da

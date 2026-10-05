@@ -92,6 +92,12 @@ the generated `icons` directory, ensuring Cargo recompiles embedded icon
 resources when these files change. Distributed `.app` bundles
 must be rebuilt to include changed icon assets.
 
+The generator gives macOS ICNS artwork a transparent 100px margin on each side
+of a 1024px canvas (824px artwork, approximately 80% of the width). This keeps
+full-bleed source designs from appearing oversized in the Dock. A temporary SVG
+wraps the original PNG; replacing `app-icon.png` and regenerating automatically
+reapplies the same margin. Linux/Windows resources use the original source size.
+
 On Linux/Wayland the shell resolves the icon through a `.desktop` entry matching
 `org.librett.desktop`, rather than the embedded window image. GTK application ID
 registration is enabled, and the GLib program name is set before GTK startup

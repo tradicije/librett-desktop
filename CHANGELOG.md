@@ -6,6 +6,10 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Changed
 
+- macOS Dock icons now use an 824px artwork region centered on a transparent
+  1024px canvas, preventing full-bleed source artwork from appearing oversized.
+  The desktop icon generator reapplies this margin automatically to ICNS assets.
+
 - Refreshed Linux PNG, Windows ICO/Appx and macOS ICNS assets from the latest
   application icon design, including its latest visual revision.
 
