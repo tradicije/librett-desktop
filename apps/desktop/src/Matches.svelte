@@ -93,7 +93,7 @@
   }
   async function submit(event: SubmitEvent) {
     event.preventDefault(); if (saving || tableSaving || !selected || !data?.draw) return;
-    if(tableNumber!==tableOriginal || tablePending){if(!await saveTable())return;}
+    if (tableNumber !== tableOriginal || tablePending) return;
     if (!pending) {
       const input = outcome === 'walkover' ? [] : sets;
       if (input.some(set => set.first === undefined || set.second === undefined || !Number.isInteger(set.first) || !Number.isInteger(set.second))) { editorError = 'invalid_result'; return; }
@@ -159,6 +159,7 @@
       {#if editorError}<p class="error" role="alert">{text[editorError]}</p>{/if}
       <form onsubmit={submit}>
         <div class="table-assignment"><label>{sr?'Broj stola':'Table number'}<input type="number" min="1" max="128" step="1" bind:value={tableNumber} disabled={readOnly || saving || tableSaving || !!pending || !!tablePending} /></label><button type="button" class="secondary" disabled={readOnly || saving || tableSaving || !!pending || (!tablePending && tableNumber===tableOriginal)} onclick={()=>saveTable()}>{tableSaving?text.saving:tablePending?text.retry:sr?'Sačuvaj sto':'Save table'}</button></div><p class="muted">{sr?'Ostavi prazno i sačuvaj da ukloniš dodelu stola.':'Leave blank and save to remove the table assignment.'}</p>
+        {#if tableNumber !== tableOriginal || tablePending}<p class="muted" role="status">{sr?'Prvo sačuvaj ili vrati promenu stola, pa sačuvaj rezultat.':'Save or revert the table change before saving the result.'}</p>{/if}
         {#if tableNotice}<p class="notice" role="status">{sr?'Sto je sačuvan.':'Table saved.'}</p>{/if}
 
         <fieldset disabled={readOnly || saving || pending !== null}>
@@ -174,7 +175,7 @@
         </fieldset>
         <div class="dialog-actions">
           {#if editorError === 'match_conflict'}<button type="button" class="secondary" onclick={() => confirmation = 'reload'}>{sr ? 'Učitaj ponovo' : 'Reload'}</button>{/if}
-          <button type="button" class="secondary" disabled={saving || tableSaving || !!tablePending || pending !== null} onclick={cancel}>{sr ? 'Otkaži' : 'Cancel'}</button><button class="primary" disabled={(readOnly && !pending) || saving || tableSaving}>{saving ? text.saving : pending ? text.retry : sr ? 'Sačuvaj rezultat' : 'Save result'}</button>
+          <button type="button" class="secondary" disabled={saving || tableSaving || !!tablePending || pending !== null} onclick={cancel}>{sr ? 'Otkaži' : 'Cancel'}</button><button class="primary" disabled={(readOnly && !pending) || saving || tableSaving || !!tablePending || tableNumber !== tableOriginal}>{saving ? text.saving : pending ? text.retry : sr ? 'Sačuvaj rezultat' : 'Save result'}</button>
         </div>
       </form>
     {/if}

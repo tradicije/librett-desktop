@@ -4,6 +4,12 @@ Notable changes to LibreTT are recorded here in English.
 
 ## Unreleased
 
+### Fixed
+
+- Restore/import validates the migrated SQLite schema against a fresh LibreTT database before replacing live data, rejecting missing/modified tables, unexpected views, indexes and triggers. Staging connections disable trusted schema.
+- Saving a match result no longer implicitly saves its table assignment; table changes must be explicitly saved or reverted first.
+- Automatic backup failures are visible at startup and during periodic checks, with a retry action; successful checks clear the warning.
+
 - Refined metadata layouts: short category/scoring summaries and position labels stay inline and wrap when needed; player details and group/knockout progress use separate rows. Set scores use compact tiles.
 
 ### Added

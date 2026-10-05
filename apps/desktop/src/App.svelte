@@ -146,7 +146,23 @@
     }
     void getCurrentWindow().startDragging().catch(() => { /* Native title bar stays usable. */ });
   }
-  onMount(()=>{if(!desktopAvailable)return;const timer=setInterval(()=>{if(!nativePending && !locked)void automaticBackup().catch(()=>{});},60*60*1000);return()=>clearInterval(timer);});
+  let backupFailed = $state(false);
+  let backupChecking = $state(false);
+  async function checkAutomaticBackup() {
+    if (backupChecking) return;
+    backupChecking = true;
+    try { await automaticBackup(); backupFailed = false; }
+    catch { backupFailed = true; }
+    finally { backupChecking = false; }
+  }
+  onMount(() => {
+    if (!desktopAvailable) return;
+    void checkAutomaticBackup();
+    const timer = setInterval(() => {
+      if (!nativePending && !locked) void checkAutomaticBackup();
+    }, 60 * 60 * 1000);
+    return () => clearInterval(timer);
+  });
   onMount(() => {
     const stopConfirmation = registerDiscardConfirmation(() => discardDialog.confirm());
     const hasUnsaved = () => homeWorkspace.status.dirty || tabs.some(tab => tab.status.dirty);
@@ -251,6 +267,12 @@
   <button class="icon-button titlebar-info" disabled={locked} aria-label={language === 'sr' ? 'O aplikaciji' : 'About LibreTT'} title={language === 'sr' ? 'O aplikaciji' : 'About LibreTT'} onclick={() => { if (!modalOpen()) { contextMenu = null; aboutDialog.open(); } }}><Icon name="info" size={18} /></button>
   {#if linuxWindow || windowsWindow}<WindowControls {language} platform={windowsWindow ? 'windows' : 'linux'} />{/if}
 </header>
+{#if backupFailed}
+  <div class="backup-warning" role="alert">
+    <span>{language === 'sr' ? 'Automatska rezervna kopija nije uspela. Proveri prostor na disku i dozvole za čuvanje.' : 'Automatic backup failed. Check disk space and storage permissions.'}</span>
+    <button class="secondary" disabled={backupChecking || locked} onclick={checkAutomaticBackup}>{backupChecking ? text.saving : language === 'sr' ? 'Pokušaj ponovo' : 'Retry'}</button>
+  </div>
+{/if}
 <div class="workspace-frame" id="home-workspace" hidden={activeId !== homeId}>
   <Workspace initialRoute={homeWorkspace.initialRoute} pinned bind:language bind:theme bind:sidebarCollapsed {resolvedTheme} bind:tournaments
     bind:status={homeWorkspace.status} externalLocked={nativePending} active={activeId === homeId}
@@ -275,6 +297,8 @@
 {/if}
 
 <style>
+  .backup-warning { position: fixed; bottom: 1rem; right: 1rem; z-index: 100; max-width: min(34rem, calc(100vw - 2rem)); display: flex; align-items: center; gap: 1rem; padding: 1rem; border: 1px solid var(--border); border-radius: .75rem; background: var(--surface); box-shadow: 0 4px 20px #0003; }
+  .backup-warning button { flex-shrink: 0; }
   .work-titlebar { height: 48px; position: fixed; top: 0; left: 0; right: 0; z-index: 30; display: flex; align-items: center; gap: 6px; background: var(--background); border-bottom: 1px solid var(--border); user-select: none; }
   .window-drag-space { align-self: stretch; width: 12px; flex-shrink: 0; }
   .mac-titlebar > .window-drag-space:first-child { width: 80px; }

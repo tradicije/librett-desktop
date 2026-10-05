@@ -164,3 +164,5 @@ LibreTT se pruža bez garancije; puni uslovi nalaze se u licenci.
 ### Rezervne kopije, stolovi i izveštaji
 
 U bočnom meniju otvori **Rezervne kopije** za dnevne/ručne snimke i vraćanje. Sto se dodeljuje ručno kroz **Mečevi → Uredi meč**. Grupe, Žreb, Rezultati i Blagajna nude pregled štampe/PDF-a i CSV/HTML izvoz.
+
+Uvezeni bekap mora da odgovara strukturi LibreTT baze; izmenjena struktura i dodatni trigeri odbijaju se pre zamene podataka. Neuspešan automatski bekap prikazuje upozorenje sa dugmetom za ponovni pokušaj. U uređivanju meča promenu stola prvo potvrdi dugmetom **Sačuvaj sto**, pa sačuvaj rezultat.

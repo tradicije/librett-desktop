@@ -167,3 +167,5 @@ LibreTT is provided without warranty; see the license for the full terms.
 ### Backups, tables and reports
 
 Use **Backups** in the sidebar for daily/manual snapshots and restore. Assign tables manually in **Matches → Edit match**. Groups, Draw, Results and Cash Desk offer print/PDF preview and CSV/HTML export.
+
+Imported backups must match LibreTT’s database schema; altered schemas and extra triggers are rejected before replacing data. Automatic backup failures show a warning with a retry button. In the match editor, save table changes explicitly with **Save table** before saving a result.

@@ -22,6 +22,20 @@ fn backup_name(name: &str) -> Result<(), ApplicationError> {
     }
     Ok(())
 }
+
+// Compare executable schema too: integrity checks do not detect missing tables,
+// changed constraints, views or injected triggers in an otherwise valid database.
+fn schema(
+    connection: &Connection,
+) -> rusqlite::Result<Vec<(String, String, String, Option<String>)>> {
+    let mut statement = connection.prepare(
+        "SELECT type,name,tbl_name,sql FROM sqlite_schema WHERE name NOT GLOB 'sqlite_*' ORDER BY type,name",
+    )?;
+    let rows = statement.query_map([], |row| {
+        Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?))
+    })?;
+    rows.collect()
+}
 impl SqliteTournamentRepository {
     pub fn create_backup(
         &self,
@@ -169,11 +183,23 @@ impl SqliteTournamentRepository {
         let stage = directory.join(format!("stage-{}.sqlite", Uuid::new_v4()));
         let result = (|| {
             let mut staged = Connection::open(&stage).map_err(|_| ApplicationError::Storage)?;
+            staged
+                .execute_batch("PRAGMA trusted_schema=OFF;")
+                .map_err(|_| ApplicationError::InvalidBackup)?;
             rusqlite::backup::Backup::new(&source, &mut staged)
                 .and_then(|b| b.run_to_completion(256, Duration::from_millis(10), None))
                 .map_err(|_| ApplicationError::Storage)?;
             let repository =
                 Self::initialize(staged).map_err(|_| ApplicationError::InvalidBackup)?;
+            let reference = Self::initialize(
+                Connection::open_in_memory().map_err(|_| ApplicationError::Storage)?,
+            )
+            .map_err(|_| ApplicationError::Storage)?;
+            if schema(&repository.connection).map_err(|_| ApplicationError::InvalidBackup)?
+                != schema(&reference.connection).map_err(|_| ApplicationError::Storage)?
+            {
+                return Err(ApplicationError::InvalidBackup);
+            }
             let violations: bool = repository
                 .connection
                 .query_row(
