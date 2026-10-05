@@ -172,7 +172,7 @@
     {#if draft}
       <section class="layout-editor">
         <div class="section-heading layout-heading"><h3>{language === 'sr' ? 'Raspored učesnika' : 'Entry arrangement'}</h3><div class="layout-status"><span class="pill">{t.revision}: {revision}</span><span class="pill">{dirty ? t.unsaved : t.saved}</span><span class="pill">{t.missing}: {missing}</span></div></div>
-        {#if draft.format === 'groups_knockout'}<p class="field-hint"><span class="metadata-line">{t.groupCount}: {draft.settings.group_count}</span><span class="metadata-line">{t.qualifiers}: {draft.settings.qualifiers_per_group}</span></p>{/if}
+        {#if draft.format === 'groups_knockout'}<p class="field-hint"><span>{t.groupCount}: {draft.settings.group_count}</span> · <span>{t.qualifiers}: {draft.settings.qualifiers_per_group}</span></p>{/if}
         <p class="field-hint">{t.hint}</p>
         <div class="draw-sections" class:knockout-layout={category.format === 'knockout'}>
           {#each draft.sections as section, group}
@@ -180,7 +180,7 @@
               <h3>{category.format === 'groups_knockout' ? `${t.group} ${groupName(group)}` : text.bracket}</h3>
               {#each section as id, slot}
                 <label class:pair-start={category.format === 'knockout' && slot % 2 === 0}>
-                  <span>{#if category.format === 'knockout'}<span class="metadata-line">{t.pair} {Math.floor(slot / 2) + 1}</span><small class="metadata-line muted">{t.position} {slot % 2 + 1}</small>{:else}{t.position} {slot + 1}{/if}</span>
+                  <span>{#if category.format === 'knockout'}<span>{t.pair} {Math.floor(slot / 2) + 1}</span> · <small class="muted">{t.position} {slot % 2 + 1}</small>{:else}{t.position} {slot + 1}{/if}</span>
                   <Select playerLabels label={`${category.format === 'groups_knockout' ? `${t.group} ${groupName(group)}` : text.bracket} · ${t.position} ${slot + 1}`} bind:value={() => id ?? '', value => assign(group, slot, value)} disabled={locked || stale} options={category.format === 'knockout' && missing === 0 && section[slot ^ 1] ? byeOptions : emptyOptions} />
                 </label>
               {/each}

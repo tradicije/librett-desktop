@@ -111,7 +111,7 @@
   }, [0, 0]).join(' : ');
 </script>
 <div class="matches-view">
-  <div class="matches-toolbar"><div><h2>{text.matches}</h2>{#if data}<InfoRows items={[{label:language==='sr'?'Setova':'Sets',value:data.rules.best_of},{label:language==='sr'?'Poena':'Points',value:data.rules.points_to_win},{label:language==='sr'?'Razlika':'Win by',value:`+${data.rules.win_by}`}]} />{/if}</div><button class="secondary icon-label" disabled={loading || !!selected} onclick={load}><Icon name="restore" size={16} />{sr ? 'Osveži' : 'Refresh'}</button></div>
+  <div class="matches-toolbar"><div><h2>{text.matches}</h2>{#if data}<InfoRows compact items={[{label:language==='sr'?'Setova':'Sets',value:data.rules.best_of},{label:language==='sr'?'Poena':'Points',value:data.rules.points_to_win},{label:language==='sr'?'Razlika':'Win by',value:`+${data.rules.win_by}`}]} />{/if}</div><button class="secondary icon-label" disabled={loading || !!selected} onclick={load}><Icon name="restore" size={16} />{sr ? 'Osveži' : 'Refresh'}</button></div>
   {#if error}<p class="error" role="alert">{text[error]}</p>{/if}
   {#if !desktopAvailable}<p class="banner">{text.preview}</p>{:else if loading && !data}<p class="muted">{text.loading}</p>{:else if !data?.draw}<section class="panel"><p class="muted">{sr ? 'Prvo sačuvaj žreb u podešavanjima kategorije.' : 'Save the draw in category settings first.'}</p><button data-open-tab class="secondary" onclick={onsettings}>{text.settings}</button></section>{:else}
     {#if data.stale}<p class="banner" role="alert">{sr ? 'Žreb je nepotpun ili su prijave i pravila grupa promenjeni. Unos je zaključan dok ne sačuvaš važeći žreb.' : 'The draw is incomplete or registrations/group rules changed. Save a current draw before entering results.'}</p>{/if}

@@ -126,4 +126,4 @@ Završeno takmičenje onemogućava izmene, uz dostupnu navigaciju i blagajnu.
 Kartice kategorija i turnira imaju oznaku Završeno.
 
 
-Podaci kategorija, igrača i pravila prikazuju se u zasebnim označenim redovima. Napredak grupa i nokauta prikazan je odvojeno, a svaki odigrani set ima zasebnu oznaku rezultata.
+Kratki sažeci kategorija i pravila ostaju u jednom redu i prelamaju se na uskim prozorima. Detalji igrača i napredak grupa/nokauta koriste zasebne označene redove gde to olakšava čitanje. Svaki odigrani set ima zasebnu oznaku rezultata.

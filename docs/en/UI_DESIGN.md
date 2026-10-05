@@ -148,4 +148,4 @@ sporting forms disable mutation controls, while navigation and the cash desk
 remain available. Completed badges appear on category and tournament cards.
 
 
-Category, player and scoring metadata use separate labeled rows. Group and knockout progress are shown independently, and each played set has its own score tile.
+Short category and scoring summaries stay inline and wrap on narrow windows. Player details and group/knockout progress use separate labeled rows where this improves readability. Each played set has its own score tile.

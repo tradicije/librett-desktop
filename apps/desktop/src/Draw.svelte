@@ -43,7 +43,7 @@
 </script>
 <div class="draw-view">
   <div class="draw-toolbar">
-    <div class="draw-heading"><h2>{view === 'groups' ? text.groups : text.draw}</h2><InfoRows items={[{label:language==='sr'?'Setova':'Sets',value:rules.best_of},{label:language==='sr'?'Poena':'Points',value:rules.points_to_win},{label:language==='sr'?'Razlika':'Win by',value:`+${rules.win_by}`}]} /></div>
+    <div class="draw-heading"><h2>{view === 'groups' ? text.groups : text.draw}</h2><InfoRows compact items={[{label:language==='sr'?'Setova':'Sets',value:rules.best_of},{label:language==='sr'?'Poena':'Points',value:rules.points_to_win},{label:language==='sr'?'Razlika':'Win by',value:`+${rules.win_by}`}]} /></div>
     <div class="draw-actions"><button class="icon-button" disabled={loading || busy} onclick={load} aria-label={language === 'sr' ? 'Osveži' : 'Refresh'} title={language === 'sr' ? 'Osveži' : 'Refresh'}><Icon name="restore" size={18} /></button><button data-open-tab class="secondary icon-label" disabled={busy} onclick={onsettings} aria-label={text.settings} title={text.settings}><Icon name="edit" size={16} />{language === 'sr' ? 'Uredi' : 'Edit'}</button></div>
   </div>
   {#if error}<p class="error" role="alert">{text[error]}</p>{/if}

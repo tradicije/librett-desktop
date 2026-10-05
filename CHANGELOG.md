@@ -4,7 +4,7 @@ Notable changes to LibreTT are recorded here in English.
 
 ## Unreleased
 
-- Reorganized category, player, scoring and progress metadata into labeled rows; set scores use separate compact tiles instead of dot-separated summaries.
+- Refined metadata layouts: short category/scoring summaries and position labels stay inline and wrap when needed; player details and group/knockout progress use separate rows. Set scores use compact tiles.
 
 ### Changed
 

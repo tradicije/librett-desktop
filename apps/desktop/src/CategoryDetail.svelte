@@ -18,7 +18,7 @@
     ? ['settings', 'registrations', 'groups', 'draw', 'matches', 'results']
     : ['settings', 'registrations', 'draw', 'matches', 'results']);
 </script>
-<div class="heading"><div><p class="eyebrow">{tournament.name}</p><h1>{category.name}</h1><InfoRows items={[{label:text.discipline,value:text[category.discipline]},{label:text.format,value:text[category.format]},{label:language==='sr'?'Kotizacija':'Entry fee',value:`${formatMoney(category.fee_minor, language)} ${text.feePerEntry}`}]} /></div></div>
+<div class="heading"><div><p class="eyebrow">{tournament.name}</p><h1>{category.name}</h1><InfoRows compact items={[{label:text.discipline,value:text[category.discipline]},{label:text.format,value:text[category.format]},{label:language==='sr'?'Kotizacija':'Entry fee',value:`${formatMoney(category.fee_minor, language)} ${text.feePerEntry}`}]} /></div></div>
 {#if category.completed || tournament.completed}<p class="banner">{language==='sr'?'Takmičenje je završeno. Za izmene ga ponovo otvori u Rezultatima / Pregledu turnira.':'Competition completed. Reopen it in Results / Tournament Overview to make changes.'}</p>{/if}
 <nav class="category-tabs" aria-label={text.categorySections}>
   {#each tabs as item}<button data-open-tab class:active={tab === item} aria-current={tab === item ? 'page' : undefined} disabled={busy} onclick={() => ontab(item)}>{text[item]}</button>{/each}
