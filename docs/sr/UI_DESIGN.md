@@ -1,5 +1,8 @@
 # Smernice za desktop interfejs
 
+Prijave koriste separator tabova kategorije, bez dodatnog gornjeg bordera i
+razmaka na samoj sekciji, nezavisno od dijaloga između elemenata.
+
 Prolaznici grupa u kosturu imaju oznaku grupe i plasmana ispred imena (A1, B2
 i slično). Oznaka prati igrača kroz naredne runde; nerazrešena mesta prikazuju
 istu oznaku uz kratko „Čeka prolaznika”.

@@ -6,6 +6,8 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Changed
 
+- Removed the redundant top separator and spacing from category Registrations;
+  its layout no longer depends on being adjacent to the category tabs.
 - Player create/edit screens and guarded desktop profile saves require a birth
   year. Existing profiles without a year remain readable.
 - Categories can enable an inclusive minimum/maximum age range (0–130) through

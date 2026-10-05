@@ -194,7 +194,7 @@ form > .primary { justify-self: start; }
 .confirm-dialog::backdrop { background: #0008; }
 .confirm-dialog p { overflow-wrap: anywhere; }
 .dialog-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 24px; }
-.players-section { margin-top: 32px; padding-top: 28px; border-top: 1px solid var(--border-subtle); }
+.players-section { margin-top: 0; padding-top: 0; }
 .players-section > h2 { margin-bottom: 6px; }
 .players-section > .muted { margin: 0 0 20px; }
 .players-section .panel > h3 { margin-bottom: 18px; }
@@ -272,7 +272,6 @@ form > .primary { justify-self: start; }
 .category-tabs { display: flex; gap: 20px; border-bottom: 1px solid var(--border-subtle); margin-bottom: 24px; overflow-x: auto; }
 .category-tabs button { flex-shrink: 0; padding: 10px 0; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: transparent; color: var(--text-secondary); font-size: 12px; }
 .category-tabs button.active { color: var(--text-primary); border-bottom-color: var(--primary); }
-.category-tabs + .players-section { border: 0; margin-top: 0; padding-top: 0; }
 .stage-placeholder { display: flex; align-items: flex-start; flex-direction: column; gap: 16px; min-height: 220px; }
 .stage-placeholder > .icon { color: var(--text-muted); }
 .stage-placeholder h2, .stage-placeholder p { margin: 0; }

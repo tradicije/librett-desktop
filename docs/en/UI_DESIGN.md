@@ -1,5 +1,8 @@
 # Desktop interface direction
 
+Registrations rely on the category tab divider; the registration section has no
+extra top border or offset, regardless of intervening dialog elements.
+
 Group qualifiers display their origin before their name in the knockout bracket
 (A1, B2, etc.). The prefix follows the entrant through later rounds; unresolved
 places show the same prefix with a short awaiting-qualifier label.
