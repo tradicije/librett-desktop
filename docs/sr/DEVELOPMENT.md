@@ -476,4 +476,4 @@ U kategoriji otvori **Žreb → Uredi**, pa klikni na igrača ili BYE u prvoj ru
 
 Pravljenje i podešavanja kategorije imaju tri prekidača u jednom redu (na uskim prozorima jedan ispod drugog): starosna grupa, Lucky loser/BYE i jedno treće mesto. Lucky loser je dostupan za grupe → nokaut, dok direktni nokaut koristi BYE. Isključen prekidač trećeg mesta znači zajedničko treće mesto. Uključen otvara izbor meča za bronzu ili dodelu trećeg mesta polufinalisti koji je izgubio od kasnijeg pobednika; drugi poraženi polufinalista je četvrti. Meč za bronzu je u završnoj rundi Mečeva i ispod kostura; kategorija čeka njegov rezultat. Ako zbog BYE postoji samo jedan poraženi polufinalista, on je treći bez dodatnog meča.
 
-Uključen Lucky loser prekidač otvara automatsko ili ručno popunjavanje. U ručnom režimu prazna mesta čekaju izbor učesnika ili BYE. Kartice baze igrača prikazuju samo ime/klub i godište; ostali podaci su u profilu.
+Uključen Lucky loser prekidač otvara automatsko ili ručno popunjavanje. U ručnom režimu prazna mesta čekaju izbor učesnika ili BYE. Kartice baze igrača prikazuju samo ime/klub i starost (tekuća godina minus godište); ostali podaci su u profilu.

@@ -10,6 +10,12 @@
   } = $props();
   const uid = $props.id();
   let text = $derived(messages[language]);
+  function ageUnit(age: number) {
+    if (language === 'en') return age === 1 ? 'year' : 'years';
+    const lastTwo = age % 100, last = age % 10;
+    if (lastTwo >= 11 && lastTwo <= 14) return 'godina';
+    return last === 1 ? 'godina' : last >= 2 && last <= 4 ? 'godine' : 'godina';
+  }
   let players = $state<Player[]>([]);
   let loading = $state(false);
   let error = $state<MessageKey | null>(null);
@@ -57,7 +63,7 @@
   {#each filtered as player (player.id)}
     <article class="player-profile">
       {#if player.photo}<img class="player-photo" src={player.photo} alt={playerLabel(player)} />{:else}<span class="player-avatar" aria-hidden="true">{player.name.split(/\s+/).slice(0, 2).map(part => part[0]).join('').toLocaleUpperCase()}</span>{/if}
-      <div class="player-details"><h3><PlayerName {player} /></h3>{#if player.birth_year !== null}<p class="birth-year"><span>{text.birthYear}</span><strong>{player.birth_year}</strong></p>{/if}
+      <div class="player-details"><h3><PlayerName {player} /></h3>{#if player.birth_year !== null}{@const age = new Date().getFullYear() - player.birth_year}<p class="player-age"><strong>{age}</strong><span>{ageUnit(age)}</span></p>{/if}
       </div>
       <div class="player-actions">
         <button class="secondary icon-label" disabled={busy} data-open-tab onclick={() => onedit(player.id)} aria-label={`${text.editPlayer}: ${playerLabel(player)}`}><Icon name="edit" size={18} />{text.editPlayer}</button>
@@ -77,7 +83,7 @@
 </dialog>
 
 <style>
-  .birth-year { display:flex; gap:8px; align-items:baseline; }
-  .birth-year > span { color:var(--text-muted); }
-  .birth-year > strong { color:var(--text-primary); font-weight:500; font-variant-numeric:tabular-nums; }
+  .player-age { display:flex; gap:4px; align-items:baseline; }
+  .player-age > span { color:var(--text-muted); }
+  .player-age > strong { color:var(--text-primary); font-weight:500; font-variant-numeric:tabular-nums; }
 </style>

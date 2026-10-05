@@ -156,8 +156,8 @@ Open a category’s **Draw → Edit**, then click a player or BYE in the opening
 
 Category creation/settings display three switches in one row (stacked on narrow windows): age group, Lucky loser/BYE, and a single third place. Lucky loser is available for groups → knockout; direct knockout uses BYE. With the third-place switch off, semifinalists share third place. With it on, choose a bronze match or award third to the semifinalist beaten by the eventual champion. The other semifinalist is fourth. A bronze match is shown beside the final round in Matches and below the bracket; completion waits for its result. If there is only one semifinal loser because of BYEs, that participant is third without an extra match.
 
-Enabling the Lucky loser switch reveals automatic or manual filling. Manual mode leaves vacant places awaiting a participant or BYE. Player directory cards show only name/club and birth year; other details are in the profile.
+Enabling the Lucky loser switch reveals automatic or manual filling. Manual mode leaves vacant places awaiting a participant or BYE. Player directory cards show only name/club and age (current year minus birth year); other details are in the profile.
 
 The bracket participant picker uses an inline dropdown whose list height adapts to the viewport; the list owns scrolling without expanding an absolutely positioned menu beyond the dialog.
 
-Player birth-year labels are muted; the year itself uses the theme’s primary text color.
+Player age numbers use the theme’s primary text color, with a muted year/years unit. Serbian uses godina for endings 1 and 5–9/0, godine for endings 2–4, and godina for 11–14.
