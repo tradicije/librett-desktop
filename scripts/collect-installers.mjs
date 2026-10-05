@@ -1,6 +1,8 @@
 import { createHash } from 'node:crypto';
 import { createReadStream } from 'node:fs';
-import { copyFile, mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, readFile, readdir, rename, rm, writeFile } from 'node:fs/promises';
+import { spawnSync } from 'node:child_process';
+import { randomUUID } from 'node:crypto';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -36,6 +38,7 @@ async function* files(directory) {
 const candidates = [];
 for await (const path of files(resolve(input))) candidates.push(path);
 const checksums = [];
+const packagedFiles = [];
 for (const extension of formats[platform]) {
   const matching = candidates.filter(path => path.endsWith(extension));
   if (matching.length !== 1) {
@@ -44,9 +47,41 @@ for (const extension of formats[platform]) {
   const name = `LibreTT_${metadata.version}_${platform}${extension}`;
   const target = join(destination, name);
   await copyFile(matching[0], target);
+  packagedFiles.push(target);
   const hash = createHash('sha256');
   for await (const chunk of createReadStream(target)) hash.update(chunk);
   checksums.push(`${hash.digest('hex')}  ${name}`);
   console.log(target);
 }
-await writeFile(join(destination, `SHA256SUMS-${platform}.txt`), `${checksums.join('\n')}\n`);
+const checksumFile = join(destination, `SHA256SUMS-${platform}.txt`);
+await writeFile(checksumFile, `${checksums.join('\n')}\n`);
+packagedFiles.push(checksumFile);
+
+// Plain text instructions open without a Markdown viewer and travel with the installer.
+if (platform.startsWith('macos-') || platform.startsWith('windows-')) {
+  const os = platform.startsWith('macos-') ? 'macos' : 'windows';
+  for (const language of ['sr', 'en']) {
+    const source = await readFile(join(root, 'docs/install', `${os}-${language}.txt`), 'utf8');
+    const text = source.replaceAll('{{VERSION}}', metadata.version)
+      .replaceAll('{{CHECKSUM}}', `SHA256SUMS-${platform}.txt`)
+      .replaceAll('{{INSTALLER}}', `LibreTT_${metadata.version}_${platform}${formats[platform][0]}`);
+    const path = join(destination, `README-${language.toUpperCase()}.txt`);
+    await writeFile(path, text);
+    packagedFiles.push(path);
+  }
+  const archive = join(destination, `LibreTT_${metadata.version}_${platform}.zip`);
+  const temporary = join(destination, `.package-${randomUUID()}.zip`);
+  try {
+    const result = process.platform === 'win32'
+      ? spawnSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command',
+        "$ErrorActionPreference='Stop'; $files=ConvertFrom-Json $env:LIBRETT_ZIP_FILES; Compress-Archive -LiteralPath $files -DestinationPath $env:LIBRETT_ZIP_OUTPUT -CompressionLevel Optimal"],
+      { stdio: 'inherit', env: { ...process.env, LIBRETT_ZIP_FILES: JSON.stringify(packagedFiles), LIBRETT_ZIP_OUTPUT: temporary } })
+      : spawnSync('zip', ['-j', '-q', temporary, ...packagedFiles], { stdio: 'inherit' });
+    if (result.error) throw result.error;
+    if (result.status !== 0) throw new Error(`ZIP packaging failed: ${result.status ?? result.signal}`);
+    await rename(temporary, archive);
+    console.log(archive);
+  } finally {
+    await rm(temporary, { force: true });
+  }
+}

@@ -51,7 +51,7 @@ jobs:
         run: npm ci
       - name: Build installers
         run: npm run desktop:build -- --ci --target ${{ matrix.target }} --bundles ${{ matrix.bundles }} -- --locked
-      - name: Collect installers and SHA-256 checksums
+      - name: Package installers, bilingual instructions and SHA-256 checksums
         run: npm run desktop:collect -- target/${{ matrix.target }}/release/bundle ${{ matrix.platform }}
       - uses: actions/upload-artifact@v4
         with:

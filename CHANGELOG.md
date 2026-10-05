@@ -6,6 +6,8 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Packaging
 
+- macOS and Windows release ZIPs now include the installer, Serbian/English plain-text installation instructions and installer SHA-256 checksums. Instructions explain Gatekeeper/SmartScreen prompts and preserve system protection.
+
 - Prepared `0.1.0-beta.1` with synchronized npm, Cargo and Tauri metadata and a beta label in About.
 - Enabled macOS application/DMG bundles (Apple Silicon and Intel), Windows NSIS setup with offline WebView2 installation, and Linux DEB/AppImage packages. Application identifier and local data location are unchanged.
 - Added a manual/tag-triggered GitHub Actions matrix that uploads installers as artifacts without publishing a release, plus release-file collection with platform names and SHA-256 checksums.

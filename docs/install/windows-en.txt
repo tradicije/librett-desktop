@@ -1,0 +1,30 @@
+LibreTT {{VERSION}} — Windows installation (x64)
+
+Installer: {{INSTALLER}}
+
+1. Right-click the downloaded ZIP → Extract All.
+2. Open the extracted folder and run the EXE installer listed above.
+3. Follow the setup wizard, then launch LibreTT from the Start menu.
+The package includes the WebView2 runtime for installation without downloading it.
+
+This beta has no publisher certificate. If a standard SmartScreen message
+says “Windows protected your PC” / “Unknown publisher” and you trust the source:
+select More info, then Run anyway if that option is available.
+
+If Run anyway is missing, Smart App Control or computer policy may block
+unsigned applications. Do not disable protection globally; on a managed
+computer contact your administrator, or report the issue to the project.
+These instructions do not apply to an antivirus report identifying actual
+malware. Do not bypass that warning; report it with the exact message.
+
+This is a beta; real-tournament validation is pending. Before replacing an
+earlier version, stop LibreTT and make a manual backup through the app.
+Data stays local; the installer does not contain your database. Keep a backup
+and parallel record for your first tournament. Referee/phone tools are not included.
+
+Official downloads and issue reports:
+https://github.com/tradicije/librett-desktop/releases
+https://github.com/tradicije/librett-desktop/issues
+Microsoft protection information:
+https://learn.microsoft.com/windows/apps/develop/smartscreen-reputation
+{{CHECKSUM}} in this package contains the installer checksum.

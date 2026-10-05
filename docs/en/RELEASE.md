@@ -49,6 +49,9 @@ npm run desktop:collect -- target/release/bundle macos-arm64
 
 Other collection labels are `macos-x64`, `windows-x64`, and `linux-x64`.
 Collected files are in `release-assets/<platform>/`, which is ignored by Git.
+macOS and Windows also produce a release ZIP containing the installer,
+`README-SR.txt`, `README-EN.txt` and installer checksums. Packaging uses `zip` on
+macOS and PowerShell Compress-Archive on Windows; Linux keeps its standalone packages.
 Collection requires exactly one package per expected format and matching npm,
 Cargo and Tauri versions. If old bundles remain, use a clean checkout/build
 directory rather than mixing versions. Builds with `--target <triple>` write to
@@ -59,7 +62,8 @@ directory rather than mixing versions. Builds with `--target <triple>` write to
 1. Commit and push the packaging changes to GitHub.
 2. Open **Actions → Build beta installers → Run workflow** and select the branch.
 3. Wait for all four platform jobs to finish. Each uploads an artifact named
-   `LibreTT-<platform>` containing the installer(s) and `SHA256SUMS-<platform>.txt`.
+   `LibreTT-<platform>` containing the installer(s), checksums, and a ready-made
+   release ZIP with bilingual instructions for macOS/Windows.
 4. Download and extract each artifact. Artifacts are retained for 30 days.
    Run installation checks before publishing; successful CI only confirms builds.
 
@@ -76,8 +80,10 @@ Create a tag for the exact commit used by the successful builds, then open
 
 - Select `v0.1.0-beta.1` and title it `LibreTT 0.1.0-beta.1`.
 - Mark **Set as a pre-release**.
-- Attach the extracted DMG, EXE, DEB and AppImage files, plus all four checksum
-  files. Attach the packages themselves, not the Actions artifact ZIPs.
+- Extract the downloaded Actions artifact ZIPs. For macOS/Windows, attach the
+  inner `LibreTT_<version>_<platform>.zip` release ZIP, which includes bilingual
+  instructions beside the installer. For Linux, attach the DEB/AppImage and
+  checksum file. Do not publish the outer Actions artifact ZIP as the release package.
 - Include the beta limitations, installation instructions and changelog summary.
 - Keep the tag/source archives available for the corresponding AGPL source code.
 

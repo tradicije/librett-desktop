@@ -1,0 +1,30 @@
+LibreTT {{VERSION}} — instalacija na Windows-u (x64)
+
+Installer: {{INSTALLER}}
+
+1. Desni klik na preuzeti ZIP → Extract All / Izdvoji sve.
+2. Otvori raspakovani folder i pokreni navedeni EXE installer.
+3. Prati instalacioni čarobnjak, pa pokreni LibreTT iz Start menija.
+Paket uključuje WebView2 runtime za instalaciju bez preuzimanja sa interneta.
+
+Ova beta nema sertifikat izdavača. Ako se pojavi obična SmartScreen poruka
+„Windows protected your PC” / „Unknown publisher”, a veruješ izvoru preuzimanja:
+klikni More info / Više informacija, pa Run anyway / Ipak pokreni ako je ponuđeno.
+
+Ako nema dugmeta Run anyway, Smart App Control ili pravila računara mogu da
+blokiraju nepotpisanu aplikaciju. Ne isključuj zaštitu globalno; na službenom
+računaru obrati se administratoru ili prijavi problem projektu.
+Ovo uputstvo ne važi za upozorenje antivirusa da je pronađen konkretan malver.
+Takvo upozorenje nemoj preskakati; prijavi ga sa tačnim tekstom poruke.
+
+Ovo je beta; provera na pravom turniru još predstoji. Pre prelaska sa ranije
+verzije zaustavi LibreTT i napravi ručnu rezervnu kopiju kroz aplikaciju.
+Podaci ostaju lokalno; installer ne sadrži tvoju bazu. Za prvi turnir zadrži
+bekap i paralelnu evidenciju. Sudije/telefoni nisu deo ove verzije.
+
+Zvanična izdanja i prijava problema:
+https://github.com/tradicije/librett-desktop/releases
+https://github.com/tradicije/librett-desktop/issues
+Microsoft objašnjenje zaštite:
+https://learn.microsoft.com/windows/apps/develop/smartscreen-reputation
+{{CHECKSUM}} u ovom paketu sadrži kontrolnu sumu instalera.

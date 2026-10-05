@@ -1,0 +1,32 @@
+LibreTT {{VERSION}} — macOS installation
+
+Installer: {{INSTALLER}}
+Apple Silicon (M1/M2/M3 and newer): download the macos-arm64 package.
+Intel Mac: download macos-x64. Check the processor in About This Mac.
+
+1. Double-click the ZIP to extract it, then open the DMG listed above.
+2. Drag LibreTT into Applications.
+3. Launch LibreTT from Applications, not from the mounted DMG.
+4. After installation, close and eject the DMG in Finder.
+
+If macOS cannot verify the developer or says the app is not notarized:
+this beta is ad-hoc signed and has not been notarized by Apple.
+If you trust this download's source, after trying to launch the app, open
+System Settings → Privacy & Security → Open Anyway for LibreTT.
+Confirm opening and provide your password or Touch ID if requested.
+Older macOS versions may use System Preferences → Security & Privacy.
+
+If macOS identifies actual malware or a damaged file, do not bypass that
+warning. Download again from the official repository and report the problem.
+There is no need to disable system protection globally or use Terminal.
+
+This is a beta; real-tournament validation is pending. Before replacing an
+earlier version, stop LibreTT and make a manual backup through the app.
+Data stays local; the installer does not contain your database. Keep a backup
+and parallel record for your first tournament. Referee/phone tools are not included.
+
+Official downloads and issue reports:
+https://github.com/tradicije/librett-desktop/releases
+https://github.com/tradicije/librett-desktop/issues
+Apple instructions: https://support.apple.com/102445
+{{CHECKSUM}} in this package contains the installer checksum.

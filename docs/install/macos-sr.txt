@@ -1,0 +1,32 @@
+LibreTT {{VERSION}} — instalacija na macOS-u
+
+Installer: {{INSTALLER}}
+Apple Silicon (M1/M2/M3 i noviji): preuzmi macos-arm64 paket.
+Intel Mac: preuzmi macos-x64 paket. Tip procesora vidiš u About This Mac.
+
+1. Raspakuj ZIP dvoklikom i otvori navedeni DMG fajl.
+2. Prevuci LibreTT u Applications.
+3. Pokreni LibreTT iz Applications, ne iz otvorenog DMG-a.
+4. Posle instalacije zatvori i izbaci DMG iz Finder-a.
+
+Ako macOS kaže da ne može da proveri developera ili da aplikacija nije
+notarizovana: ova beta ima ad-hoc potpis, bez Apple notarizacije.
+Ako veruješ izvoru ovog preuzimanja, nakon pokušaja pokretanja otvori
+System Settings → Privacy & Security → Open Anyway za LibreTT.
+Potvrdi otvaranje i, ako sistem zatraži, lozinku ili Touch ID.
+U starijem macOS-u ove opcije mogu biti u System Preferences → Security & Privacy.
+
+Ako sistem prijavi konkretan malver ili oštećen fajl, nemoj preskakati to
+upozorenje. Preuzmi paket ponovo sa zvaničnog repozitorijuma i prijavi problem.
+Nije potrebno globalno isključivati zaštitu sistema niti koristiti Terminal.
+
+Ovo je beta; provera na pravom turniru još predstoji. Pre prelaska sa ranije
+verzije zaustavi LibreTT i napravi ručnu rezervnu kopiju kroz aplikaciju.
+Podaci ostaju lokalno; installer ne sadrži tvoju bazu. Za prvi turnir zadrži
+bekap i paralelnu evidenciju. Sudije/telefoni nisu deo ove verzije.
+
+Zvanična izdanja i prijava problema:
+https://github.com/tradicije/librett-desktop/releases
+https://github.com/tradicije/librett-desktop/issues
+Apple uputstvo: https://support.apple.com/102445
+{{CHECKSUM}} u ovom paketu sadrži kontrolnu sumu instalera.

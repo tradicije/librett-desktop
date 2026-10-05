@@ -47,7 +47,10 @@ npm run desktop:collect -- target/release/bundle macos-arm64
 ```
 
 Ostale oznake su `macos-x64`, `windows-x64` i `linux-x64`. Pripremljeni fajlovi
-su u `release-assets/<platform>/`, koji Git ignoriše. Mora da postoji tačno jedan
+su u `release-assets/<platform>/`, koji Git ignoriše. macOS i Windows dobijaju i
+ZIP za izdanje sa installerom, `README-SR.txt`, `README-EN.txt` i kontrolnom sumom
+instalera. Pakovanje koristi `zip` na macOS-u i PowerShell Compress-Archive na
+Windows-u; Linux zadržava samostalne pakete. Mora da postoji tačno jedan
 paket svakog očekivanog formata, a npm, Cargo i Tauri verzije moraju da se poklapaju.
 Ako u build folderu ostanu stari paketi, koristi čist checkout/build folder.
 Sa `--target <triple>` putanja je `target/<triple>/release/bundle/`; nju prosledi
@@ -58,7 +61,8 @@ komandi za prikupljanje paketa.
 1. Commituj i pushuj izmene za pakovanje.
 2. Otvori **Actions → Build beta installers → Run workflow** i izaberi granu.
 3. Sačekaj sva četiri platform job-a. Svaki dodaje artifact `LibreTT-<platform>`
-   sa instalacionim fajlovima i `SHA256SUMS-<platform>.txt`.
+   sa instalacionim fajlovima, kontrolnim sumama i, za macOS/Windows, gotovim
+   ZIP paketom sa uputstvima na oba jezika.
 4. Preuzmi i raspakuj sve artifact-e. Čuvaju se 30 dana. Proveri instalacije pre
    objavljivanja; uspešan CI potvrđuje build, ne rad na pravom turniru.
 
@@ -74,8 +78,10 @@ otvori **Releases → Draft a new release**:
 
 - Izaberi `v0.1.0-beta.1`, sa naslovom `LibreTT 0.1.0-beta.1`.
 - Označi **Set as a pre-release**.
-- Dodaj raspakovane DMG, EXE, DEB i AppImage fajlove i sve četiri kontrolne sume.
-  Dodaj same instalere, ne ZIP arhive preuzete iz Actions-a.
+- Raspakuj ZIP arhive preuzete iz Actions-a. Za macOS/Windows dodaj unutrašnji
+  `LibreTT_<verzija>_<platforma>.zip`: to je paket za izdanje sa oba uputstva uz
+  installer. Za Linux dodaj DEB/AppImage i kontrolnu sumu. Spoljašnja Actions ZIP
+  arhiva nije paket koji objavljuješ.
 - Opiši funkcije, ograničenja bete i instalaciju, uz sažetak changelog-a.
 - Zadrži tag i arhive izvornog koda za odgovarajuće AGPL izdanje.
 
