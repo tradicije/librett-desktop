@@ -42,8 +42,8 @@ Tab Igrači prikazuje zajedničku listu. Dodaj/Izmeni otvara zasebne ekrane za
 profile i fotografije, a čuvanje vraća na listu. Brisanje traži potvrdu i čuva
 igrače sa postojećim prijavama. Prijave unutar turnira koriste tu bazu i mogu
 da se povuku i vrate;
-dolazak igrača važi kroz sve kategorije istog turnira. Šema verzije 18 sadrži neizmenjive nacrte žreba i verzije pravila kategorije; pre migracije starijih baza pravi se konzistentan
-`pre-v18-<uuid>.sqlite` backup.
+dolazak igrača važi kroz sve kategorije istog turnira. Šema verzije 19 sadrži neizmenjive nacrte žreba i verzije pravila kategorije; pre migracije starijih baza pravi se konzistentan
+`pre-v19-<uuid>.sqlite` backup.
 
 Nazad/Napred prati istoriju aktivnog radnog taba. Home dugme u gornjoj traci
 vraća na stalni početni ekran koji nema bočni meni. Čuvanje zaključava navigaciju do završetka.
@@ -488,3 +488,7 @@ Stranica Rezervne kopije u bočnom meniju koristi SQLite Backup API za konzisten
 Izveštaji su dostupni u Grupama/Žrebu, Rezultatima i Blagajni. CSV koristi UTF-8 BOM, navodnike i zaštitu od formula. HTML kodira korisničke vrednosti. Izveštaj kategorije čita stanje u jednoj transakciji. Poseban pregled otvara sistemski dijalog za štampu, uključujući čuvanje PDF-a. Listovi kostura imaju najviše 32 početna učesnika po bloku. Fajlovi idu u Downloads/LibreTT (rezervno u app data); dugme Otvori folder prikazuje lokaciju.
 
 Provere: `npm run check`, `npm run build`, `npm run test:reports` i `cargo test --workspace --exclude librett-desktop --offline`. Sistemske dijaloge za štampu i otvaranje foldera treba ručno proveriti po platformama.
+
+## Korpa za turnire
+
+Šema 19 uvodi `tournament_trash`, vezanu za originalni turnir bez uklanjanja njegovih podataka. Aktivna lista i dohvat turnira isključuju turnire u korpi; posebna lista korpe zadržava ceo sažetak turnira. Premeštanje i vraćanje mogu bezbedno da se ponove, a završeni turniri zadržavaju status završetka. SQLite okidači odbijaju izmene sportskih podataka, metapodataka, rasporeda i blagajne turnira u korpi, uključujući zahteve iz ranije otvorenih radnih prostora. Zajednički profili igrača ostaju dostupni za izmenu. Otvoreni tabovi prikazuju obaveštenje kada njihov turnir nestane iz deljene aktivne liste. Rezervne kopije čuvaju korpu; kopije šeme 18 migriraju se i proveravaju pre vraćanja. Nema komande za trajno brisanje niti automatskog isteka.

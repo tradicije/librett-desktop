@@ -25,7 +25,7 @@ pub(super) fn state(
     .ok_or(ApplicationError::NotFound)
 }
 pub(super) fn ensure_category_open(conn: &Connection, id: Uuid) -> Result<(), ApplicationError> {
-    let closed: Option<bool> = conn.query_row("SELECT c.completed_at IS NOT NULL OR t.completed_at IS NOT NULL FROM categories c JOIN tournaments t ON t.id=c.tournament_id WHERE c.id=?1", [id.to_string()], |r|r.get(0)).optional().map_err(|_|ApplicationError::Storage)?;
+    let closed: Option<bool> = conn.query_row("SELECT c.completed_at IS NOT NULL OR t.completed_at IS NOT NULL FROM categories c JOIN tournaments t ON t.id=c.tournament_id WHERE c.id=?1 AND t.id NOT IN (SELECT tournament_id FROM tournament_trash)", [id.to_string()], |r|r.get(0)).optional().map_err(|_|ApplicationError::Storage)?;
     match closed {
         Some(false) => Ok(()),
         Some(true) => Err(ApplicationError::CompetitionClosed),
@@ -33,6 +33,7 @@ pub(super) fn ensure_category_open(conn: &Connection, id: Uuid) -> Result<(), Ap
     }
 }
 pub(super) fn ensure_tournament_open(conn: &Connection, id: Uuid) -> Result<(), ApplicationError> {
+    super::trash::ensure_active(conn, id)?;
     if state(conn, "tournaments", id)?.completed_at.is_some() {
         Err(ApplicationError::CompetitionClosed)
     } else {

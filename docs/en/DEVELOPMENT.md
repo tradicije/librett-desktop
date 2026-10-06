@@ -42,8 +42,8 @@ The Players tab shows the shared directory. Add/Edit opens dedicated profile
 screens, including photos, and returns to the list after saving. Delete asks for
 confirmation and protects profiles with existing registrations. Tournament
 registration uses that directory. Entries can be withdrawn/restored, and player
-attendance is shared across categories in a tournament. Schema version 18 includes immutable draw drafts and versioned category rules; older on-disk databases receive a consistent
-`pre-v18-<uuid>.sqlite` backup before migration.
+attendance is shared across categories in a tournament. Schema version 19 includes immutable draw drafts and versioned category rules; older on-disk databases receive a consistent
+`pre-v19-<uuid>.sqlite` backup before migration.
 
 Back/Forward follows the active workspace’s screen history. The top Home button
 returns to the pinned mode-selection workspace. The mode chooser has no sidebar. Saves lock navigation until
@@ -500,3 +500,7 @@ The sidebar Backups page creates consistent snapshots with SQLite Backup API. St
 Reports are available in Groups/Draw, Results and Cash Desk. CSV uses UTF-8 BOM, quoted cells and formula-prefix protection. HTML escapes all user values. Category reports share one read transaction. A separate preview window opens the native print dialog, including the system PDF destination. Bracket sheets contain at most 32 starting entrants per block. Files are saved to Downloads/LibreTT (app data fallback); Open folder reveals that location.
 
 Checks: `npm run check`, `npm run build`, `npm run test:reports`, and `cargo test --workspace --exclude librett-desktop --offline`. Native print dialogs and filesystem folder opening still require manual platform verification.
+
+## Tournament Trash
+
+Schema 19 introduces `tournament_trash`, referencing the original tournament without deleting any of its records. Active listing and lookup exclude its members; the dedicated Trash list retains the full tournament summary. Moving and restoring are idempotent, and completed tournaments keep their completion status. Database triggers reject sporting, metadata, scheduling and cash writes for trashed tournaments, including requests from stale workspaces. Global player profiles remain editable. Open tabs display an unavailable notice when their tournament is removed from the shared active list. Backups preserve Trash; schema 18 backups are migrated and validated before restoration. There is no permanent-delete command or automatic expiry.

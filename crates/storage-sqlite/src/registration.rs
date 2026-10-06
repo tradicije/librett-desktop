@@ -271,7 +271,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(files.len(), 2);
         let backup = files.iter().find(|p| **p != path).unwrap();
-        assert!(backup.to_string_lossy().contains("pre-v18"));
+        assert!(backup.to_string_lossy().contains("pre-v19"));
         let connection = Connection::open(backup).unwrap();
         assert_eq!(
             connection

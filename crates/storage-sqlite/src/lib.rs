@@ -17,6 +17,7 @@ mod player_cash_tests;
 mod players;
 mod registration;
 mod scheduling;
+mod trash;
 #[cfg(test)]
 mod workflow_tests;
 
@@ -33,6 +34,7 @@ impl SqliteTournamentRepository {
         expected_name: &str,
         expected_cover: Option<String>,
     ) -> Result<Tournament, ApplicationError> {
+        self.find(id)?;
         let normalized = Tournament::new(name)?.name;
         if let Some(image) = &cover {
             librett_domain::validate_jpeg(image, true)?;
@@ -68,9 +70,9 @@ impl SqliteTournamentRepository {
         let path = path.as_ref();
         let connection = Connection::open(path)?;
         let version: i64 = connection.query_row("PRAGMA user_version", [], |row| row.get(0))?;
-        if (1..18).contains(&version) {
+        if (1..19).contains(&version) {
             // VACUUM INTO creates a consistent SQLite snapshot before changing an existing schema.
-            let backup = path.with_extension(format!("pre-v18-{}.sqlite", Uuid::new_v4()));
+            let backup = path.with_extension(format!("pre-v19-{}.sqlite", Uuid::new_v4()));
             connection.execute("VACUUM INTO ?1", [backup.to_string_lossy().as_ref()])?;
         }
         Self::initialize(connection)
@@ -80,7 +82,7 @@ impl SqliteTournamentRepository {
         connection.busy_timeout(Duration::from_secs(5))?;
         connection.execute_batch("PRAGMA foreign_keys = ON;")?;
         let version: i64 = connection.query_row("PRAGMA user_version", [], |row| row.get(0))?;
-        if version > 18 {
+        if version > 19 {
             return Err(rusqlite::Error::InvalidQuery);
         }
         if version == 0 {
@@ -200,6 +202,11 @@ impl SqliteTournamentRepository {
             transaction.execute_batch(include_str!("../migrations/018_scheduling.sql"))?;
             transaction.commit()?;
         }
+        if version < 19 {
+            let transaction = connection.transaction()?;
+            transaction.execute_batch(include_str!("../migrations/019_tournament_trash.sql"))?;
+            transaction.commit()?;
+        }
         Ok(Self { connection })
     }
 
@@ -258,7 +265,7 @@ impl TournamentRepository for SqliteTournamentRepository {
     fn list(&self) -> Result<Vec<Tournament>, ApplicationError> {
         let mut statement = self
             .connection
-            .prepare("SELECT id, name, cover FROM tournaments ORDER BY rowid DESC")
+            .prepare("SELECT id, name, cover FROM tournaments WHERE id NOT IN (SELECT tournament_id FROM tournament_trash) ORDER BY rowid DESC")
             .map_err(|_| ApplicationError::Storage)?;
         let rows = statement
             .query_map([], |row| {
@@ -290,7 +297,7 @@ impl TournamentRepository for SqliteTournamentRepository {
         let (name, cover) = self
             .connection
             .query_row(
-                "SELECT name,cover FROM tournaments WHERE id = ?1",
+                "SELECT name,cover FROM tournaments WHERE id = ?1 AND id NOT IN (SELECT tournament_id FROM tournament_trash)",
                 [id.to_string()],
                 |row| Ok((row.get::<_, String>(0)?, row.get::<_, Option<String>>(1)?)),
             )

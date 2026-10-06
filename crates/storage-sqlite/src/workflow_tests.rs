@@ -1,7 +1,7 @@
 use super::*;
 use librett_application::{
     self as app, CategoryRulesRepository, CompletionRequest, PlayerCashRepository,
-    SaveFillersRequest, SaveMatchRequest, ScheduleAction, ScheduleRequest,
+    PlayerRepository, SaveFillersRequest, SaveMatchRequest, ScheduleAction, ScheduleRequest,
 };
 use librett_domain::{
     CategoryRules, DrawMode, DrawSettings, FillerChoice, KnockoutFilling, MatchOutcome,
@@ -583,4 +583,159 @@ fn backup_restore_validates_before_replacement_and_preserves_safety_copy() {
         1
     );
     std::fs::remove_dir_all(directory).unwrap();
+}
+
+#[test]
+fn tournament_trash_preserves_results_cash_history_and_backup_restore() {
+    let directory = std::env::temp_dir().join(format!("librett-trash-test-{}", Uuid::new_v4()));
+    let path = directory.join("live.sqlite");
+    std::fs::create_dir_all(&directory).unwrap();
+    let mut repo = SqliteTournamentRepository::open(&path).unwrap();
+    let tournament = app::create_tournament(&mut repo, "Završeni kup")
+        .unwrap()
+        .id;
+    let other = app::create_tournament(&mut repo, "Aktivni kup").unwrap();
+    let entrants = players(&mut repo, 4);
+    let id = category(
+        &mut repo,
+        tournament,
+        "Singl",
+        CompetitionFormat::Knockout,
+        CategoryRules::default(),
+        &entrants,
+    );
+    let entries = repo.list_entries(id).unwrap();
+    let payment = librett_domain::CashRecord {
+        id: Uuid::new_v4(),
+        entry_id: entries[0].id,
+        kind: librett_domain::CashKind::Payment,
+        amount_minor: 50_000,
+        note: String::new(),
+        created_at: String::new(),
+    };
+    app::record_cash(&mut repo, tournament, payment).unwrap();
+    finish_knockout(&mut repo, tournament, id);
+    complete(&mut repo, tournament, Some(id), true).unwrap();
+    complete(&mut repo, tournament, None, true).unwrap();
+    let original = repo.find(tournament).unwrap();
+    let results = serde_json::to_value(repo.category_results(tournament, id).unwrap()).unwrap();
+    let cash = repo.cash_ledger(tournament).unwrap();
+    let history: i64 = repo
+        .connection
+        .query_row("SELECT count(*) FROM completion_history", [], |r| r.get(0))
+        .unwrap();
+    repo.trash_tournament(tournament).unwrap();
+    repo.trash_tournament(tournament).unwrap(); // Retrying cannot duplicate or lose data.
+    assert_eq!(repo.list().unwrap(), vec![other.clone()]);
+    assert_eq!(repo.find(tournament), Err(ApplicationError::NotFound));
+    assert_eq!(
+        repo.list_trashed_tournaments().unwrap(),
+        vec![original.clone()]
+    );
+    assert!(repo
+        .update_tournament_details(tournament, "Changed", None, &original.name, None)
+        .is_err());
+    // Cash remains editable on completed tournaments, but never while in trash.
+    assert!(repo.connection.execute("INSERT INTO cash_records(id,entry_id,kind,amount_minor,note) VALUES(?1,?2,'payment',1,'')", params![Uuid::new_v4().to_string(),entries[0].id.to_string()]).is_err());
+    assert!(repo
+        .connection
+        .execute(
+            "UPDATE tournaments SET name='Changed' WHERE id=?1",
+            [tournament.to_string()]
+        )
+        .is_err());
+    let backup = repo.create_backup(&directory, "manual").unwrap();
+    drop(repo);
+    let mut repo = SqliteTournamentRepository::open(&path).unwrap();
+    assert_eq!(
+        repo.list_trashed_tournaments().unwrap(),
+        vec![original.clone()]
+    );
+    assert_eq!(repo.restore_tournament(tournament).unwrap(), original);
+    assert_eq!(repo.restore_tournament(tournament).unwrap(), original);
+    assert_eq!(
+        serde_json::to_value(repo.category_results(tournament, id).unwrap()).unwrap(),
+        results
+    );
+    assert_eq!(repo.cash_ledger(tournament).unwrap(), cash);
+    assert_eq!(
+        repo.connection
+            .query_row("SELECT count(*) FROM completion_history", [], |r| r
+                .get::<_, i64>(0))
+            .unwrap(),
+        history
+    );
+    assert_eq!(repo.list_entries(id).unwrap(), entries);
+    assert_eq!(repo.find(other.id).unwrap(), other);
+    assert_eq!(repo.list_players().unwrap().len(), entrants.len());
+    repo.restore_backup(&directory, &backup.name).unwrap();
+    assert_eq!(
+        repo.list_trashed_tournaments().unwrap(),
+        vec![original.clone()]
+    );
+    assert_eq!(repo.restore_tournament(tournament).unwrap(), original);
+    assert_eq!(
+        serde_json::to_value(repo.category_results(tournament, id).unwrap()).unwrap(),
+        results
+    );
+    drop(repo);
+    std::fs::remove_dir_all(directory).unwrap();
+}
+
+#[test]
+fn trashed_open_tournament_rejects_stale_sporting_writes_and_unknown_ids() {
+    let mut repo = repository();
+    let tournament = app::create_tournament(&mut repo, "Otvoreni kup")
+        .unwrap()
+        .id;
+    let entrants = players(&mut repo, 2);
+    let id = category(
+        &mut repo,
+        tournament,
+        "Singl",
+        CompetitionFormat::Knockout,
+        CategoryRules::default(),
+        &entrants,
+    );
+    repo.trash_tournament(tournament).unwrap();
+    assert_eq!(
+        app::add_category(
+            &mut repo,
+            tournament,
+            "Dubl",
+            Discipline::Doubles,
+            CompetitionFormat::Knockout
+        ),
+        Err(ApplicationError::NotFound)
+    );
+    assert_eq!(
+        app::set_player_attendance(&mut repo, tournament, entrants[0], true),
+        Err(ApplicationError::NotFound)
+    );
+    assert!(repo
+        .connection
+        .execute(
+            "UPDATE categories SET name='Stale' WHERE id=?1",
+            [id.to_string()]
+        )
+        .is_err());
+    assert!(repo
+        .connection
+        .execute(
+            "UPDATE entries SET status='withdrawn' WHERE category_id=?1",
+            [id.to_string()]
+        )
+        .is_err());
+    assert_eq!(
+        repo.trash_tournament(Uuid::new_v4()),
+        Err(ApplicationError::NotFound)
+    );
+    assert_eq!(
+        repo.restore_tournament(Uuid::new_v4()),
+        Err(ApplicationError::NotFound)
+    );
+    repo.restore_tournament(tournament).unwrap();
+    app::set_player_attendance(&mut repo, tournament, entrants[0], true).unwrap();
+    finish_knockout(&mut repo, tournament, id);
+    assert!(repo.category_results(tournament, id).unwrap().ready);
 }

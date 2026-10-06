@@ -166,3 +166,7 @@ LibreTT se pruža bez garancije; puni uslovi nalaze se u licenci.
 U bočnom meniju otvori **Rezervne kopije** za dnevne/ručne snimke i vraćanje. Sto se dodeljuje ručno kroz **Mečevi → Uredi meč**. Grupe, Žreb, Rezultati i Blagajna nude pregled štampe/PDF-a i CSV/HTML izvoz.
 
 Uvezeni bekap mora da odgovara strukturi LibreTT baze; izmenjena struktura i dodatni trigeri odbijaju se pre zamene podataka. Neuspešan automatski bekap prikazuje upozorenje sa dugmetom za ponovni pokušaj. U uređivanju meča promenu stola prvo potvrdi dugmetom **Sačuvaj sto**, pa sačuvaj rezultat.
+
+### Korpa za turnire
+
+Na kartici turnira izaberi **Premesti u korpu** i potvrdi uklanjanje iz aktivne liste. U bočnom meniju otvori **Korpa** da pretražiš i vratiš turnire. Prijave, žreb, rezultati, status završetka i blagajna ostaju sačuvani; zajednička baza igrača ostaje dostupna. Turniri u korpi ne mogu da se menjaju, a rezervne kopije uključuju i njih. Nema automatskog isteka niti trajnog brisanja.

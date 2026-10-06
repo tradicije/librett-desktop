@@ -169,3 +169,7 @@ LibreTT is provided without warranty; see the license for the full terms.
 Use **Backups** in the sidebar for daily/manual snapshots and restore. Assign tables manually in **Matches → Edit match**. Groups, Draw, Results and Cash Desk offer print/PDF preview and CSV/HTML export.
 
 Imported backups must match LibreTT’s database schema; altered schemas and extra triggers are rejected before replacing data. Automatic backup failures show a warning with a retry button. In the match editor, save table changes explicitly with **Save table** before saving a result.
+
+### Tournament Trash
+
+Choose **Move to trash** on a tournament card and confirm to remove it from the active list. Open **Trash** in the sidebar to search and restore tournaments. Registrations, draws, results, completion status and cash records remain stored; global player profiles are unaffected. Tournaments in Trash cannot be edited, and backups include them. There is no automatic expiry or permanent deletion.

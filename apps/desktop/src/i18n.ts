@@ -1,4 +1,10 @@
 const sr = {
+  trash: 'Korpa', trashTournament: 'Premesti u korpu', restoreTournament: 'Vrati turnir',
+  trashHint: 'Turnir će biti uklonjen iz aktivne liste. Prijave, rezultati i blagajna ostaju sačuvani i možeš ih vratiti iz korpe.',
+  trashIntro: 'Sačuvani turniri koje možeš vratiti u aktivnu listu.', trashEmpty: 'Korpa je prazna.',
+  tournamentTrashed: 'Turnir je premešten u korpu.', tournamentRestored: 'Turnir je vraćen.',
+  tournamentUnavailable: 'Turnir nije dostupan u aktivnoj listi. Ako je u korpi, vrati ga da nastaviš rad.',
+
   invalid_backup: 'Rezervna kopija nije ispravna ili je iz novije verzije aplikacije.',
   schedule_conflict: 'Raspored je promenjen. Učitaj trenutno stanje i pokušaj ponovo.',
   player_busy: 'Igrač je već dodeljen drugom stolu. Oslobodi taj sto ili završi meč.',
@@ -103,6 +109,12 @@ const sr = {
 };
 type Messages = typeof sr;
 const en: Messages = {
+  trash: 'Trash', trashTournament: 'Move to trash', restoreTournament: 'Restore tournament',
+  trashHint: 'The tournament will be removed from the active list. Registrations, results and cash records are preserved and can be restored from Trash.',
+  trashIntro: 'Saved tournaments that can be restored to the active list.', trashEmpty: 'Trash is empty.',
+  tournamentTrashed: 'Tournament moved to trash.', tournamentRestored: 'Tournament restored.',
+  tournamentUnavailable: 'This tournament is unavailable in the active list. If it is in Trash, restore it to continue.',
+
   invalid_backup: 'Invalid backup or a backup from a newer app version.',
   schedule_conflict: 'The schedule changed. Reload and try again.',
   player_busy: 'A player is already assigned to another table. Release it or finish the match.',

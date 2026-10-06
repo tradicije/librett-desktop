@@ -10,6 +10,9 @@ export type EntryStatus = 'registered' | 'withdrawn';
 export interface Entry { id: string; category_id: string; status: EntryStatus; members: (Pick<Player, 'id' | 'name' | 'club'> & { checked_in: boolean })[] }
 export const desktopAvailable = isTauri();
 
+export const listTrashedTournaments = () => invoke<Tournament[]>('list_trashed_tournaments');
+export const trashTournament = (id: string) => invoke<void>('trash_tournament', { id });
+export const restoreTournament = (id: string) => invoke<Tournament>('restore_tournament', { id });
 export const listTournaments = () => invoke<Tournament[]>('list_tournaments');
 export const addCategory = (tournamentId: string, name: string, discipline: Discipline, format: CompetitionFormat, feeMinor: number) =>
   invoke<Tournament>('add_category', { tournamentId, name, discipline, format, feeMinor });

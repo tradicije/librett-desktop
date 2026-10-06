@@ -1,4 +1,5 @@
 <script lang="ts">
+  import TournamentTrash from './TournamentTrash.svelte';
   import InfoRows from './InfoRows.svelte';
   import Backups, {type RestoreSource} from './Backups.svelte';
   import Select from './Select.svelte';
@@ -18,7 +19,7 @@
   import darkIcon from '../../../assets/img/icon-dark.png';
   import lightIcon from '../../../assets/img/icon-light.png';
   import { type ThemePreference, type ResolvedTheme } from './theme';
-  import { deleteCategory, desktopAvailable, listTournaments, type CompetitionFormat, type Discipline, type Category, type Tournament } from './api';
+  import { trashTournament, deleteCategory, desktopAvailable, listTournaments, type CompetitionFormat, type Discipline, type Category, type Tournament } from './api';
   import { messages, errorKey, type Language, type MessageKey } from './i18n';
 
   import type { Route, TournamentTab, WorkspaceStatus } from './workspace';
@@ -40,7 +41,7 @@
   let route = $derived(history[historyIndex]);
   let childDirty = $state(false);
   let inPlayers = $derived(route.view === 'players' || route.view === 'player-create' || route.view === 'player-edit');
-  let pageLabel = $derived(route.view === 'backups' ? (language==='sr'?'Rezervne kopije':'Backups') : route.view === 'tournament-create' ? text.addTournament : route.view === 'dashboard' ? text.dashboard : inPlayers ? text.playerTab : text.tournaments);
+  let pageLabel = $derived(route.view === 'trash' ? text.trash : route.view === 'backups' ? (language==='sr'?'Rezervne kopije':'Backups') : route.view === 'tournament-create' ? text.addTournament : route.view === 'dashboard' ? text.dashboard : inPlayers ? text.playerTab : text.tournaments);
   let mode = $derived(route.view === 'dashboard' ? 'dashboard' : 'tournaments');
   let childBusy = $state(false);
   let selectedId = $derived((['tournament', 'category', 'category-create', 'category-edit'].includes(route.view)) ? route.id : null);
@@ -58,6 +59,7 @@
   let selectedCategory = $derived(activeCategories.find(c => c.id === route.categoryId));
   let breadcrumbs = $derived.by(() => {
     const items: { label: string; route: Route }[] = [];
+    if(route.view==='trash')return [{label:text.trash,route:{view:'trash' as const}}];
     if(route.view==='backups')return [{label:language==='sr'?'Rezervne kopije':'Backups',route:{view:'backups' as const}}];
     if (inPlayers) {
       items.push({ label: text.playerTab, route: { view: 'players' } });
@@ -78,6 +80,8 @@
     if (route.view === 'tournament-create') items.push({ label: text.addTournament, route: { ...route } });
     return items;
   });
+  let pendingTournament = $state<Tournament | null>(null);
+  let tournamentDialog: HTMLDialogElement;
   let pendingCategory = $state<Category | null>(null);
   let categoryDialog: HTMLDialogElement;
   let busy = $state(false);
@@ -110,7 +114,8 @@
     let refreshVersion=0;
     const refresh=async()=>{const version=++refreshVersion;try{const current=await listTournaments();if(version===refreshVersion)tournaments=current;}catch(cause){error=errorKey(cause);}};
     window.addEventListener('librett-completion-updated',refresh);
-    return()=>{refreshVersion++;window.removeEventListener('librett-completion-updated',refresh);};
+    window.addEventListener('librett-trash-updated',refresh);
+    return()=>{refreshVersion++;window.removeEventListener('librett-completion-updated',refresh);window.removeEventListener('librett-trash-updated',refresh);};
   });
   let wasActive = untrack(() => active);
   $effect(() => { if (active && !wasActive && route.view === 'tournaments' && desktopAvailable && !navigationLocked && !dirty) void load(); wasActive = active; });
@@ -145,6 +150,23 @@
     if (selected) navigate({ view: 'tournament', id: selected.id, tournamentTab: tab });
   }
 
+  async function confirmTournament(tournament: Tournament) {
+    if (navigationLocked) return;
+    pendingTournament = tournament; await tick(); tournamentDialog.showModal();
+  }
+  async function removeTournament() {
+    if (!pendingTournament || navigationLocked) return;
+    busy = true; error = null;
+    try {
+      const id = pendingTournament.id;
+      await trashTournament(id);
+      ++loadVersion; loading = false;
+      tournaments = tournaments.filter(t => t.id !== id);
+      tournamentDialog.close(); notice = 'tournamentTrashed';
+      window.dispatchEvent(new Event('librett-trash-updated'));
+    } catch (cause) { error = errorKey(cause); tournamentDialog.close(); }
+    finally { busy = false; }
+  }
   async function confirmCategory(category: Category) {
     pendingCategory = category; await tick(); categoryDialog.showModal();
   }
@@ -177,9 +199,10 @@
     </div>
     {#if !sidebarCollapsed}<p class="sidebar-label">{text.workspace}</p>{/if}
     <nav id={`${uid}-sidebar-nav`} aria-label={text.navigation}>
-      <button data-open-tab class="nav-item" class:active={!inPlayers && route.view!=='backups'} aria-current={!inPlayers && route.view!=='backups' ? 'page' : undefined} disabled={navigationLocked} aria-label={text.tournaments} title={text.tournaments} onclick={openTournaments}><Icon name="trophy" />{#if !sidebarCollapsed}<span>{text.tournaments}</span>{/if}</button>
+      <button data-open-tab class="nav-item" class:active={!inPlayers && !['backups','trash'].includes(route.view)} aria-current={!inPlayers && !['backups','trash'].includes(route.view) ? 'page' : undefined} disabled={navigationLocked} aria-label={text.tournaments} title={text.tournaments} onclick={openTournaments}><Icon name="trophy" />{#if !sidebarCollapsed}<span>{text.tournaments}</span>{/if}</button>
       <button data-open-tab class="nav-item" class:active={inPlayers} aria-current={inPlayers ? 'page' : undefined} disabled={navigationLocked} aria-label={text.playerTab} title={text.playerTab} onclick={() => navigate({ view: 'players' })}><Icon name="users" />{#if !sidebarCollapsed}<span>{text.playerTab}</span>{/if}</button>
       <button data-open-tab class="nav-item" class:active={route.view==='backups'} disabled={navigationLocked} aria-label={language==='sr'?'Rezervne kopije':'Backups'} title={language==='sr'?'Rezervne kopije':'Backups'} onclick={()=>navigate({view:'backups'})}><Icon name="backup"/>{#if !sidebarCollapsed}<span>{language==='sr'?'Rezervne kopije':'Backups'}</span>{/if}</button>
+      <button data-open-tab class="nav-item" class:active={route.view==='trash'} aria-current={route.view==='trash' ? 'page' : undefined} disabled={navigationLocked} aria-label={text.trash} title={text.trash} onclick={()=>navigate({view:'trash'})}><Icon name="trash"/>{#if !sidebarCollapsed}<span>{text.trash}</span>{/if}</button>
     </nav>
     <div class="sidebar-bottom">
       <span class="icon-label" title={text.local}><Icon name="desktop" size={16} />{#if !sidebarCollapsed}{text.local}{/if}</span>
@@ -232,6 +255,8 @@
           <span class="pill" id={`${uid}-league-status`}>{text.later}</span>
         </button>
       </div>
+    {:else if route.view === 'trash'}
+      <TournamentTrash {language} {active} bind:busy={childBusy} onrestored={(tournament) => { tournaments = [tournament, ...tournaments.filter(t => t.id !== tournament.id)]; notice = 'tournamentRestored'; }} />
     {:else if route.view === 'backups'}
       <Backups {language} bind:busy={childBusy} {onrestore}/>
     {:else if route.view === 'players'}
@@ -284,6 +309,8 @@
       {:else if tournamentTab === 'cash'}
         {#key selected.id}<CashDesk {active} tournament={selected} {language} bind:busy={childBusy} />{/key}
       {/if}
+    {:else if selectedId}
+      <p class="banner">{text.tournamentUnavailable}</p><button data-open-tab class="secondary icon-label" disabled={navigationLocked} onclick={()=>navigate({view:'trash'})}><Icon name="trash" size={18}/>{text.trash}</button>
     {:else}
       <div class="heading"><div><h1>{text.tournaments}</h1><p class="muted">{text.intro}</p></div><button data-open-tab class="primary" disabled={navigationLocked || loading || !desktopAvailable} onclick={() => navigate({ view: 'tournament-create' })}><Icon name="plus" />{text.addTournament}</button></div>
       {#if loading}<p class="muted" role="status">{text.loading}</p>
@@ -299,9 +326,12 @@
                   <span><Icon name="users" size={16} />{tournament.registered_count} {text.tournamentPlayers.toLocaleLowerCase()}</span>
                   <span><Icon name="layer-group" size={16} />{text.categories}: {tournament.categories.filter(c => !c.archived).length}</span>
                 </div>
+                <div class="tournament-card-actions">
                 <button data-open-tab class="secondary tournament-open" disabled={navigationLocked} onclick={(event) => { event.stopPropagation(); select(tournament.id); }} aria-label={`${language === 'sr' ? 'Otvori turnir' : 'Open tournament'}: ${tournament.name}`}>
                   {language === 'sr' ? 'Otvori turnir' : 'Open tournament'}<Icon name="arrow-right" size={18} />
                 </button>
+                <button class="icon-button" disabled={navigationLocked || loading || !desktopAvailable} title={text.trashTournament} aria-label={`${text.trashTournament}: ${tournament.name}`} onclick={(event) => { event.stopPropagation(); void confirmTournament(tournament); }}><Icon name="trash" size={18}/></button>
+                </div>
               </div>
             </div>
           {/each}
@@ -313,12 +343,19 @@
   </main>
 </div>
 
+<dialog class="confirm-dialog" bind:this={tournamentDialog} aria-labelledby={`${uid}-tournament-trash-title`} oncancel={(event)=>{if(busy)event.preventDefault();}} onclose={()=>{pendingTournament=null;}}>
+  <h2 id={`${uid}-tournament-trash-title`}>{text.trashTournament}</h2><p><strong>{pendingTournament?.name}</strong></p><p>{text.trashHint}</p>
+  <div class="dialog-actions"><button class="secondary" disabled={busy} onclick={()=>tournamentDialog.close()}>{text.cancelDelete}</button><button class="primary" disabled={busy} onclick={removeTournament}><Icon name="trash" size={16}/>{text.trashTournament}</button></div>
+</dialog>
+
 <dialog class="confirm-dialog" bind:this={categoryDialog} aria-labelledby={`${uid}-category-delete-title`} oncancel={(event) => { if (busy) event.preventDefault(); }} onclose={() => { pendingCategory = null; }}>
   <h2 id={`${uid}-category-delete-title`}>{text.deleteCategory}</h2><p><strong>{pendingCategory?.name}</strong></p><p class="muted">{pendingCategory ? text[pendingCategory.discipline] : ''}</p><p>{text.deleteCategoryHint}</p>
   <div class="dialog-actions"><button class="secondary" disabled={busy} onclick={() => categoryDialog.close()}>{text.cancelDelete}</button><button class="primary" disabled={busy} onclick={removeCategory}><Icon name="trash" size={16} />{text.deleteCategory}</button></div>
 </dialog>
 
 <style>
+  .tournament-card-actions { display: flex; align-items: center; gap: 8px; margin-top: auto; }
+  .tournament-card-actions .tournament-open { flex: 1; margin-top: 0; width: auto; }
   .sidebar { width: 208px; padding-top: 0; }
   .sidebar-brand-row { display: flex; align-items: center; gap: 16px; height: var(--workspace-toolbar-height); flex-shrink: 0; margin-bottom: 30px; }
   .sidebar:not(.collapsed) .sidebar-brand-row { padding-inline: 12px; }

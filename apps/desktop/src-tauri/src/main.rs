@@ -206,6 +206,9 @@ fn main() {
             list_cash,
             record_cash,
             list_tournaments,
+            list_trashed_tournaments,
+            trash_tournament,
+            restore_tournament,
             create_tournament_with_cover,
             update_tournament_details,
             get_match_page,
@@ -373,6 +376,36 @@ fn record_cash(
         tournament_id,
         record,
     )
+}
+
+#[tauri::command]
+fn list_trashed_tournaments(
+    database: tauri::State<Database>,
+) -> Result<Vec<Tournament>, ApplicationError> {
+    database
+        .0
+        .lock()
+        .map_err(|_| ApplicationError::Storage)?
+        .list_trashed_tournaments()
+}
+#[tauri::command]
+fn trash_tournament(database: tauri::State<Database>, id: Uuid) -> Result<(), ApplicationError> {
+    database
+        .0
+        .lock()
+        .map_err(|_| ApplicationError::Storage)?
+        .trash_tournament(id)
+}
+#[tauri::command]
+fn restore_tournament(
+    database: tauri::State<Database>,
+    id: Uuid,
+) -> Result<Tournament, ApplicationError> {
+    database
+        .0
+        .lock()
+        .map_err(|_| ApplicationError::Storage)?
+        .restore_tournament(id)
 }
 
 #[tauri::command]

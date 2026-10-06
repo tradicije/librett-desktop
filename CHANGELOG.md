@@ -23,6 +23,8 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Added
 
+- Tournament Trash in the sidebar: confirmed removal from the active list, searchable saved tournaments and restoration with registrations, results, completion history and cash records intact. SQLite schema 19 blocks stale writes while tournaments are in Trash and preserves Trash in backups. Existing databases receive a pre-v19 snapshot before migration.
+
 - Database backups: daily consistent SQLite snapshots with 14-copy rotation, manual copies, export, validated restore/import and a safety copy before replacing data. Restore reloads workspaces to prevent stale writes.
 - Manual table assignment in Matches → Edit match, independently of score entry. Table/player conflicts are checked across tournament categories and doubles; assignments can be moved/removed and completed matches release tables while retaining their table number.
 - Print/PDF previews and UTF-8 CSV/HTML export for groups, bracket, final standings and cash desk. Brackets split into blocks of up to 32 entrants; category reports use one SQLite read snapshot. Export escapes HTML and protects spreadsheet cells from formula injection.
