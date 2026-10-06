@@ -492,3 +492,11 @@ Provere: `npm run check`, `npm run build`, `npm run test:reports` i `cargo test 
 ## Korpa za turnire
 
 Šema 19 uvodi `tournament_trash`, vezanu za originalni turnir bez uklanjanja njegovih podataka. Aktivna lista i dohvat turnira isključuju turnire u korpi; posebna lista korpe zadržava ceo sažetak turnira. Premeštanje i vraćanje mogu bezbedno da se ponove, a završeni turniri zadržavaju status završetka. SQLite okidači odbijaju izmene sportskih podataka, metapodataka, rasporeda i blagajne turnira u korpi, uključujući zahteve iz ranije otvorenih radnih prostora. Zajednički profili igrača ostaju dostupni za izmenu. Otvoreni tabovi prikazuju obaveštenje kada njihov turnir nestane iz deljene aktivne liste. Rezervne kopije čuvaju korpu; kopije šeme 18 migriraju se i proveravaju pre vraćanja. Nema komande za trajno brisanje niti automatskog isteka.
+
+## Tok dolaska i naplate
+
+Dolazak važi za ceo turnir i ne menja pripremljeni žreb. Naplata proverava aktivnu prijavu/kategoriju i dolazak platioca unutar neposredne transakcije. Naplata cele prijave zahteva dolazak svih članova; pojedinačna naplata dubla samo dolazak platioca. Povraćaj ne zahteva aktivnu prijavu ni potvrđen dolazak. Uspešno upisani zahtevi ostaju idempotentni i nakon promene uslova; izbor više stavki se u celosti poništava ako jedna više ne ispunjava uslove.
+
+Originalna zaduženja ostaju neizmenjivi istorijski zapisi. `cash-balance.ts` izvodi dug samo za prisutne aktivne igrače, procenu samo za nepotvrđene aktivne igrače, a zadržava neto uplate neaktivnih prijava radi povraćaja. Izvoz blagajne koristi isti račun i označava bruto zaduženja kao istorijska. Opoziv dolaska blokira nove naplate bez brisanja ranijih transakcija. Provere: `npm run test:cash` i Rust testovi radnog prostora.
+
+Kategorija počinje prvim upisanim rezultatom ili početkom meča na dodeljenom stolu. Promene prijava tada su zaključane, dok dolasci i dalje mogu da se potvrde. Prvi rezultat proverava dolaske svih aktivnih učesnika; izričiti izuzetak `allow_unconfirmed_start` čuva se u potvrdi upisa i ne menja dolaske. Podrazumevana false vrednost zadržava format postojećih potvrda. Početak meča na stolu takođe proverava dolaske. Predaje i walkover čuvaju sportsku istoriju kroz postojeći tok unosa rezultata. Nije potrebna migracija šeme.

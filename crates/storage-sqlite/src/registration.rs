@@ -2,6 +2,39 @@ use super::*;
 use librett_application::RegistrationRepository;
 use librett_domain::EntryStatus;
 
+pub(super) fn category_started(
+    conn: &Connection,
+    category: Uuid,
+) -> Result<bool, ApplicationError> {
+    conn.query_row("SELECT EXISTS(SELECT 1 FROM match_results r JOIN category_draws d ON d.id=r.draw_id WHERE d.category_id=?1) OR EXISTS(SELECT 1 FROM match_assignments a JOIN category_draws d ON d.id=a.draw_id WHERE d.category_id=?1 AND a.started_at IS NOT NULL)", [category.to_string()], |r| r.get(0)).map_err(|_| ApplicationError::Storage)
+}
+pub(super) fn ensure_start_attendance(
+    conn: &Connection,
+    tournament: Uuid,
+    category: Uuid,
+) -> Result<(), ApplicationError> {
+    if !category_started(conn, category)? {
+        let missing: bool = conn.query_row("SELECT EXISTS(SELECT 1 FROM entries e JOIN entry_members m ON m.entry_id=e.id LEFT JOIN player_attendance a ON a.tournament_id=?1 AND a.player_id=m.player_id WHERE e.category_id=?2 AND e.status='registered' AND COALESCE(a.checked_in,0)=0)", params![tournament.to_string(),category.to_string()], |r|r.get(0)).map_err(|_|ApplicationError::Storage)?;
+        if missing {
+            return Err(ApplicationError::AttendanceRequired);
+        }
+    }
+    Ok(())
+}
+impl SqliteTournamentRepository {
+    pub fn registration_started(
+        &self,
+        tournament: Uuid,
+        category: Uuid,
+    ) -> Result<bool, ApplicationError> {
+        let t = self.find(tournament)?;
+        if !t.categories.iter().any(|c| c.id == category && !c.archived) {
+            return Err(ApplicationError::NotFound);
+        }
+        category_started(&self.connection, category)
+    }
+}
+
 impl RegistrationRepository for SqliteTournamentRepository {
     fn set_entry_status(
         &mut self,
@@ -9,20 +42,39 @@ impl RegistrationRepository for SqliteTournamentRepository {
         entry_id: Uuid,
         status: EntryStatus,
     ) -> Result<(), ApplicationError> {
-        let category: String = self.connection.query_row("SELECT e.category_id FROM entries e JOIN categories c ON c.id=e.category_id WHERE e.id=?1 AND c.tournament_id=?2", params![entry_id.to_string(),tournament_id.to_string()], |r|r.get(0)).optional().map_err(|_|ApplicationError::Storage)?.ok_or(ApplicationError::NotFound)?;
+        let tx = self
+            .connection
+            .transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)
+            .map_err(|_| ApplicationError::Storage)?;
+        let category: String = tx.query_row("SELECT e.category_id FROM entries e JOIN categories c ON c.id=e.category_id WHERE e.id=?1 AND c.tournament_id=?2", params![entry_id.to_string(),tournament_id.to_string()], |r|r.get(0)).optional().map_err(|_|ApplicationError::Storage)?.ok_or(ApplicationError::NotFound)?;
         super::completion::ensure_category_open(
-            &self.connection,
+            &tx,
             Uuid::parse_str(&category).map_err(|_| ApplicationError::Storage)?,
         )?;
+        let was_registered: bool = tx
+            .query_row(
+                "SELECT status='registered' FROM entries WHERE id=?1",
+                [entry_id.to_string()],
+                |r| r.get(0),
+            )
+            .map_err(|_| ApplicationError::Storage)?;
+        if (status == EntryStatus::Registered) != was_registered
+            && category_started(
+                &tx,
+                Uuid::parse_str(&category).map_err(|_| ApplicationError::Storage)?,
+            )?
+        {
+            return Err(ApplicationError::CompetitionStarted);
+        }
         let status = match status {
             EntryStatus::Registered => "registered",
             EntryStatus::Withdrawn => "withdrawn",
         };
-        let changed = self.connection.execute("UPDATE entries SET status = ?3 WHERE id = ?1 AND category_id IN (SELECT id FROM categories WHERE tournament_id = ?2)", params![entry_id.to_string(), tournament_id.to_string(), status]).map_err(|_| ApplicationError::Storage)?;
+        let changed = tx.execute("UPDATE entries SET status = ?3 WHERE id = ?1 AND category_id IN (SELECT id FROM categories WHERE tournament_id = ?2)", params![entry_id.to_string(), tournament_id.to_string(), status]).map_err(|_| ApplicationError::Storage)?;
         if changed == 0 {
             return Err(ApplicationError::NotFound);
         }
-        Ok(())
+        tx.commit().map_err(|_| ApplicationError::Storage)
     }
 
     fn set_player_attendance(

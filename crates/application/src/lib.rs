@@ -5,6 +5,9 @@ use uuid::Uuid;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ApplicationError {
+    AttendanceRequired,
+    RegistrationInactive,
+    CompetitionStarted,
     InvalidBackup,
     ScheduleConflict,
     PlayerBusy,
@@ -693,8 +696,14 @@ pub struct MatchPage {
     pub total: usize,
     pub matches: Vec<librett_domain::ScheduledMatch>,
 }
+fn is_false(value: &bool) -> bool {
+    !value
+}
+
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct SaveMatchRequest {
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub allow_unconfirmed_start: bool,
     pub request_id: Uuid,
     pub tournament_id: Uuid,
     pub category_id: Uuid,

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { cashBalance } from './cash-balance';
   import ReportActions from './ReportActions.svelte';
   import PlayerName from './PlayerName.svelte';
   import { playerLabel } from './player-label';
@@ -18,6 +19,7 @@
   let loaded = $state(false);
   let saving = $state(false);
   let search = $state('');
+  let showWithdrawn = $state(false);
   let selected = $state<Record<string, string[]>>({});
   let error = $state<MessageKey | null>(null);
   let notice = $state(false);
@@ -26,19 +28,8 @@
   let refund = $state<{ playerId: string; name: string; accounts: { entryId: string; label: string; amount: number }[] } | null>(null);
   let dialog: HTMLDialogElement;
   function money(amount: number) { return formatMoney(amount, language); }
-  function share(amount: number, position: number, count: number) { return Math.trunc(amount / count) + (position < Math.abs(amount % count) ? Math.sign(amount) : 0); }
-  function entryBalance(entry: Entry, playerId?: string) {
-    let due = 0; let net = 0; let allocatedNet = 0;
-    for (const record of ledger.records.filter(r => r.entry_id === entry.id)) {
-      if (record.kind === 'charge') due += record.amount_minor;
-      if (record.kind === 'discount') due -= record.amount_minor;
-      const sign = record.kind === 'payment' ? 1 : record.kind === 'refund' ? -1 : 0;
-      const allocations = ledger.allocations.filter(a => a.record_id === record.id);
-      if (playerId && allocations.length) allocatedNet += sign * allocations.filter(a => a.player_id === playerId).reduce((sum,a) => sum+a.amount_minor,0);
-      else net += sign * record.amount_minor;
-    }
-    if (playerId) { const position = entry.members.findIndex(m => m.id === playerId); due = share(due,position,entry.members.length); net = share(net,position,entry.members.length)+allocatedNet; }
-    return { due, net, remaining: Math.max(0,due-net) };
+  function entryBalance(entry: Entry, playerId: string) {
+    return cashBalance(entry, tournament.categories.find(c => c.id === entry.category_id), ledger, playerId);
   }
   function categoryLabel(entry: Entry) {
     const category = tournament.categories.find(c => c.id === entry.category_id);
@@ -54,25 +45,34 @@
     return [...players.values()].map(player => {
       const accounts = player.entries.map(entry => ({ entry, ...entryBalance(entry,player.id) }));
       const chosen = accounts.filter(a => selected[player.id]?.includes(a.entry.id));
-      return { ...player, accounts, remaining: accounts.reduce((sum,a) => sum+a.remaining,0), selectedRemaining: chosen.reduce((sum,a) => sum+a.remaining,0), selectedNet: chosen.reduce((sum,a) => sum+Math.max(0,a.net),0) };
+      return { ...player, accounts, expected: accounts.reduce((sum,a)=>sum+a.expected,0), remaining: accounts.reduce((sum,a) => sum+a.remaining,0), selectedRemaining: chosen.reduce((sum,a) => sum+a.remaining,0), selectedNet: chosen.reduce((sum,a) => sum+Math.max(0,a.net),0) };
     }).sort((a,b) => a.name.localeCompare(b.name,language));
   });
-  let filtered = $derived(rows.filter(row => `${playerLabel(row)} ${row.club} ${row.entries.map(categoryLabel).join(' ')}`.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase())));
+  let filtered = $derived(rows.filter(row => (showWithdrawn || row.accounts.some(a => a.active || a.net > 0)) && `${playerLabel(row)} ${row.club} ${row.entries.map(categoryLabel).join(' ')}`.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase())));
   let cashCategories = $derived(tournament.categories.filter(category => entries.some(entry => entry.category_id === category.id)));
-  let outstanding = $derived(entries.reduce((sum,e) => sum+entryBalance(e).remaining,0));
+  let outstanding = $derived(rows.reduce((sum,row)=>sum+row.remaining,0));
+  let expectedCash = $derived(rows.reduce((sum,row)=>sum+row.expected,0));
   let netReceived = $derived(ledger.records.reduce((sum,r) => sum+(r.kind === 'payment' ? r.amount_minor : r.kind === 'refund' ? -r.amount_minor : 0),0));
   let registered = $derived(new Set(entries.filter(e => e.status !== 'withdrawn' && !tournament.categories.find(c => c.id === e.category_id)?.archived).flatMap(e => e.members.map(m => m.id))).size);
+  let loadVersion = 0;
   async function load(preserveSelection = false) {
+    const version = ++loadVersion;
     loading = true; error = null;
     try {
       const [cash, groups] = await Promise.all([cashLedger(tournament.id), Promise.all(tournament.categories.map(c => listEntries(c.id)))]);
+      if (version !== loadVersion) return;
       ledger = cash; entries = groups.flat();
       selected = preserveSelection ? Object.fromEntries(Object.entries(selected).map(([player, ids]) => [player, ids.filter(id => entries.some(entry => entry.id === id))])) : {};
       loaded = true;
-    } catch (cause) { error = errorKey(cause); }
-    finally { loading = false; }
+    } catch (cause) { if (version === loadVersion) error = errorKey(cause); }
+    finally { if (version === loadVersion) loading = false; }
   }
-  onMount(() => { if (desktopAvailable) void load(); });
+  onMount(() => {
+    if (desktopAvailable) void load();
+    const refresh = (event: Event) => { if ((event as CustomEvent<string>).detail === tournament.id && !writeBusy) void load(true); };
+    window.addEventListener('librett-registration-updated',refresh);
+    return () => { ++loadVersion; window.removeEventListener('librett-registration-updated',refresh); };
+  });
   let wasActive = untrack(() => active);
   $effect(() => {
     if (active && !wasActive && desktopAvailable && !busy) void load(true);
@@ -105,12 +105,12 @@
     writeBusy = true; saving = true; error = null; notice = false;
     try {
       await settlePlayerCash(pending.id,tournament.id,pending.playerId,pending.entryIds,pending.paid,pending.expected);
-      ledger = await cashLedger(tournament.id);
+      await load(true);
       selected = { ...selected, [pending.playerId]: [] };
       pending = null; writeBusy = false; notice = true;
     } catch (cause) {
       error = errorKey(cause);
-      if (cause === 'cash_conflict') { pending = null; writeBusy = false; await load(true); error = 'cash_conflict'; }
+      if (['cash_conflict', 'attendance_required', 'registration_inactive'].includes(String(cause))) { pending = null; writeBusy = false; await load(true); error = errorKey(cause); }
       if (cause === 'invalid_cash' || cause === 'not_found') { pending = null; writeBusy = false; }
     } finally { saving = false; }
   }
@@ -124,28 +124,31 @@
 {#if !loaded && desktopAvailable && !loading}<button onclick={() => load()}>{text.retry}</button>{/if}
 {#if loaded}
   <ReportActions kind="cash" {tournament} {language} bind:busy={exportBusy} disabled={writeBusy || loading}/>
-<div class="cash-totals"><section class="panel"><h2>{text.outstanding}</h2><strong>{money(outstanding)}</strong></section><section class="panel"><h2>{text.netReceived}</h2><strong>{money(netReceived)}</strong></section><section class="panel"><h2>{text.registeredPlayers}</h2><strong>{registered}</strong></section></div>
+<p class="muted">{text.cashAttendanceHint}</p>
+<div class="cash-totals"><section class="panel"><h2>{text.expectedAttendanceCash}</h2><strong>{money(expectedCash)}</strong></section><section class="panel"><h2>{text.outstanding}</h2><strong>{money(outstanding)}</strong></section><section class="panel"><h2>{text.netReceived}</h2><strong>{money(netReceived)}</strong></section><section class="panel"><h2>{text.registeredPlayers}</h2><strong>{registered}</strong></section></div>
   <section class="panel player-cash-list">
     <div class="directory-toolbar"><label class="search-field"><Icon name="search" size={17} /><input type="search" aria-label={text.searchCashPlayers} placeholder={text.searchCashPlayers} bind:value={search} disabled={busy || loading} /></label><span class="muted">{filtered.length} / {rows.length}</span></div>
+    <label class="icon-label"><input type="checkbox" bind:checked={showWithdrawn}/>{text.showWithdrawnCash}</label>
     <!-- svelte-ignore a11y_no_noninteractive_tabindex (Keyboard users need a focusable container to scroll the category matrix horizontally.) -->
     <div class="cash-table-scroll" role="region" aria-label={text.cashDesk} tabindex="0">
       <table class="cash-player-table" style:min-width={`${380 + cashCategories.length * 170}px`}>
         <thead><tr><th scope="col">{text.firstPlayer}</th>{#each cashCategories as category (category.id)}<th scope="col">{category.name}<small>{text[category.discipline]}</small>{#if category.archived}<small>{text.archivedCategory}</small>{/if}</th>{/each}<th scope="col">{text.outstanding}</th><th scope="col">{text.cashActions}</th></tr></thead>
         <tbody>
           {#each filtered as row (row.id)}
-            <tr class="cash-player-row" class:is-paid={row.remaining === 0}>
+            <tr class="cash-player-row" class:is-paid={row.remaining === 0 && row.expected === 0 && row.accounts.some(a=>a.active && a.net > 0)}>
               <th scope="row"><div class="cash-player-identity"><span class="player-avatar" aria-hidden="true">{row.name.split(/\s+/).slice(0,2).map(part => part[0]).join('').toLocaleUpperCase()}</span><div><h3><PlayerName player={row} /></h3><p>{row.club}</p></div></div></th>
               {#each cashCategories as category (category.id)}
                 {@const account = row.accounts.find(a => a.entry.category_id === category.id)}
                 <td>
                   {#if account}
-                    <label class="cash-category-choice"><input type="checkbox" checked={selected[row.id]?.includes(account.entry.id)} onchange={() => toggleCategory(row.id,account.entry.id)} disabled={busy || loading || (account.remaining === 0 && account.net <= 0)} aria-label={`${text.selectCashCategory}: ${playerLabel(row)} · ${categoryLabel(account.entry)}`} /><span class="cash-category-amount">{account.remaining === 0 ? text.paid : money(account.remaining)}</span></label>
+                    <label class="cash-category-choice"><input type="checkbox" checked={selected[row.id]?.includes(account.entry.id)} onchange={() => toggleCategory(row.id,account.entry.id)} disabled={busy || loading || ((!account.eligible || account.remaining === 0) && account.net <= 0)} aria-label={`${text.selectCashCategory}: ${playerLabel(row)} · ${categoryLabel(account.entry)}`} /><span class="cash-category-amount">{!account.active ? (category.archived ? text.archivedCategory : text.withdrawnRegistrations) : !account.arrived ? `${text.cashEstimate}: ${money(account.expected)}` : account.remaining === 0 ? text.paid : money(account.remaining)}</span></label>
+                    {#if account.active && !account.arrived}<small class="cash-cell-detail">{text.notArrived}</small>{/if}
                     {#if account.entry.members.length === 2}<small class="cash-cell-detail"><PlayerName player={account.entry.members.find(m => m.id !== row.id)} /></small>{/if}
                     {#if account.entry.status === 'withdrawn'}<small class="cash-cell-detail">{text.withdrawnRegistrations}</small>{/if}
                   {:else}<span class="cash-cell-empty" aria-label={text.notRegisteredCategory}>—</span>{/if}
                 </td>
               {/each}
-              <td class="cash-player-total"><strong>{money(row.remaining)}</strong>{#if row.selectedRemaining !== row.remaining}<small>{text.selectedCashAmount}: {money(row.selectedRemaining)}</small>{/if}</td>
+              <td class="cash-player-total"><strong>{money(row.remaining)}</strong>{#if row.expected > 0}<small>{text.cashEstimate}: {money(row.expected)}</small>{/if}{#if row.selectedRemaining !== row.remaining}<small>{text.selectedCashAmount}: {money(row.selectedRemaining)}</small>{/if}</td>
               <td><div class="cash-row-actions"><button class="primary cash-pay-button" onclick={() => paySelected(row)} disabled={busy || loading || row.selectedRemaining <= 0} aria-label={`${text.pay}: ${playerLabel(row)}`}>{text.pay}</button><button class="secondary" onclick={() => refundSelected(row)} disabled={busy || loading || row.selectedNet <= 0} aria-label={`${text.refund}: ${playerLabel(row)}`}>{text.refund}</button></div></td>
             </tr>
           {/each}

@@ -6,7 +6,7 @@
   import Select from './Select.svelte';
   import { onMount, untrack } from 'svelte';
   import Icon from './Icon.svelte';
-  import { desktopAvailable, getCategoryRules, listEntries, listPlayers, registerEntries, setEntryStatus, setPlayerAttendance, type EntryStatus, type Entry, type Player, type Tournament, type Category } from './api';
+  import { registrationStarted, desktopAvailable, getCategoryRules, listEntries, listPlayers, registerEntries, setEntryStatus, setPlayerAttendance, type EntryStatus, type Entry, type Player, type Tournament, type Category } from './api';
   import { errorKey, messages, type Language, type MessageKey } from './i18n';
 
   let { active = true, tournament, category, language, busy = $bindable(false), dirty = $bindable(false) }: { active?: boolean; tournament: Tournament; category: Category; language: Language; busy?: boolean; dirty?: boolean } = $props();
@@ -15,7 +15,9 @@
   let players = $state<Player[]>([]);
   let entries = $state<Entry[]>([]);
   let search = $state('');
-  let statusFilter = $state<'all' | EntryStatus>('all');
+  let statusFilter = $state<'all' | EntryStatus>('registered');
+  let started = $state(false);
+  let registrationLocked = $derived(readOnly || started);
   let visibleEntries = $derived(entries.filter(entry => statusFilter === 'all' || entry.status === statusFilter));
   let activeEntries = $derived(entries.filter(entry => entry.status !== 'withdrawn'));
   let checkedInCount = $derived(activeEntries.reduce((sum, entry) => sum + entry.members.filter(member => member.checked_in).length, 0));
@@ -50,8 +52,9 @@
     const version = ++requestVersion;
     loading = true;
     try {
-      const [current, directory] = await Promise.all([listEntries(categoryId), listPlayers()]);
+      const [current, directory, hasStarted] = await Promise.all([listEntries(categoryId), listPlayers(), registrationStarted(tournament.id,categoryId)]);
       if (version !== requestVersion) return;
+      started = hasStarted;
       entries = current; players = directory;
       const claimed = new Set(current.filter(entry => entry.status === 'registered').flatMap(entry => entry.members.map(member => member.id)));
       checked = checked.filter(id => !claimed.has(id));
@@ -66,13 +69,13 @@
     const version = ++requestVersion;
     entries = []; entriesLoaded = false; checked = []; pairs = [];
     if (!desktopAvailable || !id) return;
-    void listEntries(id).then(result => {
-      if (version === requestVersion) { entries = result; entriesLoaded = true; }
+    void Promise.all([listEntries(id),registrationStarted(tournament.id,id)]).then(([result,hasStarted]) => {
+      if (version === requestVersion) { entries = result; started = hasStarted; entriesLoaded = true; }
     }).catch(cause => { if (version === requestVersion) error = errorKey(cause); });
   });
 
   async function register(event: SubmitEvent) {
-    event.preventDefault(); if (!category) return;
+    event.preventDefault(); if (!category || registrationLocked || busy) return;
     busy = true; error = null; notice = null;
     try {
       const selectedGroups=groups.map(group=>[...group]);
@@ -82,7 +85,7 @@
       const selectedPlayers=directory.filter(player=>selectedIds.has(player.id));
       if(!await ageDialog.confirm(selectedPlayers,configuration.rules))return;
       const saved = await registerEntries(tournament.id, category.id, selectedGroups);
-      entries = [...entries, ...saved]; checked = []; pairs = []; notice = 'entrySaved';
+      entries = [...entries, ...saved]; checked = []; pairs = []; notice = 'entrySaved'; window.dispatchEvent(new CustomEvent('librett-registration-updated',{detail:tournament.id}));
     } catch (cause) {
       error = errorKey(cause);
       try {
@@ -95,12 +98,12 @@
     finally { busy = false; }
   }
   function toggle(id: string) {
-    if (readOnly || busy) return;
+    if (registrationLocked || busy) return;
     checked = checked.includes(id) ? checked.filter(item => item !== id) : [...checked, id];
   }
   function addPair() { if (checked.length === 2) { pairs = [...pairs, [...checked]]; checked = []; } }
   async function changeStatus(entry: Entry) {
-    if (readOnly || busy) return;
+    if (registrationLocked || busy) return;
     const next: EntryStatus = entry.status === 'withdrawn' ? 'registered' : 'withdrawn';
     busy = true; error = null; notice = null;
     try {
@@ -112,7 +115,7 @@
       }
       await setEntryStatus(tournament.id, entry.id, next);
       entries = entries.map(item => item.id === entry.id ? { ...item, status: next } : item);
-      notice = 'registrationUpdated';
+      notice = 'registrationUpdated'; window.dispatchEvent(new CustomEvent('librett-registration-updated',{detail:tournament.id}));
     } catch (cause) { error = errorKey(cause); }
     finally { busy = false; }
   }
@@ -123,7 +126,7 @@
     try {
       await setPlayerAttendance(tournament.id, member.id, checkedIn);
       entries = entries.map(entry => ({ ...entry, members: entry.members.map(item => item.id === member.id ? { ...item, checked_in: checkedIn } : item) }));
-      notice = 'attendanceUpdated';
+      notice = 'attendanceUpdated'; window.dispatchEvent(new CustomEvent('librett-registration-updated',{detail:tournament.id}));
     } catch (cause) { error = errorKey(cause); }
     finally { busy = false; }
   }
@@ -135,7 +138,7 @@
   {#if error}<p class="error" role="alert">{text[error]}<button disabled={loading || busy} onclick={() => { reload += 1; void loadPlayers(); }}>{text.retry}</button></p>{/if}
   <p class="notice" role="status">{notice ? text[notice] : ''}</p>
   <div class="columns">
-    <section class="panel"><h3 class="icon-label"><Icon name="list" />{text.entries}</h3>
+    <section class="panel"><h3 class="icon-label"><Icon name="list" />{text.activeRegistrations}</h3><p class="muted">{text.registrationStartHint}</p>
       {#if entriesLoaded}
         <div class="registration-summary"><span><strong>{activeEntries.length}</strong>{text.activeRegistrations}</span><span><strong>{checkedInCount}</strong>{text.arrivedPlayers}</span><span><strong>{entries.length - activeEntries.length}</strong>{text.withdrawnRegistrations}</span></div>
       {/if}
@@ -148,10 +151,10 @@
           <p class="muted">{entry.members.map(p => p.club).filter(Boolean).join(' / ')}</p>
           {#each entry.members as member (member.id)}
             <div class="attendance-row"><span><PlayerName player={member} /><small class="metadata-line muted">{member.checked_in ? text.arrived : text.notArrived}</small></span>
-              <button class="secondary icon-label" disabled={readOnly || busy || !desktopAvailable} aria-label={`${member.checked_in ? text.markAbsent : text.markArrived}: ${playerLabel(member)}`} onclick={() => changeAttendance(member)}><Icon name={member.checked_in ? 'restore' : 'check-circle'} size={18} />{member.checked_in ? text.markAbsent : text.markArrived}</button>
+              <button class="secondary icon-label" disabled={readOnly || busy || !desktopAvailable || entry.status === 'withdrawn'} aria-label={`${member.checked_in ? text.markAbsent : text.markArrived}: ${playerLabel(member)}`} onclick={() => changeAttendance(member)}><Icon name={member.checked_in ? 'restore' : 'check-circle'} size={18} />{member.checked_in ? text.markAbsent : text.markArrived}</button>
             </div>
           {/each}
-          <button class="secondary icon-label" disabled={readOnly || busy || !desktopAvailable} onclick={() => changeStatus(entry)}><Icon name={entry.status === 'withdrawn' ? 'restore' : 'withdraw'} size={18} />{entry.status === 'withdrawn' ? text.restoreEntry : text.withdrawEntry}</button>
+          <button class="secondary icon-label" disabled={readOnly || busy || !desktopAvailable || started} title={started ? text.competition_started : undefined} onclick={() => changeStatus(entry)}><Icon name={entry.status === 'withdrawn' ? 'restore' : 'withdraw'} size={18} />{entry.status === 'withdrawn' ? text.restoreEntry : text.withdrawEntry}</button>
         </article>
       {/each}
     </section>
@@ -162,17 +165,17 @@
         {#each filtered as player (player.id)}
           {@const registered = entries.some(e => e.members.some(m => m.id === player.id))}
           {@const inPair = queued.includes(player.id)}
-          <label class="picker-row"><input type="checkbox" checked={registered || inPair || checked.includes(player.id)} onchange={() => toggle(player.id)} disabled={readOnly || busy || !entriesLoaded || registered || inPair || (category.discipline === 'doubles' && checked.length >= 2 && !checked.includes(player.id))} /><span><strong><PlayerName {player} /></strong><small>{player.club}</small></span>{#if registered}<span class="pill">{text.alreadyInCategory}</span>{/if}</label>
+          <label class="picker-row"><input type="checkbox" checked={registered || inPair || checked.includes(player.id)} onchange={() => toggle(player.id)} disabled={registrationLocked || busy || !entriesLoaded || registered || inPair || (category.discipline === 'doubles' && checked.length >= 2 && !checked.includes(player.id))} /><span><strong><PlayerName {player} /></strong><small>{player.club}</small></span>{#if registered}<span class="pill">{text.alreadyInCategory}</span>{/if}</label>
         {/each}
         {#if !filtered.length}<p class="muted">{text.noPlayers}</p>{/if}
       </div>
       {#if category.discipline === 'doubles'}
-        <button type="button" class="secondary icon-label" onclick={addPair} disabled={readOnly || busy || checked.length !== 2}><Icon name="users" size={16} />{text.addPair}</button>
+        <button type="button" class="secondary icon-label" onclick={addPair} disabled={registrationLocked || busy || checked.length !== 2}><Icon name="users" size={16} />{text.addPair}</button>
         {#each pairs as pair, index}
-          <div class="pair-row"><span><PlayerName label={pair.map(id => playerLabel(players.find(p => p.id === id))).join(' / ')} /></span><button type="button" class="icon-button" aria-label={`${text.removePair}: ${index + 1}`} disabled={readOnly || busy} onclick={() => { pairs = pairs.filter((_, i) => i !== index); }}><Icon name="trash" size={16} /></button></div>
+          <div class="pair-row"><span><PlayerName label={pair.map(id => playerLabel(players.find(p => p.id === id))).join(' / ')} /></span><button type="button" class="icon-button" aria-label={`${text.removePair}: ${index + 1}`} disabled={registrationLocked || busy} onclick={() => { pairs = pairs.filter((_, i) => i !== index); }}><Icon name="trash" size={16} /></button></div>
         {/each}
       {/if}
-      <button class="primary" disabled={readOnly || busy || !desktopAvailable || !playersLoaded || !entriesLoaded || !groups.length}><Icon name="check-circle" size={18} />{busy ? text.saving : text.registerSelected} ({groups.length})</button>
+      <button class="primary" disabled={registrationLocked || busy || !desktopAvailable || !playersLoaded || !entriesLoaded || !groups.length}><Icon name="check-circle" size={18} />{busy ? text.saving : text.registerSelected} ({groups.length})</button>
     </form></section>
   </div>
 </section>

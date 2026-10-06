@@ -1,3 +1,4 @@
+import {cashBalance} from './cash-balance';
 import {getCategoryReport,cashLedger,listEntries,getSchedule,type Tournament,type Category} from './api';
 import {playerLabel} from './player-label';
 import {groupName,roundTitle,bracketSlots,bracketRounds,type BracketSlot} from './draw-view';
@@ -45,8 +46,9 @@ export async function buildReport(kind:ReportKind,tournament:Tournament,category
     const types=sr?{charge:'Zaduženje',discount:'Popust',payment:'Uplata',refund:'Povraćaj'}:{charge:'Charge',discount:'Discount',payment:'Payment',refund:'Refund'};
     const data=ledger.records.map(r=>{const entry=entries.get(r.entry_id);return [r.created_at,categories.get(entry?.category_id??'')??'',entry?.members.map(playerLabel).join(' / ')??r.entry_id,types[r.kind],(r.amount_minor/100).toFixed(2),r.note];});
     const totals={charge:0,discount:0,payment:0,refund:0};for(const r of ledger.records)totals[r.kind]+=r.amount_minor;
-    const totalsHeaders=sr?['Zaduženje','Popust','Uplata','Povraćaj','Dugovanje']:['Charge','Discount','Payment','Refund','Outstanding'];
-    const totalsData=[[totals.charge,totals.discount,totals.payment,totals.refund,totals.charge-totals.discount-totals.payment+totals.refund].map(v=>(v/100).toFixed(2))];
+    const balances=entryGroups.flat().flatMap(entry=>entry.members.map(member=>cashBalance(entry,tournament.categories.find(c=>c.id===entry.category_id),ledger,member.id)));
+    const totalsHeaders=sr?['Istorijska zaduženja','Popusti','Uplate','Povraćaji','Dugovanje prisutnih','Očekivano od nepotvrđenih']:['Historical charges','Discounts','Payments','Refunds','Outstanding from arrivals','Expected from unconfirmed arrivals'];
+    const totalsData=[[totals.charge,totals.discount,totals.payment,totals.refund,balances.reduce((sum,b)=>sum+b.remaining,0),balances.reduce((sum,b)=>sum+b.expected,0)].map(v=>(v/100).toFixed(2))];
     sections=table(totalsHeaders,totalsData)+table(headers,data);rows=[headers,...data,[],totalsHeaders,...totalsData];
   }else if(kind==='schedule'){
     const state=await getSchedule(tournament.id);const headers=sr?['Sto','Kategorija','Prvi učesnik','Drugi učesnik','Status']:['Table','Category','First participant','Second participant','Status'];

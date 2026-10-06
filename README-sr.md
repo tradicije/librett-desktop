@@ -170,3 +170,9 @@ Uvezeni bekap mora da odgovara strukturi LibreTT baze; izmenjena struktura i dod
 ### Korpa za turnire
 
 Na kartici turnira izaberi **Premesti u korpu** i potvrdi uklanjanje iz aktivne liste. U bočnom meniju otvori **Korpa** da pretražiš i vratiš turnire. Prijave, žreb, rezultati, status završetka i blagajna ostaju sačuvani; zajednička baza igrača ostaje dostupna. Turniri u korpi ne mogu da se menjaju, a rezervne kopije uključuju i njih. Nema automatskog isteka niti trajnog brisanja.
+
+### Prijave, dolasci i naplata
+
+Prijave bez potvrđenog dolaska ulaze u procenu prihoda, a ne u dugovanje. Potvrdi dolazak svakog igrača u **Prijavama** da omogućiš naplatu; kod dubla svaki igrač može da plati svoj deo nezavisno od partnera. Povučene prijave nestaju iz podrazumevane aktivne liste i više ne ulaze u procenu niti dugovanje. Finansijska istorija ostaje dostupna, a primljene uplate mogu da se vrate i posle povlačenja prijave.
+
+Žreb može da se pripremi pre provere dolazaka. Pre prvog rezultata LibreTT traži proveru nepotvrđenih dolazaka ili izričitu odluku organizatora da počne bez provere; taj izuzetak ne omogućava naplatu. Kada mečevi počnu, odustajanje beleži kroz predaju ili walkover u **Mečevima**, umesto promene prijava, da žreb i odigrani rezultati ostanu sačuvani.

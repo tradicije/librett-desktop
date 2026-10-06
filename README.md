@@ -173,3 +173,9 @@ Imported backups must match LibreTT’s database schema; altered schemas and ext
 ### Tournament Trash
 
 Choose **Move to trash** on a tournament card and confirm to remove it from the active list. Open **Trash** in the sidebar to search and restore tournaments. Registrations, draws, results, completion status and cash records remain stored; global player profiles are unaffected. Tournaments in Trash cannot be edited, and backups include them. There is no automatic expiry or permanent deletion.
+
+### Registrations, arrivals and payments
+
+Registrations without confirmed arrival contribute to an estimate rather than outstanding debt. Confirm each player’s arrival in **Registrations** to enable payment collection; doubles partners can pay their shares independently. Withdrawn registrations disappear from the default active list and no longer contribute estimates or debt. Their financial history remains available, and received payments can be refunded even after withdrawal.
+
+Draws can be prepared before arrival checks. Before the first result, LibreTT asks the organizer to confirm missing arrivals or explicitly start without checking them; this exception does not enable payment. After matches start, record retirement or walkover in **Matches** instead of changing registrations, to preserve the draw and completed results.

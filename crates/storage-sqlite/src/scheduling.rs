@@ -390,6 +390,18 @@ impl SqliteTournamentRepository {
                 if !current.assignments.iter().any(|a| a.table == table) {
                     return Err(ApplicationError::ScheduleConflict);
                 }
+                if matches!(request.action, ScheduleAction::Start { .. }) {
+                    let assignment = current
+                        .assignments
+                        .iter()
+                        .find(|a| a.table == table)
+                        .ok_or(ApplicationError::ScheduleConflict)?;
+                    super::registration::ensure_start_attendance(
+                        &tx,
+                        request.tournament_id,
+                        assignment.scheduled.category_id,
+                    )?;
+                }
                 let query = if matches!(request.action, ScheduleAction::Start { .. }) {
                     "UPDATE match_assignments SET status='running',started_at=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE tournament_id=?1 AND table_number=?2 AND status='queued'"
                 } else {

@@ -51,6 +51,9 @@ fn batch_entries_are_atomic_and_archived_categories_keep_cash_history() {
         let entries =
             register_entries(&mut r, tid, cid, vec![vec![players[0]], vec![players[1]]]).unwrap();
         assert_eq!(entries.len(), 2);
+        for player in &players[..2] {
+            librett_application::set_player_attendance(&mut r, tid, *player, true).unwrap();
+        }
         let note = CashRecord {
             id: Uuid::new_v4(),
             entry_id: entries[0].id,

@@ -31,6 +31,9 @@ fn category(
         players.iter().map(|id| vec![*id]).collect(),
     )
     .unwrap();
+    for player in players {
+        app::set_player_attendance(repo, tournament, *player, true).unwrap();
+    }
     let draft = app::preview_category_draw(
         repo,
         tournament,
@@ -77,6 +80,7 @@ fn score(
     let first = item.first.unwrap();
     let second = item.second.unwrap();
     repo.save_match_result(SaveMatchRequest {
+        allow_unconfirmed_start: false,
         request_id: Uuid::new_v4(),
         tournament_id: tournament,
         category_id: category,
@@ -738,4 +742,130 @@ fn trashed_open_tournament_rejects_stale_sporting_writes_and_unknown_ids() {
     app::set_player_attendance(&mut repo, tournament, entrants[0], true).unwrap();
     finish_knockout(&mut repo, tournament, id);
     assert!(repo.category_results(tournament, id).unwrap().ready);
+}
+
+#[test]
+fn first_result_checks_arrivals_and_explicit_override_does_not_enable_payment() {
+    let mut repo = repository();
+    let tournament = app::create_tournament(&mut repo, "Prepared draw")
+        .unwrap()
+        .id;
+    let entrants = players(&mut repo, 2);
+    let id = category(
+        &mut repo,
+        tournament,
+        "Singles",
+        CompetitionFormat::Knockout,
+        CategoryRules::default(),
+        &entrants,
+    );
+    for p in &entrants {
+        app::set_player_attendance(&mut repo, tournament, *p, false).unwrap();
+    }
+    let schedule = repo.schedule(tournament).unwrap();
+    let ready = schedule.waiting[0].clone();
+    let queued = repo
+        .change_schedule(ScheduleRequest {
+            request_id: Uuid::new_v4(),
+            tournament_id: tournament,
+            expected_version: schedule.version,
+            action: ScheduleAction::Assign {
+                draw_id: ready.draw_id,
+                key: ready.key,
+                table: 1,
+            },
+        })
+        .unwrap();
+    assert_eq!(
+        repo.change_schedule(ScheduleRequest {
+            request_id: Uuid::new_v4(),
+            tournament_id: tournament,
+            expected_version: queued.version,
+            action: ScheduleAction::Start { table: 1 },
+        })
+        .unwrap_err(),
+        ApplicationError::AttendanceRequired
+    );
+    assert_eq!(
+        repo.schedule(tournament).unwrap().assignments[0].status,
+        "queued"
+    );
+    let state = repo.competition_state(tournament, id).unwrap();
+    let item = state
+        .matches
+        .iter()
+        .find(|m| m.first.is_some() && m.second.is_some())
+        .unwrap()
+        .clone();
+    assert_eq!(
+        score(&mut repo, tournament, id, item.clone(), false, false).unwrap_err(),
+        ApplicationError::AttendanceRequired
+    );
+    assert!(!repo.registration_started(tournament, id).unwrap());
+    assert_eq!(
+        repo.competition_state(tournament, id).unwrap().matches[0].result,
+        None
+    );
+    let entries = repo.list_entries(id).unwrap();
+    repo.save_match_result(SaveMatchRequest {
+        request_id: Uuid::new_v4(),
+        tournament_id: tournament,
+        category_id: id,
+        draw_id: state.draw_id.unwrap(),
+        rules_revision: state.rules_revision,
+        key: item.key,
+        expected_revision: item.revision,
+        invalidate_downstream: false,
+        allow_unconfirmed_start: true,
+        result: MatchResult {
+            first: item.first.unwrap(),
+            second: item.second.unwrap(),
+            winner: item.first.unwrap(),
+            outcome: MatchOutcome::Walkover,
+            sets: vec![],
+            rules: repo.find_category_rules(id).unwrap().rules,
+        },
+    })
+    .unwrap();
+    assert!(repo.registration_started(tournament, id).unwrap());
+    assert!(repo
+        .list_entries(id)
+        .unwrap()
+        .iter()
+        .all(|e| e.members.iter().all(|m| !m.checked_in)));
+    assert_eq!(
+        repo.settle_player_cash(
+            Uuid::new_v4(),
+            tournament,
+            entrants[0],
+            vec![
+                entries
+                    .iter()
+                    .find(|e| e.members[0].id == entrants[0])
+                    .unwrap()
+                    .id
+            ],
+            true
+        ),
+        Err(ApplicationError::AttendanceRequired)
+    );
+    let results = serde_json::to_value(repo.category_results(tournament, id).unwrap()).unwrap();
+    assert_eq!(
+        app::set_entry_status(
+            &mut repo,
+            tournament,
+            entries[0].id,
+            librett_domain::EntryStatus::Withdrawn
+        ),
+        Err(ApplicationError::CompetitionStarted)
+    );
+    let late = players(&mut repo, 1)[0];
+    assert_eq!(
+        app::register_entry(&mut repo, tournament, id, vec![late]),
+        Err(ApplicationError::CompetitionStarted)
+    );
+    assert_eq!(
+        serde_json::to_value(repo.category_results(tournament, id).unwrap()).unwrap(),
+        results
+    );
 }

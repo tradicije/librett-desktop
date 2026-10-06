@@ -27,6 +27,7 @@ export const savePlayerChecked = (requestId: string, playerId: string, name: str
 export const getPlayer = (id: string) => invoke<Player>('get_player', { id });
 export const deletePlayer = (id: string) => invoke<void>('delete_player', { id });
 
+export const registrationStarted = (tournamentId: string, categoryId: string) => invoke<boolean>('registration_started', { tournamentId, categoryId });
 export const setEntryStatus = (tournamentId: string, entryId: string, status: EntryStatus) =>
   invoke<void>('set_entry_status', { tournamentId, entryId, status });
 export const setPlayerAttendance = (tournamentId: string, playerId: string, checkedIn: boolean) =>
@@ -81,7 +82,7 @@ export interface SetScore { first: number; second: number }
 export interface MatchResult { first: string; second: string; winner: string; outcome: MatchOutcome; sets: SetScore[]; rules: CategoryRules }
 export interface ScheduledMatch { key: string; round: number; position: number; first: string | null; second: string | null; bye: boolean; result: MatchResult | null; revision: number }
 export interface MatchPage { draw: CategoryDraw | null; rules: CategoryRules; rules_revision: number; stale: boolean; round_count: number; total: number; matches: ScheduledMatch[] }
-export interface SaveMatchRequest { request_id: string; tournament_id: string; category_id: string; draw_id: string; rules_revision: number; key: string; expected_revision: number; result: MatchResult; invalidate_downstream: boolean }
+export interface SaveMatchRequest { allow_unconfirmed_start?: boolean; request_id: string; tournament_id: string; category_id: string; draw_id: string; rules_revision: number; key: string; expected_revision: number; result: MatchResult; invalidate_downstream: boolean }
 export const getMatchPage = (tournamentId: string, categoryId: string, group: number, round: number, page: number, knockout = false) => invoke<MatchPage>('get_match_page', { tournamentId, categoryId, group, round, page, knockout });
 export const saveMatchResult = (request: SaveMatchRequest) => invoke<ScheduledMatch>('save_match_result', { request });
 

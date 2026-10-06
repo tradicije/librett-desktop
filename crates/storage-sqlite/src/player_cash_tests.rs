@@ -1,9 +1,153 @@
 use super::*;
 use librett_application::{
     add_category_with_fee, create_player, create_tournament, record_cash, register_entry,
-    PlayerCashRepository,
+    CategoryRepository, PlayerCashRepository,
 };
 use librett_domain::{cash_share, CashKind, CashRecord};
+
+#[test]
+fn payment_requires_arrival_and_active_registration_but_refunds_remain_available() {
+    use librett_application::{set_entry_status, set_player_attendance};
+    let mut r =
+        SqliteTournamentRepository::initialize(Connection::open_in_memory().unwrap()).unwrap();
+    let tid = create_tournament(&mut r, "Arrival cup").unwrap().id;
+    let a = create_player(&mut r, "A", "").unwrap().id;
+    let b = create_player(&mut r, "B", "").unwrap().id;
+    let t = add_category_with_fee(
+        &mut r,
+        tid,
+        "Doubles",
+        Discipline::Doubles,
+        CompetitionFormat::Knockout,
+        50_001,
+    )
+    .unwrap();
+    let cid = t.categories[0].id;
+    let entry = register_entry(&mut r, tid, cid, vec![a, b]).unwrap();
+    let payment = CashRecord {
+        id: Uuid::new_v4(),
+        entry_id: entry.id,
+        kind: CashKind::Payment,
+        amount_minor: 50_001,
+        note: String::new(),
+        created_at: String::new(),
+    };
+    assert_eq!(
+        record_cash(&mut r, tid, payment.clone()),
+        Err(ApplicationError::AttendanceRequired)
+    );
+    assert_eq!(
+        r.settle_player_cash(Uuid::new_v4(), tid, a, vec![entry.id], true),
+        Err(ApplicationError::AttendanceRequired)
+    );
+    set_player_attendance(&mut r, tid, a, true).unwrap();
+    // One doubles partner may pay their share while the other has not arrived.
+    assert_eq!(
+        record_cash(&mut r, tid, payment),
+        Err(ApplicationError::AttendanceRequired)
+    );
+    let request = Uuid::new_v4();
+    r.settle_player_cash(request, tid, a, vec![entry.id], true)
+        .unwrap();
+    let paid = r.cash_ledger(tid).unwrap();
+    assert_eq!(paid.records.last().unwrap().amount_minor, 25_001);
+    assert_eq!(
+        r.settle_player_cash(Uuid::new_v4(), tid, b, vec![entry.id], true),
+        Err(ApplicationError::AttendanceRequired)
+    );
+    set_entry_status(
+        &mut r,
+        tid,
+        entry.id,
+        librett_domain::EntryStatus::Withdrawn,
+    )
+    .unwrap();
+    set_player_attendance(&mut r, tid, a, false).unwrap();
+    // Receipt retries never collect twice, even after the registration changes.
+    r.settle_player_cash(request, tid, a, vec![entry.id], true)
+        .unwrap();
+    assert_eq!(r.cash_ledger(tid).unwrap(), paid);
+    assert_eq!(
+        r.settle_player_cash(Uuid::new_v4(), tid, a, vec![entry.id], true),
+        Err(ApplicationError::RegistrationInactive)
+    );
+    r.settle_player_cash(Uuid::new_v4(), tid, a, vec![entry.id], false)
+        .unwrap();
+    assert_eq!(
+        r.cash_ledger(tid).unwrap().records.last().unwrap().kind,
+        CashKind::Refund
+    );
+    set_entry_status(
+        &mut r,
+        tid,
+        entry.id,
+        librett_domain::EntryStatus::Registered,
+    )
+    .unwrap();
+    assert_eq!(
+        r.settle_player_cash(Uuid::new_v4(), tid, a, vec![entry.id], true),
+        Err(ApplicationError::AttendanceRequired)
+    );
+    set_player_attendance(&mut r, tid, a, true).unwrap();
+    r.settle_player_cash(Uuid::new_v4(), tid, a, vec![entry.id], true)
+        .unwrap();
+    assert_eq!(
+        r.cash_ledger(tid)
+            .unwrap()
+            .records
+            .iter()
+            .filter(|r| r.kind == CashKind::Charge)
+            .count(),
+        1
+    );
+    r.delete_category(tid, cid).unwrap();
+    assert_eq!(
+        r.settle_player_cash(Uuid::new_v4(), tid, a, vec![entry.id], true),
+        Err(ApplicationError::RegistrationInactive)
+    );
+    r.settle_player_cash(Uuid::new_v4(), tid, a, vec![entry.id], false)
+        .unwrap();
+}
+
+#[test]
+fn mixed_payment_selection_rolls_back_if_one_registration_is_withdrawn() {
+    let mut r =
+        SqliteTournamentRepository::initialize(Connection::open_in_memory().unwrap()).unwrap();
+    let tid = create_tournament(&mut r, "Atomic cup").unwrap().id;
+    let p = create_player(&mut r, "Player", "").unwrap().id;
+    let mut ids = Vec::new();
+    for name in ["First", "Second"] {
+        let t = add_category_with_fee(
+            &mut r,
+            tid,
+            name,
+            Discipline::Singles,
+            CompetitionFormat::Knockout,
+            10_000,
+        )
+        .unwrap();
+        ids.push(
+            register_entry(&mut r, tid, t.categories.last().unwrap().id, vec![p])
+                .unwrap()
+                .id,
+        );
+    }
+    ids.sort();
+    librett_application::set_player_attendance(&mut r, tid, p, true).unwrap();
+    librett_application::set_entry_status(
+        &mut r,
+        tid,
+        ids[1],
+        librett_domain::EntryStatus::Withdrawn,
+    )
+    .unwrap();
+    let before = r.cash_ledger(tid).unwrap();
+    assert_eq!(
+        r.settle_player_cash(Uuid::new_v4(), tid, p, ids, true),
+        Err(ApplicationError::RegistrationInactive)
+    );
+    assert_eq!(r.cash_ledger(tid).unwrap(), before);
+}
 
 #[test]
 fn player_settlement_splits_pairs_and_is_atomic_idempotent_and_persistent() {
@@ -42,6 +186,8 @@ fn player_settlement_splits_pairs_and_is_atomic_idempotent_and_persistent() {
         doubles = register_entry(&mut r, tid, t.categories[1].id, vec![player, partner])
             .unwrap()
             .id;
+        librett_application::set_player_attendance(&mut r, tid, player, true).unwrap();
+        librett_application::set_player_attendance(&mut r, tid, partner, true).unwrap();
         let record = CashRecord {
             id: Uuid::new_v4(),
             entry_id: singles,
@@ -183,6 +329,8 @@ fn historical_pair_payments_and_discounts_split_without_rounding_loss() {
     let e = register_entry(&mut r, tid, t.categories[0].id, vec![a, b])
         .unwrap()
         .id;
+    librett_application::set_player_attendance(&mut r, tid, a, true).unwrap();
+    librett_application::set_player_attendance(&mut r, tid, b, true).unwrap();
     for (kind, amount) in [(CashKind::Discount, 1), (CashKind::Payment, 10_001)] {
         record_cash(
             &mut r,

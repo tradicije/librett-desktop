@@ -1,4 +1,12 @@
 const sr = {
+  attendance_required: 'Prvo potvrdi dolazak. Naplata nije dostupna bez potvrđenog dolaska.',
+  registration_inactive: 'Prijava je povučena ili kategorija uklonjena. Naplata nije dostupna.',
+  competition_started: 'Mečevi su već počeli. Odustajanje evidentiraj u Mečevima kao predaju ili walkover, uz očuvanje rezultata.',
+  expectedAttendanceCash: 'Očekivano od nepotvrđenih', cashAttendanceHint: 'Naplata je dostupna tek nakon potvrde dolaska. Procena od nepotvrđenih prijava nije dugovanje. Povučene prijave zadržavaju istoriju uplata i mogućnost povraćaja.',
+  showWithdrawnCash: 'Prikaži i povučene prijave bez uplata', cashEstimate: 'Procena',
+  startAttendanceTitle: 'Dolasci nisu potvrđeni', startAttendanceHint: 'Za ove učesnike nema potvrde dolaska. Vrati se u Prijave da proveriš dolaske ili izričito potvrdi početak bez te provere. Ovo neće potvrditi dolazak niti omogućiti naplatu.',
+  startUnconfirmed: 'Potvrdi početak bez provere dolazaka', registrationStartHint: 'Žreb možeš pripremiti unapred. Pre prvog rezultata proveravaju se dolasci. Kada mečevi počnu, odustajanje se beleži kao predaja ili walkover u Mečevima.',
+
   trash: 'Korpa', trashTournament: 'Premesti u korpu', restoreTournament: 'Vrati turnir',
   trashHint: 'Turnir će biti uklonjen iz aktivne liste. Prijave, rezultati i blagajna ostaju sačuvani i možeš ih vratiti iz korpe.',
   trashIntro: 'Sačuvani turniri koje možeš vratiti u aktivnu listu.', trashEmpty: 'Korpa je prazna.',
@@ -109,6 +117,14 @@ const sr = {
 };
 type Messages = typeof sr;
 const en: Messages = {
+  attendance_required: 'Confirm attendance first. Payment is unavailable without confirmed arrival.',
+  registration_inactive: 'The registration is withdrawn or the category removed. Payment is unavailable.',
+  competition_started: 'Matches have started. Record withdrawal in Matches as retirement or walkover to preserve results.',
+  expectedAttendanceCash: 'Expected from unconfirmed arrivals', cashAttendanceHint: 'Collect payment only after confirming arrival. Unconfirmed registrations are an estimate, not outstanding debt. Withdrawn registrations retain payment history and refund eligibility.',
+  showWithdrawnCash: 'Include withdrawn registrations without payments', cashEstimate: 'Estimate',
+  startAttendanceTitle: 'Arrivals are unconfirmed', startAttendanceHint: 'These participants have no confirmed arrival. Return to Registrations to check attendance, or explicitly confirm starting without this check. This will not confirm arrival or enable payment.',
+  startUnconfirmed: 'Confirm start without checking arrivals', registrationStartHint: 'You can prepare the draw in advance. Attendance is checked before the first result. Once matches start, record withdrawal as retirement or walkover in Matches.',
+
   trash: 'Trash', trashTournament: 'Move to trash', restoreTournament: 'Restore tournament',
   trashHint: 'The tournament will be removed from the active list. Registrations, results and cash records are preserved and can be restored from Trash.',
   trashIntro: 'Saved tournaments that can be restored to the active list.', trashEmpty: 'Trash is empty.',
@@ -221,7 +237,7 @@ export type Language = 'sr' | 'en';
 export const messages = { sr, en };
 export type MessageKey = keyof Messages;
 export function errorKey(error: unknown): MessageKey {
-  return typeof error === 'string' && ['invalid_backup', 'schedule_conflict', 'player_busy', 'table_busy', 'competition_closed', 'completion_conflict', 'competition_incomplete', 'birth_year_required', 'invalid_result', 'match_conflict', 'result_impact', 'player_conflict', 'cash_conflict', 'invalid_rules', 'draw_conflict', 'invalid_cash', 'player_in_use', 'invalid_profile', 'name_required', 'name_too_long', 'duplicate_category', 'not_found', 'storage', 'invalid_members', 'already_registered'].includes(error)
+  return typeof error === 'string' && ['attendance_required', 'registration_inactive', 'competition_started', 'invalid_backup', 'schedule_conflict', 'player_busy', 'table_busy', 'competition_closed', 'completion_conflict', 'competition_incomplete', 'birth_year_required', 'invalid_result', 'match_conflict', 'result_impact', 'player_conflict', 'cash_conflict', 'invalid_rules', 'draw_conflict', 'invalid_cash', 'player_in_use', 'invalid_profile', 'name_required', 'name_too_long', 'duplicate_category', 'not_found', 'storage', 'invalid_members', 'already_registered'].includes(error)
     ? error as MessageKey : 'error';
 }
 export function savedLanguage(): Language {

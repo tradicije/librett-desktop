@@ -2,13 +2,13 @@
   import InfoRows from './InfoRows.svelte';
   import PlayerName from './PlayerName.svelte';
   import { playerLabel } from './player-label';
-  import { onMount, untrack } from 'svelte';
+  import { onMount, untrack, tick } from 'svelte';
   import Icon from './Icon.svelte';
   import Select from './Select.svelte';
   import { groupName, roundTitle } from './draw-view';
-  import { getSchedule, changeSchedule, getMatchTables, type ScheduleState, type ScheduleRequest, getMatchPage, saveMatchResult, desktopAvailable, type Tournament, type Category, type MatchPage, type ScheduledMatch, type MatchOutcome, type SaveMatchRequest } from './api';
+  import { listEntries, getSchedule, changeSchedule, getMatchTables, type ScheduleState, type ScheduleRequest, getMatchPage, saveMatchResult, desktopAvailable, type Tournament, type Category, type MatchPage, type ScheduledMatch, type MatchOutcome, type SaveMatchRequest } from './api';
   import { messages, errorKey, type Language, type MessageKey } from './i18n';
-  let { active = true, tournament, category, language, busy = $bindable(false), dirty = $bindable(false), onsettings }: { active?: boolean; tournament: Tournament; category: Category; language: Language; busy?: boolean; dirty?: boolean; onsettings: () => void } = $props();
+  let { active = true, tournament, category, language, busy = $bindable(false), dirty = $bindable(false), onsettings, onregistrations }: { active?: boolean; tournament: Tournament; category: Category; language: Language; busy?: boolean; dirty?: boolean; onsettings: () => void; onregistrations: () => void } = $props();
   let text = $derived(messages[language]);
   let readOnly=$derived(category.completed || tournament.completed);
   let sr = $derived(language === 'sr');
@@ -22,6 +22,8 @@
   let outcome = $state<MatchOutcome>('played'); let winner = $state('');
   let sets = $state<{ first: number | undefined; second: number | undefined }[]>([]);
   let pending = $state<SaveMatchRequest | null>(null);
+  let startWarning = $state(false);
+  let unconfirmed = $state<string[]>([]);
   let impact = $state<SaveMatchRequest | null>(null);
   let confirmation = $state<'discard' | 'reload' | null>(null);
   let original = '';
@@ -75,7 +77,7 @@
     original = snapshot(); editorError = null; impact = null; confirmation = null;
     dialog.showModal();
   }
-  function closeEditor() { selected = null; pending = null; tablePending=null; impact = null; confirmation = null; dialog.close(); }
+  function closeEditor() { startWarning = false; unconfirmed = []; selected = null; pending = null; tablePending=null; impact = null; confirmation = null; dialog.close(); }
   function cancel() {
     if (saving || tableSaving || tablePending || pending) return;
     if (dirty) confirmation = 'discard'; else closeEditor();
@@ -111,10 +113,15 @@
     try { await saveMatchResult(pending); closeEditor(); window.dispatchEvent(new CustomEvent('librett-results-updated', { detail: category.id })); await load(); }
     catch (cause) {
       const code = typeof cause === 'string' ? cause : '';
-      if (code === 'result_impact') { impact = pending; pending = null; }
+      if (code === 'attendance_required') {
+        startWarning = true;
+        try { const current = await listEntries(category.id); unconfirmed = [...new Map(current.filter(e=>e.status==='registered').flatMap(e=>e.members.filter(m=>!m.checked_in).map(m=>[m.id,playerLabel(m)] as const))).values()]; } catch { unconfirmed = []; }
+      }
+      else if (code === 'result_impact') { impact = pending; pending = null; }
       else { editorError = errorKey(cause); if (['competition_closed', 'invalid_result', 'match_conflict', 'not_found', 'invalid_draw', 'invalid_rules'].includes(code)) pending = null; }
     } finally { saving = false; }
   }
+  async function acceptStart() { if (!pending) return; pending = {...pending, request_id:crypto.randomUUID(), allow_unconfirmed_start:true}; startWarning=false; await write(); }
   async function acceptImpact() { if (!impact) return; pending = { ...impact, request_id: crypto.randomUUID(), invalidate_downstream: true }; impact = null; await write(); }
   async function reloadEditor() { closeEditor(); await load(); }
   function changeOutcome(value: MatchOutcome) { outcome = value; if (outcome !== 'walkover' && sets.length === 0) sets = [{ first: undefined, second: undefined }]; }
@@ -153,7 +160,10 @@
   <h2 id={`${uid}-title`}>{sr ? 'Rezultat meča' : 'Match result'}</h2>
   {#if selected}
     <p class="result-opponents"><span><PlayerName label={name(selected.first)} /></span><span class="muted">vs</span><span><PlayerName label={name(selected.second)} /></span></p>
-    {#if confirmation}<p>{confirmation === 'reload' ? sr ? 'Odbaci unos i učitaj najnovije podatke?' : 'Discard your input and reload the latest data?' : sr ? 'Odbaci nesačuvane izmene?' : 'Discard unsaved changes?'}</p><div class="dialog-actions"><button class="secondary" onclick={() => confirmation = null}>{sr ? 'Nastavi unos' : 'Keep editing'}</button><button class="primary" onclick={() => { if (confirmation === 'reload') void reloadEditor(); else closeEditor(); }}>{sr ? 'Odbaci' : 'Discard'}</button></div>
+    {#if startWarning}
+      <h3>{text.startAttendanceTitle}</h3><p>{text.startAttendanceHint}</p><ul>{#each unconfirmed as name}<li>{name}</li>{/each}</ul>
+      <div class="dialog-actions"><button type="button" class="secondary" disabled={saving} onclick={async()=>{closeEditor();await tick();onregistrations();}}>{sr?'Vrati se na proveru dolazaka':'Return to attendance check'}</button><button type="button" class="primary" disabled={saving} onclick={acceptStart}>{text.startUnconfirmed}</button></div>
+    {:else if confirmation}<p>{confirmation === 'reload' ? sr ? 'Odbaci unos i učitaj najnovije podatke?' : 'Discard your input and reload the latest data?' : sr ? 'Odbaci nesačuvane izmene?' : 'Discard unsaved changes?'}</p><div class="dialog-actions"><button class="secondary" onclick={() => confirmation = null}>{sr ? 'Nastavi unos' : 'Keep editing'}</button><button class="primary" onclick={() => { if (confirmation === 'reload') void reloadEditor(); else closeEditor(); }}>{sr ? 'Odbaci' : 'Discard'}</button></div>
     {:else if impact}<p class="banner" role="alert">{sr ? 'Ispravka menja prolaznike ili pobednika i poništiće sačuvane rezultate nokaut mečeva koji zavise od tih učesnika. Ti mečevi će čekati novi unos. Istorija rezultata ostaje sačuvana.' : 'This correction changes qualifiers or a winner and will clear dependent knockout results. Those matches will need new results. Result history is retained.'}</p><div class="dialog-actions"><button class="secondary" onclick={() => impact = null}>{sr ? 'Vrati se na unos' : 'Back to editing'}</button><button class="primary" onclick={acceptImpact}>{sr ? 'Potvrdi ispravku' : 'Confirm correction'}</button></div>
     {:else}
       {#if editorError}<p class="error" role="alert">{text[editorError]}</p>{/if}

@@ -40,6 +40,29 @@ fn records(
     .collect()
 }
 
+// The cash ledger is immutable. Eligibility is evaluated against current registrations
+// and attendance under the same write lock as the payment.
+fn ensure_payment(
+    conn: &Connection,
+    tournament: Uuid,
+    entry: Uuid,
+    player: Option<Uuid>,
+) -> Result<(), ApplicationError> {
+    super::trash::ensure_active(conn, tournament)?;
+    let active: Option<bool> = conn.query_row("SELECT e.status='registered' AND c.archived=0 FROM entries e JOIN categories c ON c.id=e.category_id WHERE e.id=?1 AND c.tournament_id=?2", params![entry.to_string(),tournament.to_string()], |r|r.get(0)).optional().map_err(|_|ApplicationError::Storage)?;
+    match active {
+        None => return Err(ApplicationError::NotFound),
+        Some(false) => return Err(ApplicationError::RegistrationInactive),
+        Some(true) => {}
+    }
+    let missing: bool = conn.query_row("SELECT EXISTS(SELECT 1 FROM entry_members m LEFT JOIN player_attendance a ON a.tournament_id=?1 AND a.player_id=m.player_id WHERE m.entry_id=?2 AND (?3 IS NULL OR m.player_id=?3) AND COALESCE(a.checked_in,0)=0)", params![tournament.to_string(),entry.to_string(),player.map(|p|p.to_string())], |r|r.get(0)).map_err(|_|ApplicationError::Storage)?;
+    if missing {
+        Err(ApplicationError::AttendanceRequired)
+    } else {
+        Ok(())
+    }
+}
+
 impl CashRepository for SqliteTournamentRepository {
     fn list_cash(&self, tournament_id: Uuid) -> Result<Vec<CashRecord>, ApplicationError> {
         self.find(tournament_id)?;
@@ -70,6 +93,9 @@ impl CashRepository for SqliteTournamentRepository {
             } else {
                 Err(ApplicationError::InvalidCash)
             };
+        }
+        if record.kind == CashKind::Payment {
+            ensure_payment(&tx, tournament_id, record.entry_id, None)?;
         }
         let mut balance = CashBalance::default();
         for r in current.iter().filter(|r| r.entry_id == record.entry_id) {
@@ -127,6 +153,7 @@ mod tests {
             entry = register_entry(&mut repo, t.id, t.categories[0].id, vec![p.id])
                 .unwrap()
                 .id;
+            librett_application::set_player_attendance(&mut repo, tournament, p.id, true).unwrap();
             let charge = CashRecord {
                 id: Uuid::new_v4(),
                 entry_id: entry,
@@ -542,6 +569,9 @@ impl SqliteTournamentRepository {
             let exists:bool=tx.query_row("SELECT EXISTS(SELECT 1 FROM entries e JOIN categories c ON c.id=e.category_id JOIN entry_members m ON m.entry_id=e.id WHERE e.id=?1 AND c.tournament_id=?2 AND m.player_id=?3)",params![entry_id.to_string(),tournament_id.to_string(),player_id.to_string()],|r|r.get(0)).map_err(|_|ApplicationError::Storage)?;
             if !exists {
                 return Err(ApplicationError::NotFound);
+            }
+            if paid {
+                ensure_payment(&tx, tournament_id, *entry_id, Some(player_id))?;
             }
             let (position,count):(i64,i64)=tx.query_row("SELECT m.position,(SELECT count(*) FROM entry_members WHERE entry_id=?1) FROM entry_members m WHERE m.entry_id=?1 AND m.player_id=?2",params![entry_id.to_string(),player_id.to_string()],|r|Ok((r.get(0)?,r.get(1)?))).map_err(|_|ApplicationError::Storage)?;
             let mut whole = CashBalance::default();

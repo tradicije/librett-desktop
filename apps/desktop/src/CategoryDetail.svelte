@@ -32,7 +32,7 @@
 {:else if tab === 'draw' || tab === 'groups'}
   {#key category.id}<Draw {active} {tournament} {category} {language} bind:busy bind:dirty onsettings={() => ontab('settings')} />{/key}
 {:else if tab === 'matches'}
-  {#key category.id}<Matches {active} {tournament} {category} {language} bind:busy bind:dirty onsettings={() => ontab('settings')} />{/key}
+  {#key category.id}<Matches onregistrations={() => ontab('registrations')} {active} {tournament} {category} {language} bind:busy bind:dirty onsettings={() => ontab('settings')} />{/key}
 {:else}
   {#key category.id}<CategoryResults {active} {tournament} {category} {language} bind:busy ontab={ontab} />{/key}
 {/if}

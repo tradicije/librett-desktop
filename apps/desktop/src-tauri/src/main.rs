@@ -205,6 +205,7 @@ fn main() {
             settle_player_cash,
             list_cash,
             record_cash,
+            registration_started,
             list_tournaments,
             list_trashed_tournaments,
             trash_tournament,
@@ -406,6 +407,19 @@ fn restore_tournament(
         .lock()
         .map_err(|_| ApplicationError::Storage)?
         .restore_tournament(id)
+}
+
+#[tauri::command]
+fn registration_started(
+    database: tauri::State<Database>,
+    tournament_id: Uuid,
+    category_id: Uuid,
+) -> Result<bool, ApplicationError> {
+    database
+        .0
+        .lock()
+        .map_err(|_| ApplicationError::Storage)?
+        .registration_started(tournament_id, category_id)
 }
 
 #[tauri::command]

@@ -15,6 +15,7 @@
     "desktop:generate-icons": "node scripts/generate-desktop-icons.mjs",
     "desktop": "npm run tauri --workspace @librett/desktop --",
     "test:reports": "node scripts/verify-reports.mjs",
+    "test:cash": "node scripts/verify-cash.mjs",
     "test:core": "cargo test --workspace --exclude librett-desktop",
     "desktop:build": "npm run desktop -- build",
     "desktop:collect": "node scripts/collect-installers.mjs"

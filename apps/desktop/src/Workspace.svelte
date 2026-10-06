@@ -114,8 +114,8 @@
     let refreshVersion=0;
     const refresh=async()=>{const version=++refreshVersion;try{const current=await listTournaments();if(version===refreshVersion)tournaments=current;}catch(cause){error=errorKey(cause);}};
     window.addEventListener('librett-completion-updated',refresh);
-    window.addEventListener('librett-trash-updated',refresh);
-    return()=>{refreshVersion++;window.removeEventListener('librett-completion-updated',refresh);window.removeEventListener('librett-trash-updated',refresh);};
+    window.addEventListener('librett-trash-updated',refresh);window.addEventListener('librett-registration-updated',refresh);
+    return()=>{refreshVersion++;window.removeEventListener('librett-completion-updated',refresh);window.removeEventListener('librett-trash-updated',refresh);window.removeEventListener('librett-registration-updated',refresh);};
   });
   let wasActive = untrack(() => active);
   $effect(() => { if (active && !wasActive && route.view === 'tournaments' && desktopAvailable && !navigationLocked && !dirty) void load(); wasActive = active; });

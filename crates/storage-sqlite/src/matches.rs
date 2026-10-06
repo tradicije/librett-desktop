@@ -609,6 +609,13 @@ impl SqliteTournamentRepository {
         {
             return Err(ApplicationError::InvalidResult);
         }
+        if !request.allow_unconfirmed_start {
+            super::registration::ensure_start_attendance(
+                &tx,
+                request.tournament_id,
+                request.category_id,
+            )?;
+        }
         let draw_id = draw.id;
         let revision = item
             .revision
