@@ -128,7 +128,7 @@
 <div class="cash-totals"><section class="panel"><h2>{text.expectedAttendanceCash}</h2><strong>{money(expectedCash)}</strong></section><section class="panel"><h2>{text.outstanding}</h2><strong>{money(outstanding)}</strong></section><section class="panel"><h2>{text.netReceived}</h2><strong>{money(netReceived)}</strong></section><section class="panel"><h2>{text.registeredPlayers}</h2><strong>{registered}</strong></section></div>
   <section class="panel player-cash-list">
     <div class="directory-toolbar"><label class="search-field"><Icon name="search" size={17} /><input type="search" aria-label={text.searchCashPlayers} placeholder={text.searchCashPlayers} bind:value={search} disabled={busy || loading} /></label><span class="muted">{filtered.length} / {rows.length}</span></div>
-    <label class="icon-label"><input type="checkbox" bind:checked={showWithdrawn}/>{text.showWithdrawnCash}</label>
+    <label class="icon-label cash-history-filter"><input type="checkbox" bind:checked={showWithdrawn}/>{text.showWithdrawnCash}</label>
     <!-- svelte-ignore a11y_no_noninteractive_tabindex (Keyboard users need a focusable container to scroll the category matrix horizontally.) -->
     <div class="cash-table-scroll" role="region" aria-label={text.cashDesk} tabindex="0">
       <table class="cash-player-table" style:min-width={`${380 + cashCategories.length * 170}px`}>

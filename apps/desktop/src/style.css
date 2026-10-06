@@ -345,6 +345,7 @@ button:active:enabled { border-color: var(--primary); background: var(--primary-
 .picker-row:has(input:enabled):hover, .picker-row:has(input:focus-visible) { background: var(--surface-hover); }
 .picker-row:has(input:checked:enabled):hover { background: var(--primary-subtle); }
 input[type="checkbox"] { cursor: pointer; }
+.cash-history-filter input[type="checkbox"] { width: 15px; height: 15px; min-height: 15px; padding: 0; margin: 0; flex-shrink: 0; accent-color: var(--primary); }
 input[type="checkbox"]:disabled { cursor: default; }
 input[type="checkbox"]:hover:enabled { outline: 1px solid var(--primary); outline-offset: 2px; }
 .cash-player-row:has(input:enabled):hover { background: color-mix(in srgb, var(--surface-hover) 35%, var(--surface)); }

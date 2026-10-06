@@ -15,6 +15,8 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Fixed
 
+- Cash desk history-filter checkbox uses the standard compact size instead of inheriting full-width text-input dimensions.
+
 - Restore/import validates the migrated SQLite schema against a fresh LibreTT database before replacing live data, rejecting missing/modified tables, unexpected views, indexes and triggers. Staging connections disable trusted schema.
 - Saving a match result no longer implicitly saves its table assignment; table changes must be explicitly saved or reverted first.
 - Automatic backup failures are visible at startup and during periodic checks, with a retry action; successful checks clear the warning.
