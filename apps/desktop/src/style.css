@@ -289,6 +289,7 @@ form > .primary { justify-self: start; }
 
 .player-cash-list { padding: 20px 0 0; overflow: hidden; }
 .player-cash-list .directory-toolbar { padding: 0 20px 20px; }
+.player-cash-list .cash-history-filter { display: flex; margin: 0 20px 20px; }
 .cash-table-scroll { overflow-x: auto; }
 .cash-table-scroll:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
 .cash-player-table { width: 100%; border-collapse: collapse; text-align: left; }
@@ -313,7 +314,10 @@ form > .primary { justify-self: start; }
 .paid-choice { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 11px; cursor: pointer; }
 .is-paid .cash-player-total strong { color: var(--text-muted); }
 .player-cash-list > .muted { margin: 20px; }
-@media(max-width: 650px) { .player-cash-list .directory-toolbar { padding: 0 16px 16px; } }
+@media(max-width: 650px) {
+  .player-cash-list .directory-toolbar { padding: 0 16px 16px; }
+  .player-cash-list .cash-history-filter { margin: 0 16px 16px; }
+}
 
 /* Interactive states share the same palette and never change element geometry. */
 button { transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease; }
