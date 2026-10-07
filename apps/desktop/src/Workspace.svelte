@@ -205,12 +205,12 @@
     <nav id={`${uid}-sidebar-nav`} aria-label={text.navigation}>
       <button data-open-tab class="nav-item" class:active={!inPlayers && !['backups','trash','history','guide'].includes(route.view)} aria-current={!inPlayers && !['backups','trash','history','guide'].includes(route.view) ? 'page' : undefined} disabled={navigationLocked} aria-label={text.tournaments} title={text.tournaments} onclick={openTournaments}><Icon name="trophy" />{#if !sidebarCollapsed}<span>{text.tournaments}</span>{/if}</button>
       <button data-open-tab class="nav-item" class:active={inPlayers} aria-current={inPlayers ? 'page' : undefined} disabled={navigationLocked} aria-label={text.playerTab} title={text.playerTab} onclick={() => navigate({ view: 'players' })}><Icon name="users" />{#if !sidebarCollapsed}<span>{text.playerTab}</span>{/if}</button>
+      <button data-open-tab class="nav-item" class:active={route.view==='backups'} aria-current={route.view==='backups'?'page':undefined} disabled={navigationLocked} aria-label={language==='sr'?'Rezervne kopije':'Backups'} title={language==='sr'?'Rezervne kopije':'Backups'} onclick={()=>navigate({view:'backups'})}><Icon name="backup"/>{#if !sidebarCollapsed}<span>{language==='sr'?'Rezervne kopije':'Backups'}</span>{/if}</button>
+      <button data-open-tab class="nav-item" class:active={route.view==='history'} aria-current={route.view==='history'?'page':undefined} disabled={navigationLocked} aria-label={language==='sr'?'Istorija':'History'} title={language==='sr'?'Istorija':'History'} onclick={()=>navigate({view:'history'})}><Icon name="history"/>{#if !sidebarCollapsed}<span>{language==='sr'?'Istorija':'History'}</span>{/if}</button>
+      <button data-open-tab class="nav-item" class:active={route.view==='trash'} aria-current={route.view==='trash'?'page':undefined} disabled={navigationLocked} aria-label={text.trash} title={text.trash} onclick={()=>navigate({view:'trash'})}><Icon name="trash"/>{#if !sidebarCollapsed}<span>{text.trash}</span>{/if}</button>
     </nav>
-    <nav class="sidebar-utilities" aria-label={language==='sr'?'Podaci i pomoć':'Data and help'}>
-      <button data-open-tab class="nav-item utility-button" class:active={route.view==='trash'} aria-current={route.view==='trash'?'page':undefined} disabled={navigationLocked} aria-label={text.trash} title={text.trash} onclick={()=>navigate({view:'trash'})}><Icon name="trash" size={18}/></button>
-      <button data-open-tab class="nav-item utility-button" class:active={route.view==='backups'} aria-current={route.view==='backups'?'page':undefined} disabled={navigationLocked} aria-label={language==='sr'?'Rezervne kopije':'Backups'} title={language==='sr'?'Rezervne kopije':'Backups'} onclick={()=>navigate({view:'backups'})}><Icon name="backup" size={18}/></button>
-      <button data-open-tab class="nav-item utility-button" class:active={route.view==='history'} aria-current={route.view==='history'?'page':undefined} disabled={navigationLocked} aria-label={language==='sr'?'Istorija':'History'} title={language==='sr'?'Istorija':'History'} onclick={()=>navigate({view:'history'})}><Icon name="history" size={18}/></button>
-      <button data-open-tab class="nav-item utility-button" class:active={route.view==='guide'} aria-current={route.view==='guide'?'page':undefined} disabled={navigationLocked} aria-label={language==='sr'?'Vodič':'Guide'} title={language==='sr'?'Vodič':'Guide'} onclick={()=>navigate({view:'guide'})}><Icon name="guide" size={18}/></button>
+    <nav class="guide-navigation" aria-label={language==='sr'?'Pomoć':'Help'}>
+      <button data-open-tab class="nav-item" class:active={route.view==='guide'} aria-current={route.view==='guide'?'page':undefined} disabled={navigationLocked} aria-label={language==='sr'?'Vodič':'Guide'} title={language==='sr'?'Vodič':'Guide'} onclick={()=>navigate({view:'guide'})}><Icon name="guide"/>{#if !sidebarCollapsed}<span>{language==='sr'?'Vodič':'Guide'}</span>{/if}</button>
     </nav>
     <div class="sidebar-bottom">
       <span class="icon-label" title={text.local}><Icon name="desktop" size={16} />{#if !sidebarCollapsed}{text.local}{/if}</span>
@@ -368,10 +368,7 @@
 
 <style>
   .home-guide { margin-top:24px; }
-  .sidebar-utilities { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin-top:auto; padding-top:24px; }
-  .sidebar-utilities .utility-button { justify-content:center; min-width:0; width:100%; min-height:38px; padding:8px; border-color:var(--border-subtle); }
-  .collapsed .sidebar-utilities { grid-template-columns:1fr; gap:4px; }
-  .collapsed .sidebar-utilities .utility-button { padding:0; border-color:transparent; }
+  .guide-navigation { margin-top:auto; padding-top:24px; }
   .sidebar-bottom { margin-top:18px; padding-top:18px; border-top:1px solid var(--border-subtle); }
   .tournament-card-actions { display: flex; align-items: center; gap: 8px; margin-top: auto; }
   .tournament-card-actions .tournament-open { flex: 1; margin-top: 0; width: auto; }

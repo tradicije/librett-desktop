@@ -39,7 +39,7 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Added
 
-- Always-accessible Serbian/English tournament guide with twelve steps, common problems and a short glossary; equivalent Markdown guides are available in docs. Sidebar Trash, Backups, History and Guide now sit above local operations in an equal-width 2×2 icon grid with accessible names and hover labels.
+- Always-accessible Serbian/English tournament guide with twelve steps, common problems and a short glossary; equivalent Markdown guides are available in docs. Guide sits above local operations; Trash, Backups and History use the main sidebar navigation.
 
 - Category switch allowing or separating same-club entries in new automatic groups (allowed by default for compatibility). Separation preserves seed positions and group sizes, considers both doubles members, and refuses an unsuccessful layout rather than silently violating the policy.
 - Existing club-name suggestions in the player editor, with explicit acceptance for an unambiguous one-character typo. Club comparison ignores case, spacing/punctuation, Serbian Latin diacritics and STK / Stoni teniski klub prefixes; typo variants are never silently merged.
@@ -60,6 +60,8 @@ Notable changes to LibreTT are recorded here in English.
 - Schema 18 stores table assignments and idempotent scheduling receipts, with a consistent pre-v18 snapshot before upgrading existing databases.
 
 ### Changed
+
+- Sidebar restores labeled Backups and History rows beneath Players, with Trash last in the main navigation. Guide remains at the bottom above the retained divider and local-operations footer.
 
 - Added a subtle divider with spacing between sidebar utilities and the local-operations footer in expanded and collapsed modes.
 

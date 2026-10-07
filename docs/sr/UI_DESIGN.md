@@ -152,7 +152,7 @@ Započeta kategorija ne može da se ukloni. Čuvanje novog žreba u Podešavanji
 
 Kategorije sa grupama imaju switch Isti klub u grupi pri dodavanju i u podešavanjima, podrazumevano uključen. Isključivanje važi za nove automatske rasporede. Ako razdvajanje ne uspe, poruka upućuje na promenu nosilaca/grupa ili ručni raspored. Polje kluba igrača nudi postojeće nazive i dugme za prihvatanje sličnog naziva; tipfeler se ne ispravlja bez izbora organizatora.
 
-Pri dnu menija, iznad lokalnog rada, stoje četiri dugmeta samo sa ikonicama i jednakim širinama: Korpa/Rezervne kopije pa Istorija/Vodič. Nazivi su dostupni čitačima ekrana i na hover, aktivna stranica je označena, a mreža prelazi u jednu kolonu bez vidljivih okvira dugmića kada se meni smanji. Vodič ima numerisane korake, prečice do koraka, pitanja za česte probleme i rečnik. Prečice skroluju sadržaj bez dodavanja stavki istorije pregledača.
+Glavni levi meni prikazuje Turnire, Igrače, Rezervne kopije, Istoriju i na kraju Korpu, jednu stavku ispod druge sa nazivima. Vodič ostaje pri dnu iznad separatora i lokalnog rada. Smanjeni meni prikazuje ikonice bez okvira dugmića, sa dostupnim nazivima i hover opisima. Vodič ima numerisane korake, prečice do koraka, pitanja za česte probleme i rečnik; prečice skroluju bez dodavanja stavki istorije pregledača.
 
 Početna strana ima dugme Vodič za vođenje turnira, jer na tom ekranu levi meni nije prikazan.
 
