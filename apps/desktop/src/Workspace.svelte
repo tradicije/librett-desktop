@@ -201,7 +201,6 @@
         </button>
       {/if}
     </div>
-    {#if !sidebarCollapsed}<p class="sidebar-label">{text.workspace}</p>{/if}
     <nav id={`${uid}-sidebar-nav`} aria-label={text.navigation}>
       <button data-open-tab class="nav-item" class:active={!inPlayers && !['backups','trash','history','guide'].includes(route.view)} aria-current={!inPlayers && !['backups','trash','history','guide'].includes(route.view) ? 'page' : undefined} disabled={navigationLocked} aria-label={text.tournaments} title={text.tournaments} onclick={openTournaments}><Icon name="trophy" />{#if !sidebarCollapsed}<span>{text.tournaments}</span>{/if}</button>
       <button data-open-tab class="nav-item" class:active={inPlayers} aria-current={inPlayers ? 'page' : undefined} disabled={navigationLocked} aria-label={text.playerTab} title={text.playerTab} onclick={() => navigate({ view: 'players' })}><Icon name="users" />{#if !sidebarCollapsed}<span>{text.playerTab}</span>{/if}</button>

@@ -61,6 +61,8 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Changed
 
+- Removed the redundant workspace caption above the sidebar navigation.
+
 - Sidebar restores labeled Backups and History rows beneath Players, with Trash last in the main navigation. Guide remains at the bottom above the retained divider and local-operations footer.
 
 - Added a subtle divider with spacing between sidebar utilities and the local-operations footer in expanded and collapsed modes.

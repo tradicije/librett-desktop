@@ -157,3 +157,5 @@ Glavni levi meni prikazuje Turnire, Igrače, Rezervne kopije, Istoriju i na kraj
 Početna strana ima dugme Vodič za vođenje turnira, jer na tom ekranu levi meni nije prikazan.
 
 Diskretna horizontalna linija odvaja donju dugmad od lokalnog rada, sa po 18px razmaka iznad i ispod linije u proširenom i smanjenom meniju.
+
+Navigacija levog menija počinje direktno stavkom Turniri, bez malog naslova iznad nje.

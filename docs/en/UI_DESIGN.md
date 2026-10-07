@@ -179,3 +179,5 @@ The main sidebar lists Tournaments, Players, Backups, History and finally Trash 
 Home also offers a Tournament guide button because the sidebar is hidden on that screen.
 
 A subtle horizontal divider separates sidebar utilities from local operations, with 18px of spacing above and below the divider in expanded and collapsed modes.
+
+Sidebar navigation starts directly with Tournaments, without a workspace caption above it.
