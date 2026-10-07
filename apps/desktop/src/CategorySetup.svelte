@@ -19,6 +19,7 @@
   let drawBusy = $state(false);
   let drawDirty = $state(false);
   let fillBusy = $state(false);let fillDirty = $state(false);
+  let scoringChanged=$derived(savedRules.best_of!==rules.best_of || savedRules.points_to_win!==rules.points_to_win || savedRules.win_by!==rules.win_by);
   let impact = $state(false);let impactDialog:HTMLDialogElement;const uid=$props.id();
   let rulesDirty = $derived(baseline !== '' && JSON.stringify(rules) !== baseline);
   $effect(() => { busy = saving || pending !== null || drawBusy || fillBusy || impact; dirty = rulesDirty || drawDirty || fillDirty; });
@@ -67,7 +68,7 @@
     {#if category.format==='groups_knockout' && savedRules.knockout_filling!=='bye'}<KnockoutFillSetup manual={savedRules.knockout_filling==='lucky_loser_manual'} {active} {tournament} {category} {language} rulesRevision={revision} externalLocked={readOnly || rulesDirty || saving || pending!==null || drawBusy || drawDirty || impact} bind:busy={fillBusy} bind:dirty={fillDirty} />{/if}
   {/if}
 </div>
-<dialog class="confirm-dialog" bind:this={impactDialog} aria-labelledby={`${uid}-impact`} oncancel={event=>{event.preventDefault();impact=false;pending=null;impactDialog.close();}}><h2 id={`${uid}-impact`}>{language==='sr'?'Promena prolaznika':'Change qualifiers'}</h2><p>{language==='sr'?'Promena pravila poništiće nokaut rezultate koji zavise od promenjenih učesnika. Istorija ostaje sačuvana.':'Changing rules clears knockout results that depend on changed participants. History is retained.'}</p><div class="dialog-actions"><button class="secondary" onclick={()=>{impact=false;pending=null;impactDialog.close();}}>{language==='sr'?'Vrati se':'Back'}</button><button class="primary" onclick={()=>{impact=false;impactDialog.close();void save(undefined,true);}}>{language==='sr'?'Potvrdi promenu':'Confirm change'}</button></div></dialog>
+<dialog class="confirm-dialog" bind:this={impactDialog} aria-labelledby={`${uid}-impact`} oncancel={event=>{event.preventDefault();impact=false;pending=null;impactDialog.close();}}><h2 id={`${uid}-impact`}>{language==='sr'?'Potvrdi promenu pravila':'Confirm rule changes'}</h2>{#if scoringChanged}<p>{language==='sr'?'Kategorija je već počela. Novi broj setova, poena i potrebna razlika važe za naredne unose ili ispravke rezultata. Već sačuvani rezultati zadržavaju pravila po kojima su odigrani.':'This category has started. The new set count, point target and winning margin apply to subsequent result entries or corrections. Previously saved results retain their original scoring rules.'}</p>{/if}<p>{language==='sr'?'Ako se promene učesnici nokauta, zavisni rezultati biće poništeni. Istorija ostaje sačuvana.':'If knockout participants change, dependent results will be cleared. History is retained.'}</p><div class="dialog-actions"><button class="secondary" onclick={()=>{impact=false;pending=null;impactDialog.close();}}>{language==='sr'?'Vrati se':'Back'}</button><button class="primary" onclick={()=>{impact=false;impactDialog.close();void save(undefined,true);}}>{language==='sr'?'Potvrdi promenu':'Confirm change'}</button></div></dialog>
 <style>
   .category-setup { display: grid; gap: 28px; }
   .rules-toolbar { display: flex; justify-content: flex-end; margin-bottom: 12px; }

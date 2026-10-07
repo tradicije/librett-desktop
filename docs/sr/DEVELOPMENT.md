@@ -515,3 +515,7 @@ Migracija prenosi postojeće datirane žrebove, rezultate, blagajnu, završetke 
 ### Provere grešaka pri učitavanju
 
 Istorija resetuje prikazane zapise i paginaciju pri novom filtriranom upitu; neuspešan upit ne koristi kursor drugog filtera. Mečevi objavljuju stranicu, raspored i brojeve stolova zajedno, tek po uspešnom učitavanju svih odgovora. Regresioni testovi istorije pokrivaju nazive obrisanih kategorija u filterima, paginaciju zapisa sa istim vremenom i poništavanje istorije zajedno sa neuspelom transakcijom.
+
+### Zaštite započete kategorije
+
+Čuvanje žreba prima `confirm_restart` (podrazumevano false na desktop granici). U transakciji se novi žreb započete kategorije odbija sa `result_impact` dok organizator ne potvrdi restart. Prethodno potvrđeni upisi proveravaju se pre zaštita radi bezbednog ponavljanja zahteva. Uređivač kostura prosleđuje potvrdu iz postojećeg dijaloga, a Podešavanja imaju poseban dijalog za restart. Uklanjanje kategorije proverava otvorenost i početak unutar transakcije i zabranjuje arhiviranje započete kategorije. Promena broja setova, poena ili razlike u započetoj kategoriji traži potvrdu u oba uređivača; stari rezultati zadržavaju svoja pravila, a naredni unosi ili ispravke koriste nova. Kategorija se smatra započetom kada postoji upis rezultata ili dodela sa vremenom početka.

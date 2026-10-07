@@ -673,6 +673,12 @@ pub(super) fn guard_rules_change(
     if state.rules == *rules {
         return Ok(());
     }
+    let scoring_changed = state.rules.best_of != rules.best_of
+        || state.rules.points_to_win != rules.points_to_win
+        || state.rules.win_by != rules.win_by;
+    if scoring_changed && super::registration::category_started(conn, category)? && !confirm {
+        return Err(ApplicationError::ResultImpact);
+    }
     state.rules = rules.clone();
     let affected = invalidated(&state);
     if !affected.is_empty() && !confirm {

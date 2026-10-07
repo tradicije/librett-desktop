@@ -519,12 +519,14 @@ fn save_category_draw(
     tournament_id: Uuid,
     draw: CategoryDraw,
     expected_revision: u32,
+    confirm_restart: Option<bool>,
 ) -> Result<CategoryDraw, ApplicationError> {
     application::save_category_draw(
         &mut *database.0.lock().map_err(|_| ApplicationError::Storage)?,
         tournament_id,
         draw,
         expected_revision,
+        confirm_restart.unwrap_or(false),
     )
 }
 

@@ -527,3 +527,7 @@ Migration imports genuine dated draw/result/cash/completion/Trash records as his
 ### Read failure checks
 
 History resets displayed records and pagination when starting a fresh filtered query; a failed query cannot reuse a cursor from another filter. Matches stages its page, schedule and table-number responses before publishing them together. History regression tests cover deleted-category filter names, pagination with equal timestamps and rollback of audit records alongside failed transactions.
+
+### Started-category guards
+
+Draw saves accept `confirm_restart` (false by default at the desktop boundary). Inside the write transaction, a started category rejects an unconfirmed new draw with `result_impact`. Existing write receipts still resolve before guards, preserving safe retries. The bracket editor forwards confirmation from its existing impact dialog; Settings has an explicit restart dialog. Category deletion checks open/started state inside its write transaction and refuses to archive a started category. Scoring-rule changes (best-of, points-to-win and win-by) in started categories use the existing impact confirmation path in both editors; old scores retain their stored rules and new entries or corrections use the latest rules. Started status includes recorded match revisions and assignments with a start timestamp.

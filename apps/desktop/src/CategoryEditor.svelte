@@ -16,6 +16,7 @@
   let discipline = $state<Discipline>(untrack(() => category?.discipline ?? 'singles'));
   let format = $state<CompetitionFormat>(untrack(() => category?.format ?? 'groups_knockout'));
   let rules = $state(defaultCategoryRules());
+  let savedRules = $state(defaultCategoryRules());
   let revision = $state(0);
   let used = $state(false);
   let loading = $state(!!untrack(() => category));
@@ -26,6 +27,7 @@
   let baseline = $state(snapshot());
   type Request = { name: string; fee: number; discipline: Discipline; format: CompetitionFormat; rules: CategoryRules; revision: number };
   let pending = $state<Request | null>(null);
+  let scoringChanged=$derived(savedRules.best_of!==rules.best_of || savedRules.points_to_win!==rules.points_to_win || savedRules.win_by!==rules.win_by);
   let impact=$state(false);let impactDialog:HTMLDialogElement;const uid=$props.id();
   $effect(() => { dirty = loaded && snapshot() !== baseline; });
   async function load() {
@@ -35,7 +37,7 @@
       const state = await getCategoryEditorState(tournament.id, category.id);
       storedClosed=state.category.completed;name = state.category.name; fee = (state.category.fee_minor / 100).toFixed(2).replace('.', language === 'sr' ? ',' : '.');
       discipline = state.category.discipline; format = state.category.format;
-      rules = structuredClone(state.configuration.rules); revision = state.configuration.revision; used = state.used;
+      rules = structuredClone(state.configuration.rules); savedRules=structuredClone(state.configuration.rules); revision = state.configuration.revision; used = state.used;
       baseline = snapshot(); loaded = true;
     } catch (cause) { error = errorKey(cause); }
     finally { loading = false; }
@@ -78,7 +80,7 @@
     <div class="form-actions"><button class="primary" disabled={(readOnly && !pending) || action || impact || !loaded || !desktopAvailable}><Icon name="check-circle" />{action ? text.saving : pending ? text.retry : category ? text.editCategory : text.addCategory}</button><button type="button" class="secondary" disabled={busy} onclick={oncancel}><Icon name="arrow-left" size={18} />{text.cancelEdit}</button></div>
   </form>
 {/if}
-<dialog class="confirm-dialog" bind:this={impactDialog} aria-labelledby={`${uid}-impact`} oncancel={event=>{event.preventDefault();impact=false;pending=null;busy=false;impactDialog.close();}}><h2 id={`${uid}-impact`}>{language==='sr'?'Promena prolaznika':'Change qualifiers'}</h2><p>{language==='sr'?'Promena pravila poništiće nokaut rezultate koji zavise od promenjenih učesnika. Istorija ostaje sačuvana.':'Changing rules clears knockout results that depend on changed participants. History is retained.'}</p><div class="dialog-actions"><button class="secondary" onclick={()=>{impact=false;pending=null;busy=false;impactDialog.close();}}>{language==='sr'?'Vrati se':'Back'}</button><button class="primary" onclick={()=>{impact=false;impactDialog.close();void save(undefined,true);}}>{language==='sr'?'Potvrdi promenu':'Confirm change'}</button></div></dialog>
+<dialog class="confirm-dialog" bind:this={impactDialog} aria-labelledby={`${uid}-impact`} oncancel={event=>{event.preventDefault();impact=false;pending=null;busy=false;impactDialog.close();}}><h2 id={`${uid}-impact`}>{language==='sr'?'Potvrdi promenu pravila':'Confirm rule changes'}</h2>{#if scoringChanged}<p>{language==='sr'?'Kategorija je već počela. Novi broj setova, poena i potrebna razlika važe za naredne unose ili ispravke rezultata. Već sačuvani rezultati zadržavaju pravila po kojima su odigrani.':'This category has started. The new set count, point target and winning margin apply to subsequent result entries or corrections. Previously saved results retain their original scoring rules.'}</p>{/if}<p>{language==='sr'?'Ako se promene učesnici nokauta, zavisni rezultati biće poništeni. Istorija ostaje sačuvana.':'If knockout participants change, dependent results will be cleared. History is retained.'}</p><div class="dialog-actions"><button class="secondary" onclick={()=>{impact=false;pending=null;busy=false;impactDialog.close();}}>{language==='sr'?'Vrati se':'Back'}</button><button class="primary" onclick={()=>{impact=false;impactDialog.close();void save(undefined,true);}}>{language==='sr'?'Potvrdi promenu':'Confirm change'}</button></div></dialog>
 <style>
   .category-editor { display: grid; gap: 24px; max-width: 850px; }
   label { display: grid; gap: 6px; min-width: 0; }

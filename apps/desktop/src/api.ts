@@ -57,7 +57,7 @@ export interface CategoryDraw {
 }
 export const getCategoryDraw = (tournamentId: string, categoryId: string) => invoke<CategoryDraw | null>('get_category_draw', { tournamentId, categoryId });
 export const previewCategoryDraw = (tournamentId: string, categoryId: string, mode: DrawMode, settings: DrawSettings, seeds: string[]) => invoke<CategoryDraw>('preview_category_draw', { tournamentId, categoryId, mode, settings, seeds });
-export const saveCategoryDraw = (tournamentId: string, draw: CategoryDraw, expectedRevision: number) => invoke<CategoryDraw>('save_category_draw', { tournamentId, draw, expectedRevision });
+export const saveCategoryDraw = (tournamentId: string, draw: CategoryDraw, expectedRevision: number, confirmRestart = false) => invoke<CategoryDraw>('save_category_draw', { tournamentId, draw, expectedRevision, confirmRestart });
 
 export type RankingCriterion = 'head_to_head' | 'set_ratio' | 'point_ratio';
 export type ThirdPlaceRule = 'shared' | 'bronze_match' | 'champion_semifinalist';

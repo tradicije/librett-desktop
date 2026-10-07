@@ -61,6 +61,7 @@ pub trait DrawRepository {
         &mut self,
         draw: librett_domain::CategoryDraw,
         expected_revision: u32,
+        confirm_restart: bool,
     ) -> Result<librett_domain::CategoryDraw, ApplicationError>;
 }
 
@@ -133,6 +134,7 @@ pub fn save_category_draw(
     tournament_id: Uuid,
     mut draw: librett_domain::CategoryDraw,
     expected_revision: u32,
+    confirm_restart: bool,
 ) -> Result<librett_domain::CategoryDraw, ApplicationError> {
     let category = draw_category(repository, tournament_id, draw.category_id)?;
     let configured = repository.find_category_rules(draw.category_id)?;
@@ -149,7 +151,7 @@ pub fn save_category_draw(
         .into_iter()
         .filter(|e| e.status == librett_domain::EntryStatus::Registered)
         .collect();
-    repository.save_draw(draw, expected_revision)
+    repository.save_draw(draw, expected_revision, confirm_restart)
 }
 
 pub trait PlayerRepository {

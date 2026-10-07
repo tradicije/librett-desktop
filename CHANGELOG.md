@@ -15,6 +15,10 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Fixed
 
+- Restarting a draw after a category has started requires explicit confirmation in Settings and server-side authorization; old draw/results stay in history while the new revision starts without scores or table assignments.
+- Started categories cannot be deleted or archived; the check and write share the same transaction.
+- Changing best-of, point target or winning margin after a category starts requires confirmation in both category editors. Previously saved results retain their original scoring rules; subsequent entries/corrections use the new rules.
+
 - Refresh/reload controls use the circular refresh icon; attendance removal uses a crossed circle. Undo arrows remain for restoration/reopening actions. Removed unused raw component keys from the shared icon map.
 
 - History clears previous filter results and their pagination cursor before reloading, preventing mixed pages after a failed filter change.

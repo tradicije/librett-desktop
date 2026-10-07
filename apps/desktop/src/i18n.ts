@@ -1,7 +1,7 @@
 const sr = {
   attendance_required: 'Prvo potvrdi dolazak. Naplata nije dostupna bez potvrđenog dolaska.',
   registration_inactive: 'Prijava je povučena ili kategorija uklonjena. Naplata nije dostupna.',
-  competition_started: 'Mečevi su već počeli. Odustajanje evidentiraj u Mečevima kao predaju ili walkover, uz očuvanje rezultata.',
+  competition_started: 'Kategorija je već počela i ne može da se ukloni ili menja prijave. Odustajanje evidentiraj u Mečevima kao predaju ili walkover, uz očuvanje rezultata.',
   expectedAttendanceCash: 'Očekivano od nepotvrđenih', cashAttendanceHint: 'Naplata je dostupna tek nakon potvrde dolaska. Procena od nepotvrđenih prijava nije dugovanje. Povučene prijave zadržavaju istoriju uplata i mogućnost povraćaja.',
   showWithdrawnCash: 'Prikaži i povučene prijave bez uplata', cashEstimate: 'Procena',
   startAttendanceTitle: 'Dolasci nisu potvrđeni', startAttendanceHint: 'Za ove učesnike nema potvrde dolaska. Vrati se u Prijave da proveriš dolaske ili izričito potvrdi početak bez te provere. Ovo neće potvrditi dolazak niti omogućiti naplatu.',
@@ -119,7 +119,7 @@ type Messages = typeof sr;
 const en: Messages = {
   attendance_required: 'Confirm attendance first. Payment is unavailable without confirmed arrival.',
   registration_inactive: 'The registration is withdrawn or the category removed. Payment is unavailable.',
-  competition_started: 'Matches have started. Record withdrawal in Matches as retirement or walkover to preserve results.',
+  competition_started: 'The category has started and cannot be removed or have its registrations changed. Record withdrawal in Matches as retirement or walkover to preserve results.',
   expectedAttendanceCash: 'Expected from unconfirmed arrivals', cashAttendanceHint: 'Collect payment only after confirming arrival. Unconfirmed registrations are an estimate, not outstanding debt. Withdrawn registrations retain payment history and refund eligibility.',
   showWithdrawnCash: 'Include withdrawn registrations without payments', cashEstimate: 'Estimate',
   startAttendanceTitle: 'Arrivals are unconfirmed', startAttendanceHint: 'These participants have no confirmed arrival. Return to Registrations to check attendance, or explicitly confirm starting without this check. This will not confirm arrival or enable payment.',

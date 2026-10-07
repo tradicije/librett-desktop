@@ -427,11 +427,14 @@ impl librett_application::CategoryRepository for SqliteTournamentRepository {
         tournament_id: Uuid,
         category_id: Uuid,
     ) -> Result<(), ApplicationError> {
-        completion::ensure_category_open(&self.connection, category_id)?;
         let tx = self
             .connection
             .transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)
             .map_err(|_| ApplicationError::Storage)?;
+        completion::ensure_category_open(&tx, category_id)?;
+        if registration::category_started(&tx, category_id)? {
+            return Err(ApplicationError::CompetitionStarted);
+        }
         let used: Option<bool> = tx.query_row("SELECT EXISTS(SELECT 1 FROM entries WHERE category_id=c.id) FROM categories c WHERE c.id=?1 AND c.tournament_id=?2 AND c.archived=0",params![category_id.to_string(),tournament_id.to_string()],|r|r.get(0)).optional().map_err(|_|ApplicationError::Storage)?;
         match used {
             Some(true) => {

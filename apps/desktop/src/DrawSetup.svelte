@@ -53,14 +53,15 @@
   let loading = $state(true);
   let action = $state(false);
   let error = $state<'invalid' | 'conflict' | 'stale' | 'uncertain' | 'error' | 'closed' | null>(null);
-  let pending = $state<{ draw: CategoryDraw; revision: number } | null>(null);
+  let pending = $state<{ draw: CategoryDraw; revision: number; confirmRestart: boolean } | null>(null);
+  let impact=$state(false);let impactDialog:HTMLDialogElement;const uid=$props.id();
   let stale = $derived(!!draft && (category.format === 'groups_knockout' && (draft.settings.group_count !== groupCount || draft.settings.qualifiers_per_group !== qualifiers) || draft.participants.length !== entries.length || draft.participants.some(e => !entries.some(active => active.id === e.id))));
   let placed = $derived(new Set(draft?.sections.flat().filter((id): id is string => id !== null) ?? []));
   let missing = $derived((draft?.participants.length ?? 0) - placed.size);
   let entryOptions = $derived.by(() => { const current = draft; return current?.participants.map(entry => ({ value: entry.id, label: `${current.seeds.includes(entry.id) ? `#${current.seeds.indexOf(entry.id) + 1} ` : ''}${label(entry)}` })) ?? []; });
   let emptyOptions = $derived([{ value: '', label: t.empty }, ...entryOptions]);
   let byeOptions = $derived([{ value: '', label: t.bye }, ...entryOptions]);
-  let locked = $derived(action || loading || pending !== null || externalLocked);
+  let locked = $derived(action || loading || pending !== null || impact || externalLocked);
   function label(entry: Entry) { return entry.members.map(playerLabel).join(' / '); }
   function entryLabel(id: string) { const entry = draft?.participants.find(e => e.id === id) ?? entries.find(e => e.id === id); return entry ? label(entry) : id; }
   function changed() { dirty = true; saved = false; replacing = false; }
@@ -109,7 +110,7 @@
         { group_count: groupCount, qualifiers_per_group: qualifiers }, seeds);
       changed();
     } catch (cause) { error = cause === 'invalid_draw' || cause === 'invalid_rules' ? 'invalid' : 'error'; }
-    finally { action = false; busy = pending !== null; }
+    finally { action = false; busy = pending !== null || impact; }
   }
   function assign(section: number, slot: number, value: string) {
     if (!draft || locked || stale) return;
@@ -126,17 +127,18 @@
   }
   async function save() {
     if (!draft || action) return;
-    if (!pending) pending = { draw: JSON.parse(JSON.stringify({ ...draft, id: crypto.randomUUID(), revision: 0 })) as CategoryDraw, revision };
+    if (!pending) pending = { draw: JSON.parse(JSON.stringify({ ...draft, id: crypto.randomUUID(), revision: 0 })) as CategoryDraw, revision, confirmRestart: false };
     action = true; busy = true; error = null;
     try {
-      const result = await saveCategoryDraw(tournament.id, pending.draw, pending.revision);
+      const result = await saveCategoryDraw(tournament.id, pending.draw, pending.revision, pending.confirmRestart);
       draft = result; revision = result.revision; pending = null; dirty = false; saved = true;
       window.dispatchEvent(new CustomEvent('librett-results-updated',{detail:category.id}));
     } catch (cause) {
-      if (cause === 'competition_closed' || cause === 'invalid_draw' || cause === 'invalid_rules' || cause === 'draw_conflict' || cause === 'not_found') {
+      if(cause==='result_impact'){impact=true;impactDialog.showModal();}
+      else if (cause === 'competition_closed' || cause === 'invalid_draw' || cause === 'invalid_rules' || cause === 'draw_conflict' || cause === 'not_found') {
         error = cause === 'competition_closed' ? 'closed' : cause === 'draw_conflict' ? 'conflict' : cause === 'invalid_draw' ? 'invalid' : 'stale'; pending = null;
       } else error = 'uncertain';
-    } finally { action = false; busy = pending !== null; }
+    } finally { action = false; busy = pending !== null || impact; }
   }
 </script>
 
@@ -193,6 +195,11 @@
   {/if}
 </section>
 
+<dialog class="confirm-dialog" bind:this={impactDialog} aria-labelledby={`${uid}-restart`} oncancel={event=>{event.preventDefault();impact=false;pending=null;busy=false;impactDialog.close();}}>
+  <h2 id={`${uid}-restart`}>{language==='sr'?'Pokreni novi žreb':'Restart draw'}</h2>
+  <p>{language==='sr'?'Kategorija je već počela. Novi žreb počinje bez prethodnih rezultata i dodeljenih stolova. Prethodni žreb i rezultati ostaju u istoriji.':'This category has started. The new draw begins without previous results or table assignments. The previous draw and results remain in history.'}</p>
+  <div class="dialog-actions"><button class="secondary" onclick={()=>{impact=false;pending=null;busy=false;impactDialog.close();}}>{language==='sr'?'Vrati se':'Back'}</button><button class="primary" onclick={()=>{if(!pending)return;pending={...pending,confirmRestart:true};impact=false;impactDialog.close();void save();}}>{language==='sr'?'Potvrdi novi žreb':'Confirm new draw'}</button></div>
+</dialog>
 <style>
   .draw-workspace { display: grid; gap: 24px; border-top: 1px solid var(--border-subtle); padding-top: 28px; }
   .arrangement-heading { margin: 0; align-items: flex-start; }

@@ -46,7 +46,7 @@ fn category(
         vec![],
     )
     .unwrap();
-    app::save_category_draw(repo, tournament, draft, 0).unwrap();
+    app::save_category_draw(repo, tournament, draft, 0, false).unwrap();
     id
 }
 fn players(repo: &mut SqliteTournamentRepository, n: usize) -> Vec<Uuid> {

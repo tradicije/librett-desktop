@@ -15,8 +15,9 @@ impl DrawRepository for SqliteTournamentRepository {
         &mut self,
         mut draw: CategoryDraw,
         expected_revision: u32,
+        confirm_restart: bool,
     ) -> Result<CategoryDraw, ApplicationError> {
-        let request = serde_json::to_string(&(expected_revision, &draw))
+        let request = serde_json::to_string(&(expected_revision, &draw, confirm_restart))
             .map_err(|_| ApplicationError::Storage)?;
         let tx = self
             .connection
@@ -47,6 +48,9 @@ impl DrawRepository for SqliteTournamentRepository {
             .map_err(|_| ApplicationError::Storage)?;
         if revision != expected_revision {
             return Err(ApplicationError::DrawConflict);
+        }
+        if super::registration::category_started(&tx, draw.category_id)? && !confirm_restart {
+            return Err(ApplicationError::ResultImpact);
         }
         if draw.format == librett_domain::CompetitionFormat::GroupsKnockout {
             let payload: Option<String> = tx

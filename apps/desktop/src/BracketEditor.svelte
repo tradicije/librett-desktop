@@ -79,7 +79,7 @@
     if(saving)return;saving=true;
     try{
       if(grouped && pendingFillers)await saveKnockoutFillers(pendingFillers);
-      else if(pendingDraw)await saveCategoryDraw(tournament.id,pendingDraw,initialDraw.revision);
+      else if(pendingDraw)await saveCategoryDraw(tournament.id,pendingDraw,initialDraw.revision,true);
       else return;
       pendingDraw=null;pendingFillers=null;dirty=false;window.dispatchEvent(new CustomEvent('librett-results-updated',{detail:category.id}));ondone();
     }catch(cause){
