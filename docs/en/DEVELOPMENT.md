@@ -550,3 +550,8 @@ New proposals use draw algorithm version 2; saved version 1 layouts remain reada
 ## Backup compatibility (schema 21)
 
 Migration 21 rebuilds `category_configurations` with cascading category deletion, preserving rules and existing triggers without generating artificial history. It accepts only the two known table definitions previously shipped under migration 11. Restore migrates a temporary copy and compares the complete schema before replacing the live database; unexpected triggers/constraints remain rejected. Older schema-18 backups are portable between macOS, Windows and Linux; both installations must contain the compatibility fix. The application version and database schema version are distinct. A safety snapshot is created before upgrading an existing database.
+
+
+## Beta 2 tournament simulation
+
+See [the simulation report](BETA2_SIMULATION.md) for scenarios, reproducible commands, results and verification limits.

@@ -75,6 +75,17 @@ fn score(
     side: bool,
     confirm: bool,
 ) -> Result<librett_domain::ScheduledMatch, ApplicationError> {
+    score_with_losing_points(repo, tournament, category, item, side, confirm, 0)
+}
+fn score_with_losing_points(
+    repo: &mut SqliteTournamentRepository,
+    tournament: Uuid,
+    category: Uuid,
+    item: librett_domain::ScheduledMatch,
+    side: bool,
+    confirm: bool,
+    losing_points: u16,
+) -> Result<librett_domain::ScheduledMatch, ApplicationError> {
     let configuration = repo.find_category_rules(category)?;
     let draw = app::get_category_draw(repo, tournament, category)?.unwrap();
     let first = item.first.unwrap();
@@ -97,13 +108,13 @@ fn score(
                 .map(|_| {
                     if side {
                         SetScore {
-                            first: 0,
+                            first: losing_points,
                             second: 11,
                         }
                     } else {
                         SetScore {
                             first: 11,
-                            second: 0,
+                            second: losing_points,
                         }
                     }
                 })
@@ -880,4 +891,441 @@ fn first_result_checks_arrivals_and_explicit_override_does_not_enable_payment() 
         serde_json::to_value(repo.category_results(tournament, id).unwrap()).unwrap(),
         results
     );
+}
+
+/// A complete organizer session on disk, including restart and transfer to a new database.
+#[test]
+fn beta2_full_event_simulation_on_disk() {
+    let directory = std::env::temp_dir().join(format!("librett-beta2-event-{}", Uuid::new_v4()));
+    std::fs::create_dir_all(&directory).unwrap();
+    let path = directory.join("organizer.sqlite");
+    let mut repo = SqliteTournamentRepository::open(&path).unwrap();
+    let tournament = app::create_tournament(&mut repo, "Bubušinac — simulacija beta 2")
+        .unwrap()
+        .id;
+    let entrants: Vec<_> = (0..12)
+        .map(|i| {
+            app::save_player_profile(
+                &mut repo,
+                None,
+                &format!("Đorđe Živković {i}"),
+                ["STK Bubušinac", "Železničar", "Đerdap", "Čačak"][i % 4],
+                PlayerProfile {
+                    birth_year: Some(1970 + i as u16),
+                    ..Default::default()
+                },
+            )
+            .unwrap()
+            .id
+        })
+        .collect();
+    let groups = category(
+        &mut repo,
+        tournament,
+        "Open",
+        CompetitionFormat::GroupsKnockout,
+        CategoryRules {
+            group_count: 3,
+            qualifiers_per_group: 2,
+            allow_same_club: false,
+            knockout_filling: KnockoutFilling::LuckyLoser,
+            ..Default::default()
+        },
+        &entrants,
+    );
+    let singles = category(
+        &mut repo,
+        tournament,
+        "Veterani",
+        CompetitionFormat::Knockout,
+        CategoryRules {
+            third_place: ThirdPlaceRule::BronzeMatch,
+            ..Default::default()
+        },
+        &entrants[..7],
+    );
+    let draw = app::get_category_draw(&repo, tournament, groups)
+        .unwrap()
+        .unwrap();
+    for group in &draw.sections {
+        let clubs: Vec<_> = group
+            .iter()
+            .flatten()
+            .map(|id| {
+                librett_domain::club_key(
+                    &draw
+                        .participants
+                        .iter()
+                        .find(|p| p.id == *id)
+                        .unwrap()
+                        .members[0]
+                        .club,
+                )
+            })
+            .collect();
+        assert_eq!(
+            clubs.iter().collect::<std::collections::HashSet<_>>().len(),
+            clubs.len()
+        );
+    }
+    let t = app::add_category_with_fee(
+        &mut repo,
+        tournament,
+        "Dubl",
+        Discipline::Doubles,
+        CompetitionFormat::Knockout,
+        50_001,
+    )
+    .unwrap();
+    let doubles = t.categories.last().unwrap().id;
+    repo.save_category_rules(tournament, doubles, &CategoryRules::default(), 0)
+        .unwrap();
+    app::register_entries(
+        &mut repo,
+        tournament,
+        doubles,
+        entrants.chunks(2).map(|pair| pair.to_vec()).collect(),
+    )
+    .unwrap();
+    let draft = app::preview_category_draw(
+        &repo,
+        tournament,
+        doubles,
+        DrawMode::Automatic,
+        DrawSettings {
+            group_count: 2,
+            qualifiers_per_group: 2,
+        },
+        vec![],
+    )
+    .unwrap();
+    app::save_category_draw(&mut repo, tournament, draft, 0, false).unwrap();
+    // Collect across categories, retry the same receipt, then refund and collect again.
+    let entries: Vec<_> = [groups, singles, doubles]
+        .into_iter()
+        .flat_map(|id| repo.list_entries(id).unwrap())
+        .collect();
+    for player in &entrants {
+        let selection: Vec<_> = entries
+            .iter()
+            .filter(|e| e.members.iter().any(|m| m.id == *player))
+            .map(|e| e.id)
+            .collect();
+        let request = Uuid::new_v4();
+        repo.settle_player_cash(request, tournament, *player, selection.clone(), true)
+            .unwrap();
+        let paid = repo.cash_ledger(tournament).unwrap();
+        repo.settle_player_cash(request, tournament, *player, selection, true)
+            .unwrap();
+        assert_eq!(repo.cash_ledger(tournament).unwrap(), paid);
+    }
+    let selected: Vec<_> = entries
+        .iter()
+        .filter(|e| e.members.iter().any(|m| m.id == entrants[0]))
+        .map(|e| e.id)
+        .collect();
+    repo.settle_player_cash(
+        Uuid::new_v4(),
+        tournament,
+        entrants[0],
+        selected.clone(),
+        false,
+    )
+    .unwrap();
+    repo.settle_player_cash(Uuid::new_v4(), tournament, entrants[0], selected, true)
+        .unwrap();
+    assert_eq!(
+        complete(&mut repo, tournament, None, true).unwrap_err(),
+        ApplicationError::CompetitionIncomplete
+    );
+    // Store an actual result before closing the SQLite connection.
+    let first = repo
+        .match_page(tournament, groups, 0, 0, 0, false)
+        .unwrap()
+        .matches
+        .remove(0);
+    let priority: HashMap<_, _> = draw
+        .participants
+        .iter()
+        .enumerate()
+        .map(|(i, e)| (e.id, i))
+        .collect();
+    let side = priority[&first.second.unwrap()] < priority[&first.first.unwrap()];
+    score_with_losing_points(&mut repo, tournament, groups, first.clone(), side, false, 1).unwrap();
+    let before_restart =
+        serde_json::to_value(repo.competition_state(tournament, groups).unwrap()).unwrap();
+    let cash = repo.cash_ledger(tournament).unwrap();
+    repo.create_backup(&directory, "manual").unwrap();
+    drop(repo);
+    let mut repo = SqliteTournamentRepository::open(&path).unwrap();
+    assert_eq!(
+        serde_json::to_value(repo.competition_state(tournament, groups).unwrap()).unwrap(),
+        before_restart
+    );
+    assert_eq!(repo.cash_ledger(tournament).unwrap(), cash);
+    // Resume group play, preserving the already recorded match.
+    let draw = app::get_category_draw(&repo, tournament, groups)
+        .unwrap()
+        .unwrap();
+    let priority: HashMap<_, _> = draw
+        .participants
+        .iter()
+        .enumerate()
+        .map(|(i, e)| (e.id, i))
+        .collect();
+    for (group, section) in draw.sections.iter().enumerate() {
+        let n = section.iter().flatten().count();
+        for round in 0..n + n % 2 - 1 {
+            for item in repo
+                .match_page(tournament, groups, group, round, 0, false)
+                .unwrap()
+                .matches
+            {
+                if item.result.is_none() {
+                    let side = priority[&item.second.unwrap()] < priority[&item.first.unwrap()];
+                    score_with_losing_points(
+                        &mut repo,
+                        tournament,
+                        groups,
+                        item,
+                        side,
+                        false,
+                        (group + 1) as u16,
+                    )
+                    .unwrap();
+                }
+            }
+        }
+    }
+    let state = repo.competition_state(tournament, groups).unwrap();
+    assert!(state.groups.iter().all(|g| g.complete && g.resolved));
+    assert_eq!(
+        state
+            .slots
+            .iter()
+            .filter(|s| s.lucky_loser && s.entry_id.is_some())
+            .count(),
+        2
+    );
+    // Exercise retirement and walkover in two different disciplines.
+    for (id, outcome, sets) in [
+        (
+            singles,
+            MatchOutcome::Retired,
+            vec![
+                SetScore {
+                    first: 11,
+                    second: 7,
+                },
+                SetScore {
+                    first: 4,
+                    second: 2,
+                },
+            ],
+        ),
+        (doubles, MatchOutcome::Walkover, vec![]),
+    ] {
+        let state = repo.competition_state(tournament, id).unwrap();
+        let item = state
+            .matches
+            .iter()
+            .find(|m| m.first.is_some() && m.second.is_some() && !m.bye)
+            .unwrap()
+            .clone();
+        repo.save_match_result(SaveMatchRequest {
+            request_id: Uuid::new_v4(),
+            tournament_id: tournament,
+            category_id: id,
+            draw_id: state.draw_id.unwrap(),
+            key: item.key,
+            expected_revision: item.revision,
+            rules_revision: state.rules_revision,
+            allow_unconfirmed_start: false,
+            invalidate_downstream: false,
+            result: MatchResult {
+                first: item.first.unwrap(),
+                second: item.second.unwrap(),
+                winner: item.first.unwrap(),
+                outcome,
+                sets,
+                rules: repo.find_category_rules(id).unwrap().rules,
+            },
+        })
+        .unwrap();
+    }
+    for id in [groups, singles, doubles] {
+        finish_knockout(&mut repo, tournament, id);
+        assert!(repo.category_results(tournament, id).unwrap().ready);
+    }
+    // A changed semifinal must invalidate both final and bronze, only after consent.
+    let semifinal = repo
+        .competition_state(tournament, singles)
+        .unwrap()
+        .matches
+        .into_iter()
+        .find(|m| m.round == 1 && !m.bye && m.result.is_some())
+        .unwrap();
+    let opposite = semifinal.result.as_ref().unwrap().winner == semifinal.first.unwrap();
+    assert_eq!(
+        score(
+            &mut repo,
+            tournament,
+            singles,
+            semifinal.clone(),
+            opposite,
+            false
+        )
+        .unwrap_err(),
+        ApplicationError::ResultImpact
+    );
+    score(&mut repo, tournament, singles, semifinal, opposite, true).unwrap();
+    assert!(!repo.category_results(tournament, singles).unwrap().ready);
+    finish_knockout(&mut repo, tournament, singles);
+    for id in [groups, singles, doubles] {
+        complete(&mut repo, tournament, Some(id), true).unwrap();
+    }
+    complete(&mut repo, tournament, None, true).unwrap();
+    assert!(repo.find(tournament).unwrap().completed);
+    complete(&mut repo, tournament, None, false).unwrap();
+    complete(&mut repo, tournament, Some(singles), false).unwrap();
+    complete(&mut repo, tournament, Some(singles), true).unwrap();
+    complete(&mut repo, tournament, None, true).unwrap();
+    let results: Vec<_> = [groups, singles, doubles]
+        .into_iter()
+        .map(|id| serde_json::to_value(repo.category_results(tournament, id).unwrap()).unwrap())
+        .collect();
+    assert_eq!(results[0]["placements"].as_array().unwrap().len(), 12);
+    assert_eq!(results[1]["placements"].as_array().unwrap().len(), 7);
+    assert_eq!(results[2]["placements"].as_array().unwrap().len(), 6);
+    let cash = repo.cash_ledger(tournament).unwrap();
+    let totals = |kind| {
+        cash.records
+            .iter()
+            .filter(|r| r.kind == kind)
+            .map(|r| r.amount_minor)
+            .sum::<i64>()
+    };
+    assert_eq!(
+        totals(librett_domain::CashKind::Charge),
+        12 * 50_000 + 7 * 50_000 + 6 * 50_001
+    );
+    assert_eq!(
+        totals(librett_domain::CashKind::Payment) - totals(librett_domain::CashKind::Refund),
+        totals(librett_domain::CashKind::Charge)
+    );
+    for id in [groups, singles, doubles] {
+        let report = repo.category_report(tournament, id).unwrap();
+        assert!(report.results.ready);
+        assert_eq!(
+            serde_json::to_value(report.results).unwrap(),
+            results[[groups, singles, doubles]
+                .iter()
+                .position(|c| *c == id)
+                .unwrap()]
+        );
+    }
+    let history: i64 = repo
+        .connection
+        .query_row("SELECT count(*) FROM action_history", [], |r| r.get(0))
+        .unwrap();
+    assert!(history > 100);
+    let backup = repo.create_backup(&directory, "manual").unwrap();
+    let payload = std::fs::read(directory.join(&backup.name)).unwrap();
+    drop(repo);
+    let mut destination =
+        SqliteTournamentRepository::open(directory.join("second-computer.sqlite")).unwrap();
+    destination.import_backup(&directory, &payload).unwrap();
+    assert!(destination.find(tournament).unwrap().completed);
+    assert_eq!(destination.list_players().unwrap().len(), 12);
+    assert_eq!(destination.cash_ledger(tournament).unwrap(), cash);
+    for (index, id) in [groups, singles, doubles].into_iter().enumerate() {
+        assert_eq!(
+            serde_json::to_value(destination.category_results(tournament, id).unwrap()).unwrap(),
+            results[index]
+        );
+    }
+    assert!(
+        destination
+            .connection
+            .query_row("SELECT count(*) FROM action_history", [], |r| r
+                .get::<_, i64>(0))
+            .unwrap()
+            >= history
+    );
+    let integrity: String = destination
+        .connection
+        .query_row("PRAGMA integrity_check", [], |r| r.get(0))
+        .unwrap();
+    assert_eq!(integrity, "ok");
+    println!("Simulated 12 players / 3 categories: groups + 2 lucky losers, 7-player bronze bracket, 6 doubles pairs; payments/refund/retries, restart, result correction, completion/reopening and database transfer passed.");
+    drop(destination);
+    std::fs::remove_dir_all(directory).unwrap();
+}
+
+#[test]
+fn beta2_tied_lucky_losers_wait_for_manual_decision() {
+    let mut repo = repository();
+    let tournament = app::create_tournament(&mut repo, "Izjednačeni lucky loser kandidati")
+        .unwrap()
+        .id;
+    let entrants = players(&mut repo, 12);
+    let id = category(
+        &mut repo,
+        tournament,
+        "Open",
+        CompetitionFormat::GroupsKnockout,
+        CategoryRules {
+            group_count: 3,
+            qualifiers_per_group: 2,
+            knockout_filling: KnockoutFilling::LuckyLoser,
+            ..Default::default()
+        },
+        &entrants,
+    );
+    finish_groups(&mut repo, tournament, id);
+    let state = repo.competition_state(tournament, id).unwrap();
+    assert!(state.groups.iter().all(|g| g.complete && g.resolved));
+    let empty: Vec<_> = state
+        .slots
+        .iter()
+        .enumerate()
+        .filter(|(_, s)| s.lucky_loser && !s.bye && s.entry_id.is_none())
+        .map(|(i, _)| i)
+        .collect();
+    assert_eq!(empty.len(), 2);
+    assert_eq!(
+        complete(&mut repo, tournament, Some(id), true).unwrap_err(),
+        ApplicationError::CompetitionIncomplete
+    );
+    let fillers = empty
+        .into_iter()
+        .zip(state.candidates.iter().take(2))
+        .map(|(index, candidate)| (index, FillerChoice::Entry(candidate.standing.entry_id)))
+        .collect();
+    repo.save_knockout_fillers(SaveFillersRequest {
+        request_id: Uuid::new_v4(),
+        tournament_id: tournament,
+        category_id: id,
+        draw_id: state.draw_id.unwrap(),
+        expected_revision: state.filler_revision,
+        expected_match_version: state.match_version,
+        rules_revision: state.rules_revision,
+        order_revisions: state.order_revisions,
+        result_versions: state.result_versions,
+        fillers,
+        invalidate_downstream: false,
+    })
+    .unwrap();
+    let state = repo.competition_state(tournament, id).unwrap();
+    assert_eq!(
+        state
+            .slots
+            .iter()
+            .filter(|s| s.lucky_loser && s.entry_id.is_some())
+            .count(),
+        2
+    );
+    finish_knockout(&mut repo, tournament, id);
+    complete(&mut repo, tournament, Some(id), true).unwrap();
+    complete(&mut repo, tournament, None, true).unwrap();
 }

@@ -4,6 +4,10 @@ Notable changes to LibreTT are recorded here in English.
 
 ## Unreleased
 
+### Verification
+
+- Added a repeatable beta-2 tournament simulation on isolated SQLite files: 12 players, club-separated groups with two lucky losers, a seven-player bronze bracket and six doubles pairs; cash retries/refunds, restart, guarded semifinal correction, completion/reopening and import into a second database. Added a tied lucky-loser scenario requiring manual selection. The core suite and existing cash/report-format checks pass.
+
 ### Packaging
 
 - macOS and Windows release ZIPs now include the installer, Serbian/English plain-text installation instructions and installer SHA-256 checksums. Instructions explain Gatekeeper/SmartScreen prompts and preserve system protection.
