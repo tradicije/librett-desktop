@@ -76,9 +76,9 @@
 <div class="heading"><div><h1>{sr?'Istorija':'History'}</h1><p class="muted">{sr?'Sve zabeležene akcije, najnovije prvo.':'All recorded actions, newest first.'}</p></div><button class="secondary icon-label" disabled={loading} onclick={()=>load()}><Icon name="restore" size={16}/>{sr?'Osveži':'Refresh'}</button></div>
 <section class="panel history-filters">
   <div class="filter-selects">
-    <label>{sr?'Turnir':'Tournament'}<Select label={sr?'Turnir':'Tournament'} bind:value={()=>tournament,(v)=>{tournament=v;category='';}} options={[{value:'',label:sr?'Svi turniri':'All tournaments'},...tournaments.map(t=>({value:t.id,label:t.name}))]}/></label>
-    <label>{sr?'Kategorija':'Category'}<Select label={sr?'Kategorija':'Category'} bind:value={category} options={[{value:'',label:sr?'Sve kategorije':'All categories'},...categories.filter(c=>!tournament||c.tournament_id===tournament).map(c=>({value:c.id,label:`${c.name}${!tournament?' — '+(tournaments.find(t=>t.id===c.tournament_id)?.name??''):''}`}))]}/></label>
-    <label>{sr?'Akcija':'Action'}<Select label={sr?'Akcija':'Action'} bind:value={action} options={[{value:'',label:sr?'Sve akcije':'All actions'},...actions.map(a=>({value:a,label:actionLabel(a)}))]}/></label>
+    <label class="field-label">{sr?'Turnir':'Tournament'}<Select label={sr?'Turnir':'Tournament'} bind:value={()=>tournament,(v)=>{tournament=v;category='';}} options={[{value:'',label:sr?'Svi turniri':'All tournaments'},...tournaments.map(t=>({value:t.id,label:t.name}))]}/></label>
+    <label class="field-label">{sr?'Kategorija':'Category'}<Select label={sr?'Kategorija':'Category'} bind:value={category} options={[{value:'',label:sr?'Sve kategorije':'All categories'},...categories.filter(c=>!tournament||c.tournament_id===tournament).map(c=>({value:c.id,label:`${c.name}${!tournament?' — '+(tournaments.find(t=>t.id===c.tournament_id)?.name??''):''}`}))]}/></label>
+    <label class="field-label">{sr?'Akcija':'Action'}<Select label={sr?'Akcija':'Action'} bind:value={action} options={[{value:'',label:sr?'Sve akcije':'All actions'},...actions.map(a=>({value:a,label:actionLabel(a)}))]}/></label>
   </div>
   <fieldset><legend>{sr?'Vrste istorije':'History types'}</legend><div class="kind-filters">{#each kinds as kind}<button type="button" class="secondary" class:selected={selected.includes(kind)} aria-pressed={selected.includes(kind)} onclick={()=>toggle(kind)}>{kindLabel(kind)}</button>{/each}</div></fieldset>
   <div class="filter-note"><span class="muted">{selected.length===0?(sr?'Prikazane su sve vrste.':'All types are shown.'):(sr?'Prikazane su izabrane vrste.':'Selected types are shown.')}</span><button class="secondary" onclick={()=>{selected=[];tournament='';category='';action='';}}>{sr?'Ukloni filtere':'Clear filters'}</button></div>
@@ -92,10 +92,11 @@
   <article class="history-row">
     <span class="player-avatar history-icon"><Icon name={historyIcon(item.kind)} size={20}/></span>
     <div class="history-body">
-    <div class="history-row-top"><span class="pill">{kindLabel(item.kind)}</span><time datetime={item.occurred_at}>{new Date(item.occurred_at).toLocaleString(sr?'sr-Latn-RS':'en-GB')}</time></div>
-    <h2>{actionLabel(item.action)}</h2><p><PlayerName label={entityLabel(item)}/></p>
-    {#if item.tournament_name}<div class="history-context"><span>{sr?'Turnir':'Tournament'}: <strong>{item.tournament_name}</strong></span>{#if item.category_name}<span>{sr?'Kategorija':'Category'}: <strong>{item.category_name}</strong></span>{/if}</div>{/if}
-    {#if item.historical}<small class="muted">{sr?'Prethodno sačuvana istorija':'Previously saved history'}</small>{/if}
+    <div class="history-summary">
+      <div class="history-subject"><h2>{actionLabel(item.action)}</h2><p><PlayerName label={entityLabel(item)}/></p></div>
+      <div class="history-context">{#if item.tournament_name}<span>{item.tournament_name}</span>{/if}{#if item.category_name}<span class="muted">{item.category_name}</span>{/if}</div>
+      <div class="history-meta"><span class="pill">{kindLabel(item.kind)}</span><time datetime={item.occurred_at} title={new Date(item.occurred_at).toLocaleString(sr?'sr-Latn-RS':'en-GB')}>{new Date(item.occurred_at).toLocaleTimeString(sr?'sr-Latn-RS':'en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}</time>{#if item.historical}<small class="muted">{sr?'Prethodno sačuvano':'Previously saved'}</small>{/if}</div>
+    </div>
     {#if item.before_data||item.after_data}<details><summary>{sr?'Detalji promene':'Change details'}</summary><div class="history-change">{#each [{label:sr?'Pre':'Before',data:item.before_data},{label:sr?'Posle':'After',data:item.after_data}] as side}<section><h3>{side.label}</h3>{#if side.data}<dl>{#each details(side.data,item) as field}<div><dt>{field.label}</dt><dd><PlayerName label={field.value}/></dd></div>{/each}</dl>{:else}<p class="muted">—</p>{/if}</section>{/each}</div></details>{/if}
     </div>
   </article>
@@ -110,24 +111,27 @@
   .kind-filters { display: flex; flex-wrap: wrap; gap: 8px; }
   .kind-filters button { padding: 6px 10px; font-size: 12px; }
   .kind-filters .selected { color: var(--primary); border-color: var(--primary); background: var(--primary-subtle); }
-  .filter-note,.history-row-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .filter-note { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
   .filter-note { font-size: 12px; }
   .history-note { margin: 12px 0 24px; font-size: 12px; }
   .history-list { margin-bottom: 20px; }
   .history-day { font-size: 12px; font-weight: 550; color: var(--text-secondary); margin: 24px 0 10px; }
   .history-day:first-child { margin-top: 0; }
-  .history-row { display: flex; align-items: flex-start; gap: 14px; padding: 18px 20px; border: 1px solid var(--border-subtle); border-bottom: 0; background: var(--surface); }
+  .history-row { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border: 1px solid var(--border-subtle); border-bottom: 0; background: var(--surface); }
   .history-row:has(+.history-day),.history-row:last-child { border-bottom: 1px solid var(--border-subtle); border-radius: 0 0 8px 8px; }
   .history-day+.history-row { border-radius: 8px 8px 0 0; }
   .history-icon { color: var(--primary); background: var(--primary-subtle); margin-top: 2px; }
   .history-body { flex: 1; min-width: 0; }
-  .history-row h2 { font-size: 14px; margin: 10px 0 4px; }
-  .history-row p { margin: 4px 0; overflow-wrap: anywhere; }
-  .history-row time { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
-  .history-context { font-size: 12px; color: var(--text-secondary); display: flex; flex-direction: column; gap: 4px; margin: 10px 0; }
-  .history-context strong { color: var(--text-primary); font-weight: 500; }
-  .history-row small { font-size: 11px; }
-  .history-row details { margin-top: 12px; }
+  .filter-selects label { gap: 10px; min-width: 0; }
+  .history-summary { display: grid; grid-template-columns: minmax(0,1.2fr) minmax(0,1fr) auto; align-items: start; gap: 20px; }
+  .history-subject { min-width: 0; }
+  .history-row h2 { font-size: 13px; font-weight: 550; margin: 0 0 5px; }
+  .history-row p { margin: 0; font-size: 13px; overflow-wrap: anywhere; }
+  .history-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  .history-row time { font-size: 11px; color: var(--text-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .history-context { font-size: 12px; display: flex; flex-direction: column; gap: 5px; overflow-wrap: anywhere; }
+  .history-row small { font-size: 10px; }
+  .history-row details { margin-top: 8px; }
   .history-row summary { cursor: pointer; font-size: 12px; color: var(--primary); }
   .history-row summary:focus-visible { outline: 2px solid var(--primary); outline-offset: 4px; }
   .history-change { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border-subtle); }
@@ -137,5 +141,5 @@
   .history-change dt { color: var(--text-secondary); font-size: 11px; }
   .history-change dd { margin: 4px 0 0; font-size: 12px; overflow-wrap: anywhere; white-space: pre-wrap; }
   @media(max-width:800px) { .filter-selects { grid-template-columns: 1fr; } }
-  @media(max-width:650px) { .history-row { padding: 16px; gap: 10px; }.history-row-top { align-items: flex-start; flex-direction: column; gap: 6px; }.history-change { grid-template-columns: 1fr; gap: 16px; }.filter-note { align-items: flex-start; flex-direction: column; } }
+  @media(max-width:650px) { .history-row { padding: 16px; gap: 10px; }.history-summary { grid-template-columns: minmax(0,1fr) auto; gap: 10px; }.history-context { grid-column: 1; grid-row: 2; }.history-context:empty { display: none; }.history-meta { grid-column: 2; grid-row: 1 / span 2; }.history-meta .pill { white-space: normal; max-width: 130px; text-align: right; }.history-change { grid-template-columns: 1fr; gap: 16px; }.filter-note { align-items: flex-start; flex-direction: column; } }
 </style>
