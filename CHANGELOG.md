@@ -61,6 +61,8 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Changed
 
+- Collapsed sidebar stacks Trash, Backups, History and Guide in a single column; expanded sidebar retains its equal-width 2×2 grid.
+
 - History type now uses a dropdown with an All types option; removed the tournament-category dropdown and type toggle buttons.
 
 - Draw → Edit now keeps the bracket visible and lets organizers select opening-round participants or BYE by clicking a slot. Existing participants swap positions; group knockout overrides support any registered category entry after resolved groups, with guarded result invalidation.

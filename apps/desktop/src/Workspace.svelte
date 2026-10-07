@@ -370,7 +370,7 @@
   .home-guide { margin-top:24px; }
   .sidebar-utilities { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin-top:auto; padding-top:24px; }
   .sidebar-utilities .utility-button { justify-content:center; min-width:0; width:100%; min-height:38px; padding:8px; border-color:var(--border-subtle); }
-  .collapsed .sidebar-utilities { gap:4px; }
+  .collapsed .sidebar-utilities { grid-template-columns:1fr; gap:4px; }
   .collapsed .sidebar-utilities .utility-button { padding:0; }
   .sidebar-bottom { margin-top:0; }
   .tournament-card-actions { display: flex; align-items: center; gap: 8px; margin-top: auto; }
