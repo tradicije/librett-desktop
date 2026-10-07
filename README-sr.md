@@ -159,6 +159,9 @@ Copyright (C) 2026 Aleksa Dimitrijević.
 LibreTT je licenciran pod **GNU Affero General Public License, verzija 3
 ili bilo koja kasnija verzija** (`AGPL-3.0-or-later`). Pogledaj [LICENSE](LICENSE).
 
+Za autorska prava logotipa/ikonice i identitet brenda pročitaj
+[pravila brenda](branding-sr.md).
+
 LibreTT se pruža bez garancije; puni uslovi nalaze se u licenci.
 
 ### Rezervne kopije, stolovi i izveštaji

@@ -4,6 +4,10 @@ Notable changes to LibreTT are recorded here in English.
 
 ## Unreleased
 
+### Branding
+
+- Added a standalone branding copyright and identity policy, with an English original and Serbian translation. The policy reserves applicable trademark rights without claiming registration or revoking existing AGPL copyright permissions.
+
 ### Interface
 
 - Corrected the home block’s vertical reference: the logo/preferences toolbar no longer shifts centering downward. The block centers within the full window area below the title tabs, with symmetric clearance for the toolbar.

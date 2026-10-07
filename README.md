@@ -162,6 +162,8 @@ Copyright (C) 2026 Aleksa Dimitrijević.
 LibreTT is licensed under the **GNU Affero General Public License, version 3
 or any later version** (`AGPL-3.0-or-later`). See [LICENSE](LICENSE).
 
+For logo/icon copyright and brand identity, see [branding.md](branding.md).
+
 LibreTT is provided without warranty; see the license for the full terms.
 
 ### Backups, tables and reports
