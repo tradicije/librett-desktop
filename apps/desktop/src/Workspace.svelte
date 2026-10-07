@@ -1,4 +1,5 @@
 <script lang="ts">
+  import FreeSoftwareNotice from './FreeSoftwareNotice.svelte';
   import TournamentGuide from './TournamentGuide.svelte';
   import ActionHistory from './ActionHistory.svelte';
   import TournamentTrash from './TournamentTrash.svelte';
@@ -262,6 +263,7 @@
           <span class="pill" id={`${uid}-league-status`}>{text.later}</span>
         </button>
       </div>
+      <FreeSoftwareNotice {language}/>
     {:else if route.view === 'guide'}
       <TournamentGuide {language}/>
     {:else if route.view === 'history'}

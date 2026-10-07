@@ -157,3 +157,12 @@ Glavni levi meni prikazuje Turnire, Igrače, Rezervne kopije, Istoriju i na kraj
 Diskretna horizontalna linija odvaja donju dugmad od lokalnog rada, sa po 18px razmaka iznad i ispod linije u proširenom i smanjenom meniju.
 
 Navigacija levog menija počinje direktno stavkom Turniri, bez malog naslova iznad nje.
+
+
+## Obaveštenje o besplatnom softveru
+
+Prvi ekran sa izborom turnira ili lige ispod kartica prikazuje obaveštenje da je LibreTT besplatan zauvek i da korisnik koji je program kupio treba odmah da traži povraćaj novca od prodavca. Zvanični linkovi su `https://librett.org` i `https://github.com/tradicije/librett-desktop`. Desktop ih otvara u sistemskom pregledaču, uz dozvoljene samo te dve fiksne adrese; pregled interfejsa koristi standardne spoljne linkove. Obaveštenje prati srpski/engleski jezik aplikacije.
+
+Obaveštenje zauzima celu širinu mreže kartica uz kompaktne razmake. Linkovi nose nazive **LibreTT Website** i **Source Code**. Sekcija ne preuzima globalne stilove bočnog menija.
+
+Obaveštenje ima naslov od 22px, odvojene pasuse za besplatan softver i povraćaj novca i donji red sa oznakom zvaničnih linkova levo, a imenovanim linkovima desno. U uskom prozoru donji red prelazi u vertikalni raspored.

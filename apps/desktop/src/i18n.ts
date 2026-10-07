@@ -89,6 +89,11 @@ const sr = {
   invalid_profile: 'Proveri godište i detalje profila. Fotografija mora biti ispravna slika u podržanom formatu.',
 
   dashboard: 'Početna', navigation: 'Navigacija', chooseMode: 'Izaberi način takmičenja',
+  freeSoftwareTitle: 'Besplatan zauvek',
+  freeSoftwareNotice: 'LibreTT je besplatan softver i nikada se neće naplaćivati.',
+  freeSoftwareRefund: 'Ako si ovaj program negde kupio, odmah traži povraćaj novca od prodavca.',
+  officialLinks: 'Zvanični linkovi',
+  officialLinkError: 'Link nije mogao da se otvori. Kopiraj adresu u svoj pregledač.',
   dashboardIntro: 'Turniri i lige na jednom mestu. Izaberi šta želiš da organizuješ.',
   tournamentModeDescription: 'Organizuj turnire, kategorije, igrače i prijave.',
   leagueModeDescription: 'Organizuj ligaška takmičenja i prati rezultate kroz sezonu.',
@@ -207,6 +212,11 @@ const en: Messages = {
   invalid_profile: 'Check the birth year and profile details. The photo must be a valid image in a supported format.',
 
   dashboard: 'Dashboard', navigation: 'Navigation', chooseMode: 'Choose a competition mode',
+  freeSoftwareTitle: 'Free forever',
+  freeSoftwareNotice: 'LibreTT is free software and will never require payment.',
+  freeSoftwareRefund: 'If you paid someone for this program, request a refund from the seller immediately.',
+  officialLinks: 'Official links',
+  officialLinkError: 'The link could not be opened. Copy the address into your browser.',
   dashboardIntro: 'Tournaments and leagues in one place. Choose what you want to organize.',
   tournamentModeDescription: 'Organize tournaments, categories, players, and registrations.',
   leagueModeDescription: 'Organize league competitions and follow results throughout the season.',

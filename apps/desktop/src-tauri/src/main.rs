@@ -184,6 +184,7 @@ fn main() {
             import_backup,
             export_backup,
             open_data_folder,
+            open_official_link,
             get_schedule,
             get_match_tables,
             change_schedule,
@@ -847,6 +848,23 @@ fn export_backup(
         .map_err(|_| ApplicationError::Storage)?
         .record_export(&name)?;
     Ok(target.to_string_lossy().into_owned())
+}
+// Only project-owned destinations can be opened from the home notice.
+#[tauri::command]
+fn open_official_link(destination: String) -> Result<(), ApplicationError> {
+    let url = match destination.as_str() {
+        "website" => "https://librett.org",
+        "source" => "https://github.com/tradicije/librett-desktop",
+        _ => return Err(ApplicationError::NotFound),
+    };
+    #[cfg(target_os = "macos")]
+    let result = std::process::Command::new("open").arg(url).spawn();
+    #[cfg(target_os = "windows")]
+    let result = std::process::Command::new("explorer.exe").arg(url).spawn();
+    #[cfg(target_os = "linux")]
+    let result = std::process::Command::new("xdg-open").arg(url).spawn();
+    result.map_err(|_| ApplicationError::Storage)?;
+    Ok(())
 }
 #[tauri::command]
 fn open_data_folder(app: tauri::AppHandle, kind: String) -> Result<(), ApplicationError> {

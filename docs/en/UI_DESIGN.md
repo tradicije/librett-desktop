@@ -179,3 +179,12 @@ The main sidebar lists Tournaments, Players, Backups, History and finally Trash 
 A subtle horizontal divider separates sidebar utilities from local operations, with 18px of spacing above and below the divider in expanded and collapsed modes.
 
 Sidebar navigation starts directly with Tournaments, without a workspace caption above it.
+
+
+## Free-software notice
+
+The initial tournament/league selection screen includes a restrained notice below the mode cards: LibreTT is free forever and anyone who paid a seller for the program should request a refund. It displays the official `https://librett.org` and `https://github.com/tradicije/librett-desktop` links. Desktop opens these two fixed destinations in the system browser; preview uses normal external links. The notice follows the selected Serbian/English language.
+
+The notice spans the full width of the mode-card grid with compact spacing. Links are labeled **LibreTT Website** and **Source Code**. Its semantic section avoids inheriting global sidebar styles.
+
+The notice uses a 22px heading, separate primary free-software and secondary refund paragraphs, and a bottom row with official-link labels on the left and named links on the right. Narrow windows stack the links row.

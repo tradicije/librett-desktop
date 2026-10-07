@@ -4,6 +4,14 @@ Notable changes to LibreTT are recorded here in English.
 
 ## Unreleased
 
+### Interface
+
+- Refined the home notice with a larger heading, separate free-software/refund paragraphs and an aligned official-links row that wraps on narrow windows.
+
+- Fixed the home free-software notice inheriting full-height sidebar styles; it now spans the mode-card area with compact spacing and named Website/Source Code links.
+
+- The initial tournament/league selection screen now states in Serbian and English that LibreTT is free forever, asks anyone who purchased it to request a refund, and links to the official website and source repository. Official links open in the system browser on desktop.
+
 ### Verification
 
 - Added a repeatable beta-2 tournament simulation on isolated SQLite files: 12 players, club-separated groups with two lucky losers, a seven-player bronze bracket and six doubles pairs; cash retries/refunds, restart, guarded semifinal correction, completion/reopening and import into a second database. Added a tied lucky-loser scenario requiring manual selection. The core suite and existing cash/report-format checks pass.

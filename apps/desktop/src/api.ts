@@ -136,3 +136,5 @@ export interface HistoryItem { id:number; occurred_at:string; kind:string; actio
 export interface HistoryOption {id:string;name:string;tournament_id:string|null}
 export interface HistoryPage {items:HistoryItem[];has_more:boolean;tournaments:HistoryOption[];categories:HistoryOption[]}
 export const getActionHistory = (kinds:string[],tournamentId:string|null,categoryId:string|null,action:string|null,beforeAt:string|null,beforeId:number|null) => invoke<HistoryPage>('get_action_history',{kinds,tournamentId,categoryId,action,beforeAt,beforeId});
+
+export const openOfficialLink=(destination:'website'|'source')=>invoke<void>('open_official_link',{destination});
