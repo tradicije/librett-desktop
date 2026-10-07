@@ -15,6 +15,10 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Fixed
 
+- History clears previous filter results and their pagination cursor before reloading, preventing mixed pages after a failed filter change.
+- Matches publishes scores, schedule and table numbers together only after all reads succeed, preventing a new match page from displaying old table assignments after a read failure.
+- Added history regression checks for deleted-category filters, equal-timestamp pagination and transaction rollback.
+
 - Completing/reopening a category or tournament now snapshots the reactive confirmation draft before cloning it, so confirmation reaches the backend instead of failing on a Svelte proxy. Request preparation errors are caught and displayed in the dialog.
 
 - Cash desk history-filter checkbox uses the standard compact size instead of inheriting full-width text-input dimensions, with panel-aligned spacing on desktop and narrow windows.

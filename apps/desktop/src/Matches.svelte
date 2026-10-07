@@ -56,7 +56,12 @@
   async function load() {
     if (loading) return;
     loading = true; error = null;
-    try { const [matchPage,state]=await Promise.all([getMatchPage(tournament.id, category.id, Number(group), Number(round), page, stage === 'knockout'),getSchedule(tournament.id)]);data=matchPage;schedule=state;tables=matchPage.draw?await getMatchTables(tournament.id,matchPage.draw.id):{}; }
+    try {
+      const [matchPage,state]=await Promise.all([getMatchPage(tournament.id, category.id, Number(group), Number(round), page, stage === 'knockout'),getSchedule(tournament.id)]);
+      const matchTables=matchPage.draw?await getMatchTables(tournament.id,matchPage.draw.id):{};
+      // Publish the whole view only after every read succeeds.
+      data=matchPage;schedule=state;tables=matchTables;
+    }
     catch (cause) { error = errorKey(cause); }
     finally { loading = false; }
   }

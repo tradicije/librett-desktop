@@ -143,3 +143,90 @@ impl SqliteTournamentRepository {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn repository() -> SqliteTournamentRepository {
+        SqliteTournamentRepository::initialize(Connection::open_in_memory().unwrap()).unwrap()
+    }
+
+    #[test]
+    fn deleted_category_keeps_history_filters_readable() {
+        let mut repo = repository();
+        repo.connection
+            .execute("INSERT INTO tournaments(id,name) VALUES('t','Kup')", [])
+            .unwrap();
+        repo.connection.execute("INSERT INTO categories(id,tournament_id,name,name_key,discipline,format) VALUES('c','t','Seniori','seniori','singles','knockout')", []).unwrap();
+        repo.connection.execute("INSERT INTO category_configurations(category_id,revision,payload) VALUES('c',1,'{}')", []).unwrap();
+        repo.connection
+            .execute("DELETE FROM categories WHERE id='c'", [])
+            .unwrap();
+        let page = repo
+            .action_history(vec![], None, None, None, None, None)
+            .unwrap();
+        assert_eq!(page.categories.len(), 1);
+        assert_eq!(page.categories[0].name, "Seniori");
+        assert_eq!(page.categories[0].tournament_id.as_deref(), Some("t"));
+        assert_eq!(page.tournaments[0].name, "Kup");
+    }
+
+    #[test]
+    fn equal_timestamp_pages_are_complete_and_failed_writes_leave_no_history() {
+        let mut repo = repository();
+        for index in 0..105 {
+            repo.connection.execute("INSERT INTO action_history(occurred_at,kind,action,entity_type,entity_id,entity_name) VALUES('2026-10-07T12:00:00.000Z','exports','exported','export',?1,?1)", [index.to_string()]).unwrap();
+        }
+        let first = repo
+            .action_history(vec![], None, None, None, None, None)
+            .unwrap();
+        assert_eq!(first.items.len(), 50);
+        assert!(first.has_more);
+        let last = first.items.last().unwrap();
+        let second = repo
+            .action_history(
+                vec![],
+                None,
+                None,
+                None,
+                Some(last.occurred_at.clone()),
+                Some(last.id),
+            )
+            .unwrap();
+        let last = second.items.last().unwrap();
+        let third = repo
+            .action_history(
+                vec![],
+                None,
+                None,
+                None,
+                Some(last.occurred_at.clone()),
+                Some(last.id),
+            )
+            .unwrap();
+        assert_eq!(third.items.len(), 5);
+        assert!(!third.has_more);
+        let ids: std::collections::HashSet<_> = first
+            .items
+            .iter()
+            .chain(&second.items)
+            .chain(&third.items)
+            .map(|item| item.id)
+            .collect();
+        assert_eq!(ids.len(), 105);
+        {
+            let tx = repo.connection.transaction().unwrap();
+            tx.execute(
+                "INSERT INTO tournaments(id,name) VALUES('rollback','Rollback')",
+                [],
+            )
+            .unwrap();
+        }
+        let count: i64 = repo
+            .connection
+            .query_row("SELECT COUNT(*) FROM action_history", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(count, 105);
+    }
+}

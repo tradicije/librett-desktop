@@ -59,6 +59,8 @@
     if(!desktopAvailable)return;
     const version=++request;loading=true;error=null;
     const last=append?items.at(-1):null;
+    // A failed filter change must not leave an old cursor attached to new filters.
+    if(!append){items=[];hasMore=false;}
     try{const page=await getActionHistory([...selected],tournament||null,category||null,action||null,last?.occurred_at??null,last?.id??null);if(version!==request)return;items=append?[...items,...page.items]:page.items;hasMore=page.has_more;tournaments=page.tournaments;categories=page.categories;}
     catch(cause){if(version===request)error=errorKey(cause);}
     finally{if(version===request)loading=false;}
