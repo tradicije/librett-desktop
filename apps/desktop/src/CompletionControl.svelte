@@ -18,8 +18,9 @@
   }
   function close(){if(saving || pending)return;opened=false;draft=null;dialog.close();}
   async function save(){
-    if(saving || !draft)return;if(!pending)pending=structuredClone(draft);saving=true;error=null;
+    if(saving || !draft)return;saving=true;error=null;
     try{
+      if(!pending)pending=structuredClone($state.snapshot(draft));
       const result=await changeCompletion(pending);
       pending=null;opened=false;draft=null;dialog.close();
       await onchanged(result);

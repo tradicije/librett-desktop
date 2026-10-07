@@ -15,6 +15,8 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Fixed
 
+- Completing/reopening a category or tournament now snapshots the reactive confirmation draft before cloning it, so confirmation reaches the backend instead of failing on a Svelte proxy. Request preparation errors are caught and displayed in the dialog.
+
 - Cash desk history-filter checkbox uses the standard compact size instead of inheriting full-width text-input dimensions, with panel-aligned spacing on desktop and narrow windows.
 
 - Restore/import validates the migrated SQLite schema against a fresh LibreTT database before replacing live data, rejecting missing/modified tables, unexpected views, indexes and triggers. Staging connections disable trusted schema.

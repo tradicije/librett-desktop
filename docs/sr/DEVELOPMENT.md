@@ -452,6 +452,9 @@ prikazuje napredak i pobednike kategorija. Završi turnir zahteva najmanje jednu
 aktivnu kategoriju i potvrđen završetak svake aktivne kategorije. Nekorišćene
 kategorije prethodno ukloni ili arhiviraj.
 
+Zahtev za potvrdu kopira se iz običnog snimka Svelte stanja. Greške tokom
+pripreme zahteva prikazuju se u dijalogu, umesto da neprimetno zaustave akciju.
+
 Ponovno otvaranje traži zasebnu potvrdu. Prvo se otvara turnir, pa kategorija;
 otvaranje turnira ne otključava završene kategorije automatski. Istorija
 prethodnih završetaka i ispravki rezultata ostaje. Novo završavanje čuva novi

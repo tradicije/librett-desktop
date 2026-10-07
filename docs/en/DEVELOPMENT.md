@@ -463,6 +463,9 @@ Overview shows category progress/winners; Complete tournament requires at least
 one active category and all active categories already completed. Remove or
 archive unused categories before completing a tournament.
 
+The confirmation request is copied from a plain Svelte state snapshot, and request
+preparation errors are displayed in the dialog rather than silently stopping the action.
+
 Reopen requires a separate confirmation. A closed tournament must be reopened
 before reopening a category; reopening a tournament does not automatically
 unlock completed categories. Earlier completion snapshots and result revisions
