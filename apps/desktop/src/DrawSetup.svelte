@@ -141,7 +141,7 @@
 </script>
 
 <section class="draw-workspace">
-  <div class="section-heading arrangement-heading"><div><h2>{t.title}</h2><p class="muted">{t.intro}</p></div><button class="secondary icon-label" disabled={locked} onclick={async () => { if (!dirty || await confirmDiscard()) await load(); }}><Icon name="restore" size={16} />{t.load}</button></div>
+  <div class="section-heading arrangement-heading"><div><h2>{t.title}</h2><p class="muted">{t.intro}</p></div><button class="secondary icon-label" disabled={locked} onclick={async () => { if (!dirty || await confirmDiscard()) await load(); }}><Icon name="refresh" size={16} />{t.load}</button></div>
   {#if !desktopAvailable}<p class="muted">{text.preview}</p>
   {:else if loading}<p role="status">{text.loading}</p>
   {:else}

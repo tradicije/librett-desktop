@@ -15,6 +15,8 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Fixed
 
+- Refresh/reload controls use the circular refresh icon; attendance removal uses a crossed circle. Undo arrows remain for restoration/reopening actions. Removed unused raw component keys from the shared icon map.
+
 - History clears previous filter results and their pagination cursor before reloading, preventing mixed pages after a failed filter change.
 - Matches publishes scores, schedule and table numbers together only after all reads succeed, preventing a new match page from displaying old table assignments after a read failure.
 - Added history regression checks for deleted-category filters, equal-timestamp pagination and transaction rollback.

@@ -151,7 +151,7 @@
           <p class="muted">{entry.members.map(p => p.club).filter(Boolean).join(' / ')}</p>
           {#each entry.members as member (member.id)}
             <div class="attendance-row"><span><PlayerName player={member} /><small class="metadata-line muted">{member.checked_in ? text.arrived : text.notArrived}</small></span>
-              <button class="secondary icon-label" disabled={readOnly || busy || !desktopAvailable || entry.status === 'withdrawn'} aria-label={`${member.checked_in ? text.markAbsent : text.markArrived}: ${playerLabel(member)}`} onclick={() => changeAttendance(member)}><Icon name={member.checked_in ? 'restore' : 'check-circle'} size={18} />{member.checked_in ? text.markAbsent : text.markArrived}</button>
+              <button class="secondary icon-label" disabled={readOnly || busy || !desktopAvailable || entry.status === 'withdrawn'} aria-label={`${member.checked_in ? text.markAbsent : text.markArrived}: ${playerLabel(member)}`} onclick={() => changeAttendance(member)}><Icon name={member.checked_in ? 'absent' : 'check-circle'} size={18} />{member.checked_in ? text.markAbsent : text.markArrived}</button>
             </div>
           {/each}
           <button class="secondary icon-label" disabled={readOnly || busy || !desktopAvailable || started} title={started ? text.competition_started : undefined} onclick={() => changeStatus(entry)}><Icon name={entry.status === 'withdrawn' ? 'restore' : 'withdraw'} size={18} />{entry.status === 'withdrawn' ? text.restoreEntry : text.withdrawEntry}</button>

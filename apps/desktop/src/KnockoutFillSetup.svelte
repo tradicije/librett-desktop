@@ -56,7 +56,7 @@
   async function reload(){if(locked)return;if(!dirty || await confirmDiscard())await load(true);}
 </script>
 <section class="fill-setup" aria-labelledby={`${uid}-heading`}>
-  <div class="section-heading"><div><h2 id={`${uid}-heading`}>{sr?'Lucky loser mesta':'Lucky loser places'}</h2><p class="muted">{manual ? sr?'Izaberi igrača ili BYE za svako mesto.':'Choose a player or BYE for each place.' : sr?'Automatski popuni sva mesta ili izaberi igrača / BYE za svako mesto.':'Fill every place automatically, or choose a player / BYE for each place.'}</p></div><button class="secondary icon-label" disabled={locked} onclick={reload}><Icon name="restore" size={16} />{sr?'Osveži':'Refresh'}</button></div>
+  <div class="section-heading"><div><h2 id={`${uid}-heading`}>{sr?'Lucky loser mesta':'Lucky loser places'}</h2><p class="muted">{manual ? sr?'Izaberi igrača ili BYE za svako mesto.':'Choose a player or BYE for each place.' : sr?'Automatski popuni sva mesta ili izaberi igrača / BYE za svako mesto.':'Fill every place automatically, or choose a player / BYE for each place.'}</p></div><button class="secondary icon-label" disabled={locked} onclick={reload}><Icon name="refresh" size={16} />{sr?'Osveži':'Refresh'}</button></div>
   {#if error}<p class="error" role="alert">{text[error]}</p>{/if}
   {#if loading}<p role="status">{text.loading}</p>
   {:else if !source?.draw_id}<p class="muted">{sr?'Prvo sačuvaj raspored grupa.':'Save a group arrangement first.'}</p>

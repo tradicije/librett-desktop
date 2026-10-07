@@ -167,3 +167,5 @@ Backups are in the sidebar. Match editors expose a table number and independent 
 ## Action history
 
 History uses the shared heading, panel, Select, secondary button, pill and player-name components. One filter panel contains tournament/history-type/action dropdowns. Events are grouped by local calendar date, with a compact type icon, explicit history type, action, subject and tournament/category context. Before/after details expand inside the row instead of nesting more bordered panels. Theme tokens cover both light/dark modes; narrow windows stack filters, timestamps and change columns. Older history is identified without presenting invented actions or operator identities. Dropdown labels have explicit spacing above their controls. Compact event rows place the action and subject, tournament/category context, and type/time in three columns; dates stay in group headings. On narrow windows the context moves below the subject.
+
+Refresh and reload controls use the circular refresh icon. Undo arrows identify restoring or reopening an item, while a crossed circle marks removal of attendance confirmation.

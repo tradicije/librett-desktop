@@ -74,7 +74,7 @@
   function day(date:string){return new Date(date).toLocaleDateString(sr?'sr-Latn-RS':'en-GB',{day:'numeric',month:'long',year:'numeric'});}
 </script>
 
-<div class="heading"><div><h1>{sr?'Istorija':'History'}</h1><p class="muted">{sr?'Sve zabeležene akcije, najnovije prvo.':'All recorded actions, newest first.'}</p></div><button class="secondary icon-label" disabled={loading} onclick={()=>load()}><Icon name="restore" size={16}/>{sr?'Osveži':'Refresh'}</button></div>
+<div class="heading"><div><h1>{sr?'Istorija':'History'}</h1><p class="muted">{sr?'Sve zabeležene akcije, najnovije prvo.':'All recorded actions, newest first.'}</p></div><button class="secondary icon-label" disabled={loading} onclick={()=>load()}><Icon name="refresh" size={16}/>{sr?'Osveži':'Refresh'}</button></div>
 <section class="panel history-filters">
   <div class="filter-selects">
     <label class="field-label">{sr?'Turnir':'Tournament'}<Select label={sr?'Turnir':'Tournament'} bind:value={tournament} options={[{value:'',label:sr?'Svi turniri':'All tournaments'},...tournaments.map(t=>({value:t.id,label:t.name}))]}/></label>

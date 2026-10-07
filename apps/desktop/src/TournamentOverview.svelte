@@ -17,7 +17,7 @@
   function winner(category:CategoryResults){const id=category.placements.find(p=>p.stage==='winner')?.entry_id;const entry=category.draw?.participants.find(e=>e.id===id);return entry?.members.map(playerLabel).join(' / ');}
 </script>
 <section class="overview">
-  <div class="section-heading"><div><h2>{text.tournamentOverview}</h2><p class="muted">{sr?'Napredak kategorija i završetak turnira.':'Category progress and tournament completion.'}</p></div><button class="secondary icon-label" disabled={busy} onclick={load}><Icon name="restore" size={16} />{sr?'Osveži':'Refresh'}</button></div>
+  <div class="section-heading"><div><h2>{text.tournamentOverview}</h2><p class="muted">{sr?'Napredak kategorija i završetak turnira.':'Category progress and tournament completion.'}</p></div><button class="secondary icon-label" disabled={busy} onclick={load}><Icon name="refresh" size={16} />{sr?'Osveži':'Refresh'}</button></div>
   {#if error}<p class="error" role="alert">{text[error]}</p>{/if}
   {#if loading}<p role="status">{text.loading}</p>{:else if !desktopAvailable}<p class="banner">{text.preview}</p>{:else if data}
     <div class="overview-status"><span class="pill">{data.completion.completed_at?(sr?'Turnir završen':'Tournament completed'):(sr?'Turnir u toku':'Tournament in progress')}</span><span>{finished}/{data.categories.length} {sr?'završenih kategorija':'completed categories'}</span>{#if data.completion.completed_at}<time datetime={data.completion.completed_at}>{new Date(data.completion.completed_at).toLocaleString(sr?'sr-Latn-RS':'en-GB')}</time>{/if}</div>

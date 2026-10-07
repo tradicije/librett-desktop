@@ -2,7 +2,7 @@
   import {
     IconHistory, IconDatabase, IconSettings, IconLayoutSidebarLeftCollapse, IconCash, IconTrophy, IconUser, IconUsers, IconUserPlus, IconArrowLeft, IconArrowRight,
     IconPlus, IconSun, IconMoon, IconDeviceDesktop, IconSearch, IconCircleCheck, IconMinus, IconSquare, IconSquares,
-    IconUserMinus, IconArrowBackUp, IconPencil, IconTrash, IconHome, IconWorld, IconLayersIntersect, IconList, IconAlertCircle, IconInfoCircle, IconX, IconArrowUp, IconArrowDown,
+    IconUserMinus, IconArrowBackUp, IconRefresh, IconCircleX, IconPencil, IconTrash, IconHome, IconWorld, IconLayersIntersect, IconList, IconAlertCircle, IconInfoCircle, IconX, IconArrowUp, IconArrowDown,
   } from '@tabler/icons-svelte';
 
   const icons = {
@@ -13,7 +13,7 @@
     'arrow-left': IconArrowLeft, 'arrow-right': IconArrowRight, plus: IconPlus,
     sun: IconSun, moon: IconMoon, desktop: IconDeviceDesktop, search: IconSearch,
     'check-circle': IconCircleCheck, globe: IconWorld, 'layer-group': IconLayersIntersect,
-    withdraw: IconUserMinus, restore: IconArrowBackUp, edit: IconPencil, trash: IconTrash, home: IconHome, list: IconList, 'exclamation-circle': IconAlertCircle, IconInfoCircle, IconX, IconArrowUp, IconArrowDown,
+    withdraw: IconUserMinus, restore: IconArrowBackUp, refresh: IconRefresh, 'absent': IconCircleX, edit: IconPencil, trash: IconTrash, home: IconHome, list: IconList, 'exclamation-circle': IconAlertCircle,
   };
   let { name, size = 20 }: { name: keyof typeof icons; size?: number } = $props();
   const Component = $derived(icons[name]);
