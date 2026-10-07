@@ -29,6 +29,8 @@ pub enum ThirdPlaceRule {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CategoryRules {
+    #[serde(default = "allow_same_club_default")]
+    pub allow_same_club: bool,
     #[serde(default)]
     pub third_place: ThirdPlaceRule,
     #[serde(default)]
@@ -46,9 +48,14 @@ pub struct CategoryRules {
     pub win_by: u8,
     pub ranking: Vec<RankingCriterion>,
 }
+fn allow_same_club_default() -> bool {
+    true
+}
+
 impl Default for CategoryRules {
     fn default() -> Self {
         Self {
+            allow_same_club: true,
             third_place: ThirdPlaceRule::Shared,
             age_enabled: false,
             knockout_filling: KnockoutFilling::Bye,

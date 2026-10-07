@@ -183,3 +183,7 @@ Draws can be prepared before arrival checks. Before the first result, LibreTT as
 ### Action history
 
 **History** in the sidebar shows newest actions first, with dropdown filters for history type, action and tournament and change details. The new log records edits from the upgrade onward; existing saved result, draw and cash history is included.
+
+Automatic groups use snake seeding. Category settings can separate clubmates in automatic groups; STK prefixes, case and Serbian Latin diacritics are normalized, while club typos require an explicit correction. Automatic lucky losers retain their ranking and are placed to avoid opening-round group rematches where possible.
+
+Need a walkthrough? Open **Guide** at the bottom of the sidebar, or read the [tournament guide](docs/en/TOURNAMENT_GUIDE.md).

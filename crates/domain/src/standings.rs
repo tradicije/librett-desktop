@@ -462,7 +462,7 @@ pub fn filled_qualification_slots(
     } else {
         cutoff
     };
-    for (rank, index) in automatic.into_iter().enumerate() {
+    for (rank, index) in automatic.iter().copied().enumerate() {
         let slot = &mut slots[index];
         if rank < boundary {
             let c = available[rank];
@@ -472,6 +472,66 @@ pub fn filled_qualification_slots(
         } else if rank >= available.len() {
             slot.bye = true;
         }
+    }
+    // Move only automatically selected lucky losers, preserving the qualification cutoff.
+    let positions: Vec<_> = automatic
+        .iter()
+        .copied()
+        .filter(|index| slots[*index].entry_id.is_some())
+        .collect();
+    let entrants: Vec<_> = positions
+        .iter()
+        .map(|index| slots[*index].clone())
+        .collect();
+    let mut assigned = vec![None; positions.len()];
+    fn place(
+        candidate: usize,
+        entrants: &[QualificationSlot],
+        positions: &[usize],
+        slots: &[QualificationSlot],
+        assigned: &mut [Option<usize>],
+        seen: &mut [bool],
+    ) -> bool {
+        let allowed = |target: usize| {
+            entrants[candidate].group.is_none()
+                || entrants[candidate].group != slots[positions[target] ^ 1].group
+        };
+        for target in 0..positions.len() {
+            if !seen[target] && assigned[target].is_none() && allowed(target) {
+                seen[target] = true;
+                assigned[target] = Some(candidate);
+                return true;
+            }
+        }
+        for target in 0..positions.len() {
+            if seen[target] || !allowed(target) {
+                continue;
+            }
+            seen[target] = true;
+            if let Some(previous) = assigned[target] {
+                if place(previous, entrants, positions, slots, assigned, seen) {
+                    assigned[target] = Some(candidate);
+                    return true;
+                }
+            }
+        }
+        false
+    }
+    for candidate in 0..entrants.len() {
+        place(
+            candidate,
+            &entrants,
+            &positions,
+            &slots,
+            &mut assigned,
+            &mut vec![false; positions.len()],
+        );
+    }
+    let used: HashSet<_> = assigned.iter().flatten().copied().collect();
+    let mut remaining = (0..entrants.len()).filter(|candidate| !used.contains(candidate));
+    for (target, index) in positions.into_iter().enumerate() {
+        let candidate = assigned[target].unwrap_or_else(|| remaining.next().unwrap());
+        slots[index] = entrants[candidate].clone();
     }
     slots
 }

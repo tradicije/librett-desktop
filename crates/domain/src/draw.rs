@@ -69,7 +69,7 @@ pub fn validate_draw(
     if category.archived
         || draw.category_id != category.id
         || draw.format != category.format
-        || draw.algorithm_version != 1
+        || !matches!(draw.algorithm_version, 1 | 2)
     {
         return Err(DomainError::InvalidDraw);
     }
@@ -120,8 +120,8 @@ pub fn validate_draw(
     Ok(())
 }
 
-// Version 1: SplitMix64 with Fisher-Yates. Persisting the UUID seed and version
-// reproduces a proposal; random choices are independent of registration IDs.
+// SplitMix64 with Fisher-Yates. Version 2 adds snake seeding and club separation.
+// Version 1 saved layouts remain valid; new proposals are marked version 2.
 struct Random(u64);
 impl Random {
     fn next(&mut self) -> u64 {
@@ -166,7 +166,7 @@ pub fn create_draw(
         category_id: category.id,
         format: category.format,
         mode,
-        algorithm_version: 1,
+        algorithm_version: 2,
         random_seed,
         settings,
         participants,
@@ -192,7 +192,12 @@ pub fn create_draw(
     match category.format {
         CompetitionFormat::GroupsKnockout => {
             for (index, &id) in draw.seeds.iter().enumerate() {
-                let group = index % draw.sections.len();
+                let offset = index % draw.sections.len();
+                let group = if (index / draw.sections.len()) % 2 == 0 {
+                    offset
+                } else {
+                    draw.sections.len() - 1 - offset
+                };
                 let slot = draw.sections[group]
                     .iter()
                     .position(Option::is_none)
@@ -266,4 +271,155 @@ pub fn create_draw(
     }
     validate_draw(&draw, category, entries)?;
     Ok(draw)
+}
+
+/// Club identity for draw constraints, without guessing typographical errors.
+pub fn club_key(name: &str) -> String {
+    let normalized: String = name
+        .to_lowercase()
+        .chars()
+        .map(|c| match c {
+            'š' | 'ś' => 's',
+            'č' | 'ć' => 'c',
+            'ž' => 'z',
+            'đ' => 'd',
+            c if c.is_alphanumeric() => c,
+            _ => ' ',
+        })
+        .collect();
+    let words: Vec<_> = normalized.split_whitespace().collect();
+    let words = if words.starts_with(&["stoni", "teniski", "klub"]) {
+        &words[3..]
+    } else if words.first() == Some(&"stk") {
+        &words[1..]
+    } else {
+        &words[..]
+    };
+    words.join("")
+}
+fn clubs(entry: &Entry) -> HashSet<String> {
+    entry
+        .members
+        .iter()
+        .map(|m| club_key(&m.club))
+        .filter(|club| !club.is_empty())
+        .collect()
+}
+pub fn has_group_club_conflicts(draw: &CategoryDraw) -> bool {
+    let identities: std::collections::HashMap<_, _> = draw
+        .participants
+        .iter()
+        .map(|entry| (entry.id, clubs(entry)))
+        .collect();
+    draw.sections.iter().any(|group| {
+        let mut used = HashSet::new();
+        group.iter().flatten().any(|id| {
+            identities
+                .get(id)
+                .is_some_and(|clubs| clubs.iter().any(|club| !used.insert(club.clone())))
+        })
+    })
+}
+/// Preserve seeded positions; distribute the remaining entries with bounded retries.
+pub fn separate_group_clubs(draw: &mut CategoryDraw) -> Result<(), DomainError> {
+    if draw.mode != DrawMode::Automatic || draw.format != CompetitionFormat::GroupsKnockout {
+        return Ok(());
+    }
+    let identities: std::collections::HashMap<_, _> = draw
+        .participants
+        .iter()
+        .map(|entry| (entry.id, clubs(entry)))
+        .collect();
+    let mut fixed = draw.sections.clone();
+    let seeded: HashSet<_> = draw.seeds.iter().copied().collect();
+    for slot in fixed.iter_mut().flatten() {
+        if slot.is_some_and(|id| !seeded.contains(&id)) {
+            *slot = None;
+        }
+    }
+    let mut random =
+        Random(draw.random_seed.as_u128() as u64 ^ (draw.random_seed.as_u128() >> 64) as u64);
+    let mut remaining: Vec<_> = draw
+        .participants
+        .iter()
+        .filter(|entry| !seeded.contains(&entry.id))
+        .map(|entry| entry.id)
+        .collect();
+    let mut frequencies = std::collections::HashMap::<String, usize>::new();
+    for entry in &draw.participants {
+        for club in &identities[&entry.id] {
+            *frequencies.entry(club.clone()).or_default() += 1;
+        }
+    }
+    if frequencies
+        .values()
+        .any(|count| *count > draw.sections.len())
+    {
+        return Err(DomainError::InvalidDraw);
+    }
+    for _ in 0..64 {
+        let mut sections = fixed.clone();
+        let mut used: Vec<HashSet<String>> = sections
+            .iter()
+            .map(|group| {
+                group
+                    .iter()
+                    .flatten()
+                    .flat_map(|id| identities[id].iter().cloned())
+                    .collect()
+            })
+            .collect();
+        if sections.iter().enumerate().any(|(index, group)| {
+            group
+                .iter()
+                .flatten()
+                .map(|id| identities[id].len())
+                .sum::<usize>()
+                > used[index].len()
+        }) {
+            return Err(DomainError::InvalidDraw);
+        }
+        random.shuffle(&mut remaining);
+        remaining.sort_by_key(|id| {
+            std::cmp::Reverse(
+                identities[id]
+                    .iter()
+                    .map(|club| frequencies[club])
+                    .max()
+                    .unwrap_or(0),
+            )
+        });
+        let mut success = true;
+        for id in &remaining {
+            let mut candidates: Vec<_> = sections
+                .iter()
+                .enumerate()
+                .filter(|(group, slots)| {
+                    slots.iter().any(Option::is_none) && identities[id].is_disjoint(&used[*group])
+                })
+                .map(|(index, _)| index)
+                .collect();
+            random.shuffle(&mut candidates);
+            candidates.sort_by_key(|group| {
+                std::cmp::Reverse(
+                    sections[*group]
+                        .iter()
+                        .filter(|slot| slot.is_none())
+                        .count(),
+                )
+            });
+            let Some(&group) = candidates.first() else {
+                success = false;
+                break;
+            };
+            let slot = sections[group].iter().position(Option::is_none).unwrap();
+            sections[group][slot] = Some(*id);
+            used[group].extend(identities[id].iter().cloned());
+        }
+        if success {
+            draw.sections = sections;
+            return Ok(());
+        }
+    }
+    Err(DomainError::InvalidDraw)
 }

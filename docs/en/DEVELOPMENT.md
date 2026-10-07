@@ -531,3 +531,17 @@ History resets displayed records and pagination when starting a fresh filtered q
 ### Started-category guards
 
 Draw saves accept `confirm_restart` (false by default at the desktop boundary). Inside the write transaction, a started category rejects an unconfirmed new draw with `result_impact`. Existing write receipts still resolve before guards, preserving safe retries. The bracket editor forwards confirmation from its existing impact dialog; Settings has an explicit restart dialog. Category deletion checks open/started state inside its write transaction and refuses to archive a started category. Scoring-rule changes (best-of, points-to-win and win-by) in started categories use the existing impact confirmation path in both editors; old scores retain their stored rules and new entries or corrections use the latest rules. Started status includes recorded match revisions and assignments with a start timestamp.
+
+### Group allocation and club identity
+
+Seeds use alternating snake order within group capacity limits. `allow_same_club` is persisted in category-rule JSON and defaults to true for older configurations/results; no schema migration is needed. When disabled, automatic previews retain seed positions, place club-heavy entries first, and attempt up to 64 deterministic layouts using the stored random seed. Failed searches return a draw error; this does not prove that every possible layout is impossible. Automatic saves recheck club conflicts on persisted registration snapshots; manual layouts may override the policy. Empty club names are unconstrained, and doubles share a group conflict if either member’s normalized club overlaps another entry.
+
+Rust `club_key` and frontend `clubKey` normalize case, Serbian Latin diacritics, punctuation/whitespace and leading STK / Stoni teniski klub. Typographical variants are not identity matches. The player editor offers known names and an explicit suggestion for a unique one-character insertion/deletion/substitution (at least five normalized input characters). Editing a player does not rewrite previously registered club snapshots; correct club names before registration/draw generation.
+
+Automatic lucky-loser allocation preserves the qualification cutoff and tie handling, then maximizes non-rematching assignments among the selected automatic entrants. Manual slots, direct qualifiers and unfilled/tied slots are not moved. If every group rematch cannot be avoided, only unmatched candidates use the remaining positions.
+
+### In-app tournament guide
+
+`TournamentGuide.svelte` renders localized content from `tournament-guide.ts`; the guide route participates in workspace tabs, breadcrumbs and back/forward navigation. Update both content languages and their Markdown copies at `docs/en/TOURNAMENT_GUIDE.md` and `docs/sr/TOURNAMENT_GUIDE.md` when workflows change.
+
+New proposals use draw algorithm version 2; saved version 1 layouts remain readable/editable without regenerating their positions.

@@ -14,6 +14,7 @@
   } = $props();
   const labels = {
     sr: {
+      clubs:'Nije pronađen raspored bez zajedničkih klubova uz ove nosioce i veličine grupa. Proveri nazive klubova, promeni nosioce/broj grupa ili izaberi ručni raspored.',
       closed:'Kategorija je završena. Ponovo je otvori u Rezultatima.', title: 'Nosioci i raspored', intro: 'Poređaj nosioce, napravi raspored i po potrebi ručno odredi ko sa kim igra.',
       automatic: 'Automatski', manual: 'Ručno', groupCount: 'Broj grupa', qualifiers: 'Prolaznika iz svake grupe',
       seeds: 'Nosioci, od najjačeg', addSeed: 'Dodaj nosioca', choose: 'Izaberi prijavu', up: 'Pomeri gore', down: 'Pomeri dole', remove: 'Ukloni',
@@ -26,6 +27,7 @@
       hint: 'Izbor već raspoređene prijave menja njeno mesto sa ovom pozicijom. Prazna pozicija je bye tek kada je ceo kostur popunjen.',
     },
     en: {
+      clubs:'No club-separated layout was found with these seeds and group sizes. Check club names, adjust seeds/groups or choose a manual layout.',
       closed:'Category completed. Reopen it in Results.', title: 'Seeds and arrangement', intro: 'Order seeds, create a layout and adjust group membership or first-round opponents manually.',
       automatic: 'Automatic', manual: 'Manual', groupCount: 'Number of groups', qualifiers: 'Qualifiers per group',
       seeds: 'Seeds, strongest first', addSeed: 'Add seed', choose: 'Choose an entry', up: 'Move up', down: 'Move down', remove: 'Remove',
@@ -52,7 +54,7 @@
   let saved = $state(false);
   let loading = $state(true);
   let action = $state(false);
-  let error = $state<'invalid' | 'conflict' | 'stale' | 'uncertain' | 'error' | 'closed' | null>(null);
+  let error = $state<'clubs' | 'invalid' | 'conflict' | 'stale' | 'uncertain' | 'error' | 'closed' | null>(null);
   let pending = $state<{ draw: CategoryDraw; revision: number; confirmRestart: boolean } | null>(null);
   let impact=$state(false);let impactDialog:HTMLDialogElement;const uid=$props.id();
   let stale = $derived(!!draft && (category.format === 'groups_knockout' && (draft.settings.group_count !== groupCount || draft.settings.qualifiers_per_group !== qualifiers) || draft.participants.length !== entries.length || draft.participants.some(e => !entries.some(active => active.id === e.id))));
@@ -109,7 +111,7 @@
       draft = await previewCategoryDraw(tournament.id, category.id, mode,
         { group_count: groupCount, qualifiers_per_group: qualifiers }, seeds);
       changed();
-    } catch (cause) { error = cause === 'invalid_draw' || cause === 'invalid_rules' ? 'invalid' : 'error'; }
+    } catch (cause) { error = cause === 'invalid_draw' && !rules.allow_same_club && mode==='automatic' && category.format==='groups_knockout' ? 'clubs' : cause === 'invalid_draw' || cause === 'invalid_rules' ? 'invalid' : 'error'; }
     finally { action = false; busy = pending !== null || impact; }
   }
   function assign(section: number, slot: number, value: string) {

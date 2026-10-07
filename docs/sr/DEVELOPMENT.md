@@ -519,3 +519,17 @@ Istorija resetuje prikazane zapise i paginaciju pri novom filtriranom upitu; neu
 ### Zaštite započete kategorije
 
 Čuvanje žreba prima `confirm_restart` (podrazumevano false na desktop granici). U transakciji se novi žreb započete kategorije odbija sa `result_impact` dok organizator ne potvrdi restart. Prethodno potvrđeni upisi proveravaju se pre zaštita radi bezbednog ponavljanja zahteva. Uređivač kostura prosleđuje potvrdu iz postojećeg dijaloga, a Podešavanja imaju poseban dijalog za restart. Uklanjanje kategorije proverava otvorenost i početak unutar transakcije i zabranjuje arhiviranje započete kategorije. Promena broja setova, poena ili razlike u započetoj kategoriji traži potvrdu u oba uređivača; stari rezultati zadržavaju svoja pravila, a naredni unosi ili ispravke koriste nova. Kategorija se smatra započetom kada postoji upis rezultata ili dodela sa vremenom početka.
+
+### Raspored grupa i identitet klubova
+
+Nosioci koriste zmijasti raspored u okviru kapaciteta grupa. `allow_same_club` se čuva u JSON pravilima i podrazumevano je true za starije konfiguracije/rezultate; migracija šeme nije potrebna. Kada je isključen, automatski raspored zadržava mesta nosilaca, prvo raspoređuje prijave iz najzastupljenijih klubova i pokušava do 64 deterministička rasporeda uz sačuvani nasumični seed. Neuspešna pretraga vraća grešku žreba; to nije dokaz da nijedan mogući raspored ne postoji. Automatsko čuvanje proverava klubove iz sačuvanih prijava, a ručni raspored dopušta izuzetke. Prazan naziv kluba nema ograničenje; kod dubla se proveravaju klubovi oba člana.
+
+Rust `club_key` i frontend `clubKey` ujednačavaju velika/mala slova, srpske latinične dijakritike, interpunkciju/razmake i početno STK / Stoni teniski klub. Tipfeleri se ne poistovećuju automatski. Uređivač igrača nudi postojeće nazive i prihvatanje jednoznačnog predloga za jedno dodato/obrisano/zamenjeno slovo (najmanje pet normalizovanih znakova unosa). Izmena igrača ne menja klubove prethodno sačuvanih prijava; nazive ispravi pre prijavljivanja i pravljenja žreba.
+
+Automatska popuna lucky loser-a zadržava izbor kandidata i rešavanje izjednačenja, pa maksimalno razdvaja izabrane automatske učesnike od protivnika iz njihove grupe. Ručna mesta, direktni prolaznici i nerešena mesta se ne pomeraju. Ako svi revanši ne mogu da se izbegnu, preostali kandidati zauzimaju preostala mesta.
+
+### Vodič u aplikaciji
+
+`TournamentGuide.svelte` prikazuje lokalizovan sadržaj iz `tournament-guide.ts`; ruta vodiča koristi tabove, breadcrumbs i nazad/napred navigaciju. Kada se postupci promene, ažuriraj oba jezika sadržaja i Markdown kopije u `docs/en/TOURNAMENT_GUIDE.md` i `docs/sr/TOURNAMENT_GUIDE.md`.
+
+Novi rasporedi koriste verziju algoritma 2; sačuvani rasporedi verzije 1 ostaju dostupni za pregled i uređivanje bez ponovnog generisanja mesta.

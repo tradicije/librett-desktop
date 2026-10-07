@@ -180,3 +180,7 @@ Prijave bez potvrđenog dolaska ulaze u procenu prihoda, a ne u dugovanje. Potvr
 ### Istorija akcija
 
 **Istorija** u levom meniju prikazuje najnovije akcije prve, sa dropdown filterima za vrstu istorije, akciju i turnir i detaljima promena. Novi dnevnik beleži izmene od nadogradnje; starija sačuvana istorija rezultata, žreba i blagajne takođe je dostupna.
+
+Automatske grupe koriste zmijasti raspored nosilaca. U podešavanjima kategorije možeš razdvojiti klubove u automatskim grupama; prefiks STK, velika/mala slova i srpske latinične dijakritike se ujednačavaju, dok tipfeler traži prihvatanje predloga. Automatski lucky loser-i zadržavaju rangiranje i raspoređuju se tako da izbegnu revanš iz grupe u prvoj nokaut rundi kada je moguće.
+
+Treba ti uputstvo korak po korak? Otvori **Vodič** pri dnu levog menija ili pročitaj [vodič za turnir](docs/sr/TOURNAMENT_GUIDE.md).

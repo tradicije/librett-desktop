@@ -149,3 +149,9 @@ Istorija koristi zajednički heading, panel, Select, sekundarne dugmiće, oznake
 Osvežavanje i ponovno učitavanje koriste kružnu refresh ikonicu. Strelica za poništavanje označava vraćanje ili ponovno otvaranje stavke, a precrtani krug uklanjanje potvrde dolaska.
 
 Započeta kategorija ne može da se ukloni. Čuvanje novog žreba u Podešavanjima traži potvrdu uz objašnjenje da rezultati i dodeljeni stolovi ne prelaze u novu verziju. Promena bodovanja nakon početka objašnjava da prethodni rezultati zadržavaju svoja pravila, a naredni unosi ili ispravke koriste nova; potvrda postoji u oba ekrana za uređivanje kategorije.
+
+Kategorije sa grupama imaju switch Isti klub u grupi pri dodavanju i u podešavanjima, podrazumevano uključen. Isključivanje važi za nove automatske rasporede. Ako razdvajanje ne uspe, poruka upućuje na promenu nosilaca/grupa ili ručni raspored. Polje kluba igrača nudi postojeće nazive i dugme za prihvatanje sličnog naziva; tipfeler se ne ispravlja bez izbora organizatora.
+
+Pri dnu menija, iznad lokalnog rada, stoje četiri dugmeta samo sa ikonicama i jednakim širinama: Korpa/Rezervne kopije pa Istorija/Vodič. Nazivi su dostupni čitačima ekrana i na hover, aktivna stranica je označena, a mreža ostaje u dve kolone i kada se meni smanji. Vodič ima numerisane korake, prečice do koraka, pitanja za česte probleme i rečnik. Prečice skroluju sadržaj bez dodavanja stavki istorije pregledača.
+
+Početna strana ima dugme Vodič za vođenje turnira, jer na tom ekranu levi meni nije prikazan.

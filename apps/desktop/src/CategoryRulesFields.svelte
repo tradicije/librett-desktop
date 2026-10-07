@@ -24,6 +24,7 @@
     </div>
   </div>
   {#if format === 'groups_knockout'}
+    <div class="club-policy"><label class="age-toggle"><input type="checkbox" role="switch" bind:checked={rules.allow_same_club} {disabled}/><span class="switch-track" aria-hidden="true"></span><span>{language==='sr'?'Isti klub u grupi':'Same club in a group'}<small>{rules.allow_same_club ? language==='sr'?'Dozvoljeno u automatskom žrebu':'Allowed in automatic draws' : language==='sr'?'Razdvoji klubove u automatskom žrebu':'Separate clubs in automatic draws'}</small></span></label><p class="field-hint">{language==='sr'?'Važi za nove automatske grupe. Ručni raspored omogućava izuzetke. U dublu se uzimaju klubovi oba igrača.':'Applies to new automatic groups. Manual layouts allow exceptions. Doubles consider both players’ clubs.'}</p></div>
     <div class="form-fields"><label>{text.groupCount}<input type="number" min="1" max="2048" step="1" bind:value={rules.group_count} required /></label><label>{text.qualifiersPerGroup}<input type="number" min="1" max="4096" step="1" bind:value={rules.qualifiers_per_group} required /></label></div>
     <p class="field-hint">{text.rulesHint}</p>
   {/if}
@@ -37,6 +38,7 @@
   {/if}
 </fieldset>
 <style>
+  .club-policy { display:grid; gap:14px; }
   .age-section, .toggle-section { display: grid; align-content:start; gap: 14px; min-width:0; }
   .rule-toggles { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:24px; padding-bottom:20px; border-bottom:1px solid var(--border-subtle); }
   .rule-toggles .age-toggle { min-height:52px; }

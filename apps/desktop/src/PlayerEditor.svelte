@@ -1,10 +1,11 @@
 <script lang="ts">
   import { onMount, untrack, tick } from 'svelte';
   import Icon from './Icon.svelte';
+  import { clubKey, clubSuggestion } from './club-name';
   import { confirmDiscard } from './confirmation';
   import ImageCropDialog from './ImageCropDialog.svelte';
   let cropDialog: ImageCropDialog;
-  import { desktopAvailable, getPlayer, savePlayerChecked, type Player, type PlayerProfile } from './api';
+  import { desktopAvailable, listPlayers, getPlayer, savePlayerChecked, type Player, type PlayerProfile } from './api';
   import { messages, errorKey, type Language, type MessageKey } from './i18n';
   let { language, playerId, busy = $bindable(false), dirty = $bindable(false), onsaved, oncancel }: {
     language: Language; playerId?: string; busy?: boolean; dirty?: boolean;
@@ -21,6 +22,8 @@
   let loading = $state(false);
   let error = $state<MessageKey | null>(null);
   let name = $state(''); let club = $state('');
+  let knownClubs=$state<string[]>([]);const uid=$props.id();
+  let suggestedClub=$derived(clubSuggestion(club,knownClubs));
   let birthYear = $state<number | undefined>();
   let city = $state(''); let country = $state(''); let email = $state(''); let phone = $state(''); let notes = $state('');
   let photo = $state<string | null>(null);
@@ -36,7 +39,14 @@
   }
   async function load() {
     loading = true; error = null;
-    try { if (playerId) { const current = await getPlayer(playerId); fill(current); expected = current; } baseline = snapshot(); loaded = true; }
+    try {
+      const [players,current]=await Promise.all([listPlayers(),playerId?getPlayer(playerId):Promise.resolve(null)]);
+      const known=new Map<string,string>();
+      for(const player of players){if(player.id===playerId)continue;const key=clubKey(player.club);if(key && !known.has(key))known.set(key,player.club);}
+      knownClubs=[...known.values()].sort((a,b)=>a.localeCompare(b,language));
+      if(current){fill(current);expected=current;}
+      baseline = snapshot(); loaded = true;
+    }
     catch (cause) { error = errorKey(cause) === 'not_found' ? 'player_not_found' : errorKey(cause); }
     finally { loading = false; }
   }
@@ -74,7 +84,7 @@
     <form onsubmit={save}>
       <fieldset class="form-group"><legend>{text.profileDetails}</legend><div class="form-fields">
       <label>{text.playerName}<input bind:value={name} required maxlength="120" disabled={busy} /></label>
-      <label>{text.club}<input bind:value={club} maxlength="120" disabled={busy} /></label>
+      <label>{text.club}<input bind:value={club} list={`${uid}-clubs`} maxlength="120" disabled={busy} /><datalist id={`${uid}-clubs`}>{#each knownClubs as known}<option value={known}></option>{/each}</datalist>{#if suggestedClub}<span class="club-suggestion"><span>{language==='sr'?'Postojeći sličan naziv:':'Similar existing name:'}</span><button type="button" class="secondary" disabled={busy} onclick={()=>{if(suggestedClub)club=suggestedClub;}}>{suggestedClub}</button></span>{/if}</label>
       <label>{text.birthYear}<input type="number" bind:value={birthYear} min="1900" max={currentYear} step="1" required disabled={busy} /></label>
       <label>{text.city}<input bind:value={city} maxlength="2000" disabled={busy} /></label>
       <label>{text.country}<input bind:value={country} maxlength="2000" disabled={busy} /></label>
@@ -94,3 +104,8 @@
     </form>
   </section>
 {/if}
+
+<style>
+  .club-suggestion { display:flex; flex-wrap:wrap; align-items:center; gap:8px; color:var(--text-secondary); font-size:11px; }
+  .club-suggestion button { font-size:11px; padding:5px 8px; }
+</style>

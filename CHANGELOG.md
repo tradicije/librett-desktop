@@ -15,6 +15,8 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Fixed
 
+- Group seeds now follow alternating snake order (two groups: 1/4 and 2/3). Automatically selected lucky losers use maximum matching to minimize opening-round group rematches without changing the selected candidates or manual slots.
+
 - Restarting a draw after a category has started requires explicit confirmation in Settings and server-side authorization; old draw/results stay in history while the new revision starts without scores or table assignments.
 - Started categories cannot be deleted or archived; the check and write share the same transaction.
 - Changing best-of, point target or winning margin after a category starts requires confirmation in both category editors. Previously saved results retain their original scoring rules; subsequent entries/corrections use the new rules.
@@ -36,6 +38,11 @@ Notable changes to LibreTT are recorded here in English.
 - Refined metadata layouts: short category/scoring summaries and position labels stay inline and wrap when needed; player details and group/knockout progress use separate rows. Set scores use compact tiles.
 
 ### Added
+
+- Always-accessible Serbian/English tournament guide with twelve steps, common problems and a short glossary; equivalent Markdown guides are available in docs. Sidebar Trash, Backups, History and Guide now sit above local operations in an equal-width 2×2 icon grid with accessible names and hover labels.
+
+- Category switch allowing or separating same-club entries in new automatic groups (allowed by default for compatibility). Separation preserves seed positions and group sizes, considers both doubles members, and refuses an unsuccessful layout rather than silently violating the policy.
+- Existing club-name suggestions in the player editor, with explicit acceptance for an unambiguous one-character typo. Club comparison ignores case, spacing/punctuation, Serbian Latin diacritics and STK / Stoni teniski klub prefixes; typo variants are never silently merged.
 
 - Global History in the sidebar, styled with shared theme colors, spaced filter labels, compact event columns, dated event rows, type icons and expandable change details; newest first with dropdown filters for history type, action and tournament, stable paginated loading, contextual labels and before/after details for results, draws/rules, profiles, registrations, attendance, cash, tables, completion, Trash, backups and file exports.
 - SQLite schema 20 records committed data changes through immutable transactional audit triggers and preserves names after deletion/renaming without duplicating image data. Existing dated result/draw/cash/completion/Trash records are imported as clearly marked historical entries; previously unrecorded edits are not fabricated. Older databases receive a pre-v20 safety snapshot. Restoring a backup restores its history and records the restore action.

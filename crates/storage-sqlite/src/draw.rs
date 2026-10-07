@@ -68,6 +68,12 @@ impl DrawRepository for SqliteTournamentRepository {
                 })
                 .transpose()?
                 .unwrap_or_default();
+            if !configured.allow_same_club
+                && draw.mode == librett_domain::DrawMode::Automatic
+                && librett_domain::has_group_club_conflicts(&draw)
+            {
+                return Err(ApplicationError::InvalidDraw);
+            }
             if configured.group_count != draw.settings.group_count
                 || configured.qualifiers_per_group != draw.settings.qualifiers_per_group
             {

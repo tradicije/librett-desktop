@@ -22,7 +22,10 @@ pub use matches::{
 mod results;
 pub use results::{final_placements, final_placements_with_rule, FinalPlacement, PlacementStage};
 mod draw;
-pub use draw::{create_draw, validate_draw, CategoryDraw, DrawMode, DrawSettings};
+pub use draw::{
+    club_key, create_draw, has_group_club_conflicts, separate_group_clubs, validate_draw,
+    CategoryDraw, DrawMode, DrawSettings,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]

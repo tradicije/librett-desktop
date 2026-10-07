@@ -116,14 +116,18 @@ pub fn preview_category_draw(
     {
         return Err(ApplicationError::InvalidRules);
     }
-    Ok(librett_domain::create_draw(
+    let mut draw = librett_domain::create_draw(
         &category,
         &draw_entries(repository, category_id)?,
         mode,
         settings,
         seeds,
         Uuid::new_v4(),
-    )?)
+    )?;
+    if !configured.rules.allow_same_club {
+        librett_domain::separate_group_clubs(&mut draw)?;
+    }
+    Ok(draw)
 }
 
 pub fn save_category_draw(

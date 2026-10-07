@@ -171,3 +171,9 @@ History uses the shared heading, panel, Select, secondary button, pill and playe
 Refresh and reload controls use the circular refresh icon. Undo arrows identify restoring or reopening an item, while a crossed circle marks removal of attendance confirmation.
 
 Started categories cannot be removed. Saving a replacement draw in Settings explains that scores and table assignments do not carry into the new revision and requires confirmation. Scoring changes after the category starts explain that saved scores keep their original rules and subsequent entries/corrections use the new rules; both category editing screens present this confirmation.
+
+Group categories include a Same club in a group switch in creation/settings, enabled by default. Disabling it applies to new automatic layouts. Failed club separation explains that seeds/groups or a manual layout can be adjusted. The player club field offers existing names and an explicit correction button for a similar name; it never silently replaces a typo.
+
+Sidebar utilities sit above local operations as four icon-only, equal-width buttons: Trash/Backups then History/Guide. Names remain available to assistive technology and on hover, active pages are highlighted, and the grid stays two columns when the sidebar collapses. Guide uses readable numbered sections, a jump index, common-problem disclosures and a glossary. Its jumps scroll without adding browser history entries.
+
+Home also offers a Tournament guide button because the sidebar is hidden on that screen.

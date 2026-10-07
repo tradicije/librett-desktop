@@ -1,12 +1,12 @@
 <script lang="ts">
   import {
-    IconHistory, IconDatabase, IconSettings, IconLayoutSidebarLeftCollapse, IconCash, IconTrophy, IconUser, IconUsers, IconUserPlus, IconArrowLeft, IconArrowRight,
+    IconBook2, IconHistory, IconDatabase, IconSettings, IconLayoutSidebarLeftCollapse, IconCash, IconTrophy, IconUser, IconUsers, IconUserPlus, IconArrowLeft, IconArrowRight,
     IconPlus, IconSun, IconMoon, IconDeviceDesktop, IconSearch, IconCircleCheck, IconMinus, IconSquare, IconSquares,
     IconUserMinus, IconArrowBackUp, IconRefresh, IconCircleX, IconPencil, IconTrash, IconHome, IconWorld, IconLayersIntersect, IconList, IconAlertCircle, IconInfoCircle, IconX, IconArrowUp, IconArrowDown,
   } from '@tabler/icons-svelte';
 
   const icons = {
-    history: IconHistory, backup: IconDatabase, settings: IconSettings, minimize: IconMinus, maximize: IconSquare, 'restore-window': IconSquares,
+    guide: IconBook2, history: IconHistory, backup: IconDatabase, settings: IconSettings, minimize: IconMinus, maximize: IconSquare, 'restore-window': IconSquares,
     'arrow-up': IconArrowUp, 'arrow-down': IconArrowDown, info: IconInfoCircle, close: IconX,
     'sidebar-collapse': IconLayoutSidebarLeftCollapse,
     cash: IconCash, trophy: IconTrophy, user: IconUser, users: IconUsers, 'user-plus': IconUserPlus,
