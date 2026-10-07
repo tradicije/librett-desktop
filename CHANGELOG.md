@@ -61,6 +61,8 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Changed
 
+- Collapsed sidebar utility buttons use transparent borders, matching the main navigation icons.
+
 - Collapsed sidebar stacks Trash, Backups, History and Guide in a single column; expanded sidebar retains its equal-width 2×2 grid.
 
 - History type now uses a dropdown with an All types option; removed the tournament-category dropdown and type toggle buttons.

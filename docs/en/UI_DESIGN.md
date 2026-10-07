@@ -174,6 +174,6 @@ Started categories cannot be removed. Saving a replacement draw in Settings expl
 
 Group categories include a Same club in a group switch in creation/settings, enabled by default. Disabling it applies to new automatic layouts. Failed club separation explains that seeds/groups or a manual layout can be adjusted. The player club field offers existing names and an explicit correction button for a similar name; it never silently replaces a typo.
 
-Sidebar utilities sit above local operations as four icon-only, equal-width buttons: Trash/Backups then History/Guide. Names remain available to assistive technology and on hover, active pages are highlighted, and the grid becomes a single column when the sidebar collapses. Guide uses readable numbered sections, a jump index, common-problem disclosures and a glossary. Its jumps scroll without adding browser history entries.
+Sidebar utilities sit above local operations as four icon-only, equal-width buttons: Trash/Backups then History/Guide. Names remain available to assistive technology and on hover, active pages are highlighted, and the grid becomes a single column with transparent button borders when the sidebar collapses. Guide uses readable numbered sections, a jump index, common-problem disclosures and a glossary. Its jumps scroll without adding browser history entries.
 
 Home also offers a Tournament guide button because the sidebar is hidden on that screen.
