@@ -61,6 +61,8 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Changed
 
+- Added a subtle divider with spacing between sidebar utilities and the local-operations footer in expanded and collapsed modes.
+
 - Collapsed sidebar utility buttons use transparent borders, matching the main navigation icons.
 
 - Collapsed sidebar stacks Trash, Backups, History and Guide in a single column; expanded sidebar retains its equal-width 2×2 grid.

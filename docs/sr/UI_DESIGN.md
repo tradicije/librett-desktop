@@ -155,3 +155,5 @@ Kategorije sa grupama imaju switch Isti klub u grupi pri dodavanju i u podešava
 Pri dnu menija, iznad lokalnog rada, stoje četiri dugmeta samo sa ikonicama i jednakim širinama: Korpa/Rezervne kopije pa Istorija/Vodič. Nazivi su dostupni čitačima ekrana i na hover, aktivna stranica je označena, a mreža prelazi u jednu kolonu bez vidljivih okvira dugmića kada se meni smanji. Vodič ima numerisane korake, prečice do koraka, pitanja za česte probleme i rečnik. Prečice skroluju sadržaj bez dodavanja stavki istorije pregledača.
 
 Početna strana ima dugme Vodič za vođenje turnira, jer na tom ekranu levi meni nije prikazan.
+
+Diskretna horizontalna linija odvaja donju dugmad od lokalnog rada, sa po 18px razmaka iznad i ispod linije u proširenom i smanjenom meniju.

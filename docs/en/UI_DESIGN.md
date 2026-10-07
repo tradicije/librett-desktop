@@ -177,3 +177,5 @@ Group categories include a Same club in a group switch in creation/settings, ena
 Sidebar utilities sit above local operations as four icon-only, equal-width buttons: Trash/Backups then History/Guide. Names remain available to assistive technology and on hover, active pages are highlighted, and the grid becomes a single column with transparent button borders when the sidebar collapses. Guide uses readable numbered sections, a jump index, common-problem disclosures and a glossary. Its jumps scroll without adding browser history entries.
 
 Home also offers a Tournament guide button because the sidebar is hidden on that screen.
+
+A subtle horizontal divider separates sidebar utilities from local operations, with 18px of spacing above and below the divider in expanded and collapsed modes.

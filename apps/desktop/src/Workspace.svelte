@@ -372,7 +372,7 @@
   .sidebar-utilities .utility-button { justify-content:center; min-width:0; width:100%; min-height:38px; padding:8px; border-color:var(--border-subtle); }
   .collapsed .sidebar-utilities { grid-template-columns:1fr; gap:4px; }
   .collapsed .sidebar-utilities .utility-button { padding:0; border-color:transparent; }
-  .sidebar-bottom { margin-top:0; }
+  .sidebar-bottom { margin-top:18px; padding-top:18px; border-top:1px solid var(--border-subtle); }
   .tournament-card-actions { display: flex; align-items: center; gap: 8px; margin-top: auto; }
   .tournament-card-actions .tournament-open { flex: 1; margin-top: 0; width: auto; }
   .sidebar { width: 208px; padding-top: 0; }
