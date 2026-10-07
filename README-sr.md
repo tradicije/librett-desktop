@@ -179,4 +179,4 @@ Prijave bez potvrđenog dolaska ulaze u procenu prihoda, a ne u dugovanje. Potvr
 
 ### Istorija akcija
 
-**Istorija** u levom meniju prikazuje najnovije akcije prve, sa filterima za vrstu akcije, turnir i kategoriju i detaljima promena. Novi dnevnik beleži izmene od nadogradnje; starija sačuvana istorija rezultata, žreba i blagajne takođe je dostupna.
+**Istorija** u levom meniju prikazuje najnovije akcije prve, sa dropdown filterima za vrstu istorije, akciju i turnir i detaljima promena. Novi dnevnik beleži izmene od nadogradnje; starija sačuvana istorija rezultata, žreba i blagajne takođe je dostupna.

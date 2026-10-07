@@ -506,7 +506,7 @@ Kategorija počinje prvim upisanim rezultatom ili početkom meča na dodeljenom 
 
 ## Globalna istorija akcija
 
-Istorija u levom meniju prikazuje sačuvane akcije svih turnira, najnovije prvo (vreme i stabilan redni broj). Organizator može da kombinuje vrste istorije i filtrira akciju, turnir i kategoriju. Rezultati prikazuju izmene setova, pravila svoje parametre, a žreb nosioce i raspored. Stariji zapisi učitavaju se po 50, bez pomeranja stranica kada pristignu novi zapisi. Promena filtera vraća prikaz na početak. Osveži ili ponovo aktiviraj tab Istorija za izmene iz drugih tabova.
+Istorija u levom meniju prikazuje sačuvane akcije svih turnira, najnovije prvo (vreme i stabilan redni broj). Organizator bira vrstu istorije (ili sve vrste) u dropdown polju i filtrira akciju i turnir. Rezultati prikazuju izmene setova, pravila svoje parametre, a žreb nosioce i raspored. Stariji zapisi učitavaju se po 50, bez pomeranja stranica kada pristignu novi zapisi. Promena filtera vraća prikaz na početak. Osveži ili ponovo aktiviraj tab Istorija za izmene iz drugih tabova.
 
 Šema 20 dodaje neizmenjivu `action_history`; SQLite okidači upisuju promene u istoj transakciji kao turniri/kategorije/igrači, prijave/učesnici i dolasci, pravila, žreb, rezultati i poništavanja, plasman grupa/nokaut mesta, blagajna/raspodele, stolovi, završavanje/otvaranje i korpa. Kreiranje/vraćanje bekapa i izvoz fajla beleže se nakon uspešne operacije. Navigacija, neuspešni/poništeni upisi i ponovljeni zahtevi koji ne menjaju bazu ne stvaraju događaje izmene podataka. Slike se ne dupliraju; beleži se promena i prisustvo slike.
 

@@ -31,7 +31,7 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Added
 
-- Global History in the sidebar, styled with shared theme colors, spaced filter labels, compact event columns, dated event rows, type icons and expandable change details; newest first with filters for multiple history types, action, tournament and category, stable paginated loading, contextual labels and before/after details for results, draws/rules, profiles, registrations, attendance, cash, tables, completion, Trash, backups and file exports.
+- Global History in the sidebar, styled with shared theme colors, spaced filter labels, compact event columns, dated event rows, type icons and expandable change details; newest first with dropdown filters for history type, action and tournament, stable paginated loading, contextual labels and before/after details for results, draws/rules, profiles, registrations, attendance, cash, tables, completion, Trash, backups and file exports.
 - SQLite schema 20 records committed data changes through immutable transactional audit triggers and preserves names after deletion/renaming without duplicating image data. Existing dated result/draw/cash/completion/Trash records are imported as clearly marked historical entries; previously unrecorded edits are not fabricated. Older databases receive a pre-v20 safety snapshot. Restoring a backup restores its history and records the restore action.
 
 - Attendance-aware cash desk separates estimates for unconfirmed arrivals from outstanding debt. Collecting payment requires an active registration and confirmed arrival in both UI and transactional backend checks; doubles partners pay independently. Withdrawn/archived registrations stop contributing debt or estimates, while original charges and payments remain in the audit ledger and refunds remain available.
@@ -47,6 +47,8 @@ Notable changes to LibreTT are recorded here in English.
 - Schema 18 stores table assignments and idempotent scheduling receipts, with a consistent pre-v18 snapshot before upgrading existing databases.
 
 ### Changed
+
+- History type now uses a dropdown with an All types option; removed the tournament-category dropdown and type toggle buttons.
 
 - Draw → Edit now keeps the bracket visible and lets organizers select opening-round participants or BYE by clicking a slot. Existing participants swap positions; group knockout overrides support any registered category entry after resolved groups, with guarded result invalidation.
 - Category creation/settings show age, Lucky loser/BYE and third-place switches in one responsive row. Enabling Lucky loser reveals automatic versus manual filling; manual mode leaves places unresolved until chosen. Third place can be shared, decided by a bronze match, or awarded to the semifinalist beaten by the eventual champion.

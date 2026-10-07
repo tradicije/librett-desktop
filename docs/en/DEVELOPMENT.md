@@ -518,7 +518,7 @@ A category starts at its first recorded match result or started table assignment
 
 ## Global action history
 
-History in the sidebar shows committed actions across all tournaments, newest first (timestamp and stable sequence). Organizers can combine history types and filter by action, tournament and category. Results expose score revisions, rules expose their settings, and draw details show seeds/sections. Older pages load 50 entries at a time through a keyset cursor; filtering resets pagination. Refresh or re-enter the active History workspace to retrieve changes from other tabs.
+History in the sidebar shows committed actions across all tournaments, newest first (timestamp and stable sequence). Organizers can select a history type (or all types) and filter by action and tournament. Results expose score revisions, rules expose their settings, and draw details show seeds/sections. Older pages load 50 entries at a time through a keyset cursor; filtering resets pagination. Refresh or re-enter the active History workspace to retrieve changes from other tabs.
 
 Schema 20 adds immutable `action_history`, transactionally populated by SQLite triggers for tournament/category/player changes, registration/member and attendance changes, rules, draws, results including invalidation, group order/knockout slots, cash records/allocations, tables, completion/reopening and Trash. File backup creation/restoration and export are recorded after their operation succeeds. Navigation, unsuccessful writes, rolled-back writes and idempotent retries that perform no database mutation do not create data-change events. Images are represented by a change event/presence flag, never duplicated image bytes.
 

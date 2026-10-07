@@ -182,4 +182,4 @@ Draws can be prepared before arrival checks. Before the first result, LibreTT as
 
 ### Action history
 
-**History** in the sidebar shows newest actions first, with type/action, tournament and category filters and change details. The new log records edits from the upgrade onward; existing saved result, draw and cash history is included.
+**History** in the sidebar shows newest actions first, with dropdown filters for history type, action and tournament and change details. The new log records edits from the upgrade onward; existing saved result, draw and cash history is included.

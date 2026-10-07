@@ -8,8 +8,8 @@
   import { formatMoney } from './money';
   let { language, active, busy=$bindable(false) }:{language:Language;active:boolean;busy?:boolean}=$props();
   let sr=$derived(language==='sr');let text=$derived(messages[language]);
-  let items=$state<HistoryItem[]>([]);let tournaments=$state<HistoryOption[]>([]);let categories=$state<HistoryOption[]>([]);
-  let selected=$state<string[]>([]);let tournament=$state('');let category=$state('');let action=$state('');
+  let items=$state<HistoryItem[]>([]);let tournaments=$state<HistoryOption[]>([]);
+  let kind=$state('');let tournament=$state('');let action=$state('');
   let loading=$state(false);let hasMore=$state(false);let error=$state<MessageKey|null>(null);let request=0;
   const kinds=['results','categories','rules','draws','registrations','attendance','cash','tables','completion','tournaments','players','trash','backups','exports'];
   const actions=['created','updated','deleted','recorded','corrected','invalidated','archived','restored','completed','reopened','trashed','image_changed','charge','discount','payment','refund','allocated','exported'];
@@ -61,29 +61,27 @@
     const last=append?items.at(-1):null;
     // A failed filter change must not leave an old cursor attached to new filters.
     if(!append){items=[];hasMore=false;}
-    try{const page=await getActionHistory([...selected],tournament||null,category||null,action||null,last?.occurred_at??null,last?.id??null);if(version!==request)return;items=append?[...items,...page.items]:page.items;hasMore=page.has_more;tournaments=page.tournaments;categories=page.categories;}
+    try{const page=await getActionHistory(kind?[kind]:[],tournament||null,null,action||null,last?.occurred_at??null,last?.id??null);if(version!==request)return;items=append?[...items,...page.items]:page.items;hasMore=page.has_more;tournaments=page.tournaments;}
     catch(cause){if(version===request)error=errorKey(cause);}
     finally{if(version===request)loading=false;}
   }
   $effect(()=>{busy=loading;});
-  $effect(()=>{if(active&&desktopAvailable){selected;tournament;category;action;void load();}});
+  $effect(()=>{if(active&&desktopAvailable){kind;tournament;action;void load();}});
   function historyIcon(kind:string):'check-circle'|'settings'|'layer-group'|'users'|'cash'|'desktop'|'trophy'|'user'|'trash'|'backup'|'history'{
     const icons={results:'check-circle',categories:'layer-group',rules:'settings',draws:'layer-group',registrations:'users',attendance:'users',cash:'cash',tables:'desktop',completion:'check-circle',tournaments:'trophy',players:'user',trash:'trash',backups:'backup',exports:'history'} as const;
     return icons[kind as keyof typeof icons]??'history';
   }
   function day(date:string){return new Date(date).toLocaleDateString(sr?'sr-Latn-RS':'en-GB',{day:'numeric',month:'long',year:'numeric'});}
-  function toggle(kind:string){selected=selected.includes(kind)?selected.filter(k=>k!==kind):[...selected,kind];}
 </script>
 
 <div class="heading"><div><h1>{sr?'Istorija':'History'}</h1><p class="muted">{sr?'Sve zabeležene akcije, najnovije prvo.':'All recorded actions, newest first.'}</p></div><button class="secondary icon-label" disabled={loading} onclick={()=>load()}><Icon name="restore" size={16}/>{sr?'Osveži':'Refresh'}</button></div>
 <section class="panel history-filters">
   <div class="filter-selects">
-    <label class="field-label">{sr?'Turnir':'Tournament'}<Select label={sr?'Turnir':'Tournament'} bind:value={()=>tournament,(v)=>{tournament=v;category='';}} options={[{value:'',label:sr?'Svi turniri':'All tournaments'},...tournaments.map(t=>({value:t.id,label:t.name}))]}/></label>
-    <label class="field-label">{sr?'Kategorija':'Category'}<Select label={sr?'Kategorija':'Category'} bind:value={category} options={[{value:'',label:sr?'Sve kategorije':'All categories'},...categories.filter(c=>!tournament||c.tournament_id===tournament).map(c=>({value:c.id,label:`${c.name}${!tournament?' — '+(tournaments.find(t=>t.id===c.tournament_id)?.name??''):''}`}))]}/></label>
+    <label class="field-label">{sr?'Turnir':'Tournament'}<Select label={sr?'Turnir':'Tournament'} bind:value={tournament} options={[{value:'',label:sr?'Svi turniri':'All tournaments'},...tournaments.map(t=>({value:t.id,label:t.name}))]}/></label>
+    <label class="field-label">{sr?'Vrsta istorije':'History type'}<Select label={sr?'Vrsta istorije':'History type'} bind:value={kind} options={[{value:'',label:sr?'Sve vrste':'All types'},...kinds.map(value=>({value,label:kindLabel(value)}))]}/></label>
     <label class="field-label">{sr?'Akcija':'Action'}<Select label={sr?'Akcija':'Action'} bind:value={action} options={[{value:'',label:sr?'Sve akcije':'All actions'},...actions.map(a=>({value:a,label:actionLabel(a)}))]}/></label>
   </div>
-  <fieldset><legend>{sr?'Vrste istorije':'History types'}</legend><div class="kind-filters">{#each kinds as kind}<button type="button" class="secondary" class:selected={selected.includes(kind)} aria-pressed={selected.includes(kind)} onclick={()=>toggle(kind)}>{kindLabel(kind)}</button>{/each}</div></fieldset>
-  <div class="filter-note"><span class="muted">{selected.length===0?(sr?'Prikazane su sve vrste.':'All types are shown.'):(sr?'Prikazane su izabrane vrste.':'Selected types are shown.')}</span><button class="secondary" onclick={()=>{selected=[];tournament='';category='';action='';}}>{sr?'Ukloni filtere':'Clear filters'}</button></div>
+  <div class="filter-note"><button class="secondary" onclick={()=>{kind='';tournament='';action='';}}>{sr?'Ukloni filtere':'Clear filters'}</button></div>
 </section>
 <p class="muted history-note">{sr?'Starije akcije dostupne su tamo gde je istorija već bila sačuvana.':'Older actions are available where history was already recorded.'}</p>
 {#if error}<p class="error" role="alert">{text[error]} <button class="secondary" onclick={()=>load()}>{text.retry}</button></p>{/if}
@@ -108,13 +106,8 @@
 <style>
   .history-filters { margin-bottom: 16px; }
   .filter-selects { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px; }
-  .history-filters fieldset { border: 0; padding: 0; margin: 20px 0 16px; }
-  .history-filters legend { margin-bottom: 10px; font-size: 12px; color: var(--text-secondary); }
-  .kind-filters { display: flex; flex-wrap: wrap; gap: 8px; }
-  .kind-filters button { padding: 6px 10px; font-size: 12px; }
-  .kind-filters .selected { color: var(--primary); border-color: var(--primary); background: var(--primary-subtle); }
   .filter-note { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-  .filter-note { font-size: 12px; }
+  .filter-note { justify-content: flex-end; margin-top: 16px; font-size: 12px; }
   .history-note { margin: 12px 0 24px; font-size: 12px; }
   .history-list { margin-bottom: 20px; }
   .history-day { font-size: 12px; font-weight: 550; color: var(--text-secondary); margin: 24px 0 10px; }
