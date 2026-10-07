@@ -42,8 +42,8 @@ The Players tab shows the shared directory. Add/Edit opens dedicated profile
 screens, including photos, and returns to the list after saving. Delete asks for
 confirmation and protects profiles with existing registrations. Tournament
 registration uses that directory. Entries can be withdrawn/restored, and player
-attendance is shared across categories in a tournament. Schema version 19 includes immutable draw drafts and versioned category rules; older on-disk databases receive a consistent
-`pre-v19-<uuid>.sqlite` backup before migration.
+attendance is shared across categories in a tournament. Schema version 20 includes immutable draw drafts and versioned category rules; older on-disk databases receive a consistent
+`pre-v20-<uuid>.sqlite` backup before migration.
 
 Back/Forward follows the active workspace’s screen history. The top Home button
 returns to the pinned mode-selection workspace. The mode chooser has no sidebar. Saves lock navigation until
@@ -515,3 +515,11 @@ Attendance remains tournament-wide and does not alter prepared draws. Collecting
 Original fee charges remain immutable audit records. `cash-balance.ts` derives collectable debt only from arrived active players, estimates only from unconfirmed active players, and retains net payments for inactive accounts so they can be refunded. Cash exports use the same calculation and label gross ledger charges as historical. Arrival revocation blocks new payments without erasing prior transactions. Test with `npm run test:cash` and the Rust workspace tests.
 
 A category starts at its first recorded match result or started table assignment. Registration changes then lock, while attendance can still be confirmed. The first result checks all active entrants’ arrivals; an explicit `allow_unconfirmed_start` override is saved in its receipt and never changes attendance. False defaults preserve existing receipt serialization. Table start also checks arrivals. Retirements and walkovers preserve sporting history through the existing match-result workflow. No schema migration is required.
+
+## Global action history
+
+History in the sidebar shows committed actions across all tournaments, newest first (timestamp and stable sequence). Organizers can combine history types and filter by action, tournament and category. Results expose score revisions, rules expose their settings, and draw details show seeds/sections. Older pages load 50 entries at a time through a keyset cursor; filtering resets pagination. Refresh or re-enter the active History workspace to retrieve changes from other tabs.
+
+Schema 20 adds immutable `action_history`, transactionally populated by SQLite triggers for tournament/category/player changes, registration/member and attendance changes, rules, draws, results including invalidation, group order/knockout slots, cash records/allocations, tables, completion/reopening and Trash. File backup creation/restoration and export are recorded after their operation succeeds. Navigation, unsuccessful writes, rolled-back writes and idempotent retries that perform no database mutation do not create data-change events. Images are represented by a change event/presence flag, never duplicated image bytes.
+
+Migration imports genuine dated draw/result/cash/completion/Trash records as historical entries. Earlier edits without a saved timestamp/history cannot be reconstructed; legacy context labels use names available during migration. There is no invented operator identity: the app is local and has no authenticated accounts. History travels inside backups. Restoring a backup intentionally restores its history snapshot as well, followed by a new restore event; it is not a separate forensic log surviving all restores. The pre-restore safety backup retains the replaced database and its history. History has no destructive clear/edit command.

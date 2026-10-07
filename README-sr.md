@@ -176,3 +176,7 @@ Na kartici turnira izaberi **Premesti u korpu** i potvrdi uklanjanje iz aktivne 
 Prijave bez potvrđenog dolaska ulaze u procenu prihoda, a ne u dugovanje. Potvrdi dolazak svakog igrača u **Prijavama** da omogućiš naplatu; kod dubla svaki igrač može da plati svoj deo nezavisno od partnera. Povučene prijave nestaju iz podrazumevane aktivne liste i više ne ulaze u procenu niti dugovanje. Finansijska istorija ostaje dostupna, a primljene uplate mogu da se vrate i posle povlačenja prijave.
 
 Žreb može da se pripremi pre provere dolazaka. Pre prvog rezultata LibreTT traži proveru nepotvrđenih dolazaka ili izričitu odluku organizatora da počne bez provere; taj izuzetak ne omogućava naplatu. Kada mečevi počnu, odustajanje beleži kroz predaju ili walkover u **Mečevima**, umesto promene prijava, da žreb i odigrani rezultati ostanu sačuvani.
+
+### Istorija akcija
+
+**Istorija** u levom meniju prikazuje najnovije akcije prve, sa filterima za vrstu akcije, turnir i kategoriju i detaljima promena. Novi dnevnik beleži izmene od nadogradnje; starija sačuvana istorija rezultata, žreba i blagajne takođe je dostupna.

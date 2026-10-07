@@ -24,15 +24,17 @@ mod tests {
         let path = directory.join("live.sqlite");
         let mut repo = SqliteTournamentRepository::open(&path).unwrap();
         let tournament = librett_application::create_tournament(&mut repo, "Beta kup").unwrap();
-        // Remove exactly migration 19 to reproduce the schema shipped in beta.1.
-        let triggers: Vec<String> = repo.connection.prepare("SELECT name FROM sqlite_schema WHERE type='trigger' AND sql LIKE '%tournament_in_trash%'").unwrap().query_map([], |r| r.get(0)).unwrap().map(Result::unwrap).collect();
+        // Remove migrations 19 and 20 to reproduce the schema shipped in beta.1.
+        let triggers: Vec<String> = repo.connection.prepare("SELECT name FROM sqlite_schema WHERE type='trigger' AND (sql LIKE '%tournament_in_trash%' OR name GLOB 'history_*')").unwrap().query_map([], |r| r.get(0)).unwrap().map(Result::unwrap).collect();
         for trigger in triggers {
             repo.connection
                 .execute_batch(&format!("DROP TRIGGER {trigger};"))
                 .unwrap();
         }
         repo.connection
-            .execute_batch("DROP TABLE tournament_trash; PRAGMA user_version=18;")
+            .execute_batch(
+                "DROP TABLE action_history; DROP TABLE tournament_trash; PRAGMA user_version=18;",
+            )
             .unwrap();
         drop(repo);
         for _ in 0..2 {
@@ -43,7 +45,7 @@ mod tests {
         let backups = std::fs::read_dir(&directory)
             .unwrap()
             .map(|p| p.unwrap().path())
-            .filter(|p| p.to_string_lossy().contains("pre-v19-"))
+            .filter(|p| p.to_string_lossy().contains("pre-v20-"))
             .collect::<Vec<_>>();
         assert_eq!(backups.len(), 1);
         let old_backup = std::fs::read(&backups[0]).unwrap();

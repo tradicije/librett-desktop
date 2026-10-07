@@ -163,3 +163,7 @@ The bracket participant picker uses an inline dropdown whose list height adapts 
 Player age numbers use the theme’s primary text color, with a muted year/years unit. Serbian uses godina for endings 1 and 5–9/0, godine for endings 2–4, and godina for 11–14.
 
 Backups are in the sidebar. Match editors expose a table number and independent save; report buttons are next to Groups/Draw, Results and Cash Desk. Print previews have a separate native window.
+
+## Action history
+
+History uses the shared heading, panel, Select, secondary button, pill and player-name components. One filter panel contains tournament/category/action dropdowns and selectable type buttons. Events are grouped by local calendar date, with a compact type icon, explicit history type, action, subject and tournament/category context. Before/after details expand inside the row instead of nesting more bordered panels. Theme tokens cover both light/dark modes; narrow windows stack filters, timestamps and change columns. Older history is identified without presenting invented actions or operator identities.

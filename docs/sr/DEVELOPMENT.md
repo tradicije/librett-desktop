@@ -42,8 +42,8 @@ Tab Igrači prikazuje zajedničku listu. Dodaj/Izmeni otvara zasebne ekrane za
 profile i fotografije, a čuvanje vraća na listu. Brisanje traži potvrdu i čuva
 igrače sa postojećim prijavama. Prijave unutar turnira koriste tu bazu i mogu
 da se povuku i vrate;
-dolazak igrača važi kroz sve kategorije istog turnira. Šema verzije 19 sadrži neizmenjive nacrte žreba i verzije pravila kategorije; pre migracije starijih baza pravi se konzistentan
-`pre-v19-<uuid>.sqlite` backup.
+dolazak igrača važi kroz sve kategorije istog turnira. Šema verzije 20 sadrži neizmenjive nacrte žreba i verzije pravila kategorije; pre migracije starijih baza pravi se konzistentan
+`pre-v20-<uuid>.sqlite` backup.
 
 Nazad/Napred prati istoriju aktivnog radnog taba. Home dugme u gornjoj traci
 vraća na stalni početni ekran koji nema bočni meni. Čuvanje zaključava navigaciju do završetka.
@@ -503,3 +503,11 @@ Dolazak važi za ceo turnir i ne menja pripremljeni žreb. Naplata proverava akt
 Originalna zaduženja ostaju neizmenjivi istorijski zapisi. `cash-balance.ts` izvodi dug samo za prisutne aktivne igrače, procenu samo za nepotvrđene aktivne igrače, a zadržava neto uplate neaktivnih prijava radi povraćaja. Izvoz blagajne koristi isti račun i označava bruto zaduženja kao istorijska. Opoziv dolaska blokira nove naplate bez brisanja ranijih transakcija. Provere: `npm run test:cash` i Rust testovi radnog prostora.
 
 Kategorija počinje prvim upisanim rezultatom ili početkom meča na dodeljenom stolu. Promene prijava tada su zaključane, dok dolasci i dalje mogu da se potvrde. Prvi rezultat proverava dolaske svih aktivnih učesnika; izričiti izuzetak `allow_unconfirmed_start` čuva se u potvrdi upisa i ne menja dolaske. Podrazumevana false vrednost zadržava format postojećih potvrda. Početak meča na stolu takođe proverava dolaske. Predaje i walkover čuvaju sportsku istoriju kroz postojeći tok unosa rezultata. Nije potrebna migracija šeme.
+
+## Globalna istorija akcija
+
+Istorija u levom meniju prikazuje sačuvane akcije svih turnira, najnovije prvo (vreme i stabilan redni broj). Organizator može da kombinuje vrste istorije i filtrira akciju, turnir i kategoriju. Rezultati prikazuju izmene setova, pravila svoje parametre, a žreb nosioce i raspored. Stariji zapisi učitavaju se po 50, bez pomeranja stranica kada pristignu novi zapisi. Promena filtera vraća prikaz na početak. Osveži ili ponovo aktiviraj tab Istorija za izmene iz drugih tabova.
+
+Šema 20 dodaje neizmenjivu `action_history`; SQLite okidači upisuju promene u istoj transakciji kao turniri/kategorije/igrači, prijave/učesnici i dolasci, pravila, žreb, rezultati i poništavanja, plasman grupa/nokaut mesta, blagajna/raspodele, stolovi, završavanje/otvaranje i korpa. Kreiranje/vraćanje bekapa i izvoz fajla beleže se nakon uspešne operacije. Navigacija, neuspešni/poništeni upisi i ponovljeni zahtevi koji ne menjaju bazu ne stvaraju događaje izmene podataka. Slike se ne dupliraju; beleži se promena i prisustvo slike.
+
+Migracija prenosi postojeće datirane žrebove, rezultate, blagajnu, završetke i korpu kao označenu prethodnu istoriju. Ranije izmene bez sačuvanog vremena/istorije ne mogu da se rekonstruišu; stari kontekst koristi nazive dostupne pri migraciji. Ne izmišljamo identitet organizatora: aplikacija je lokalna, bez prijavljenih naloga. Istorija je deo bekapa. Vraćanje bekapa vraća i njegov snimak istorije, uz novi događaj vraćanja; ovo nije izdvojen forenzički dnevnik koji preživljava sva vraćanja. Sigurnosna kopija pre vraćanja čuva prethodnu bazu i istoriju. Istorija nema komandu za brisanje ili izmenu.

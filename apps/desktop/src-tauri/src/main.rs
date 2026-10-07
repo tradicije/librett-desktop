@@ -208,6 +208,7 @@ fn main() {
             registration_started,
             list_tournaments,
             list_trashed_tournaments,
+            get_action_history,
             trash_tournament,
             restore_tournament,
             create_tournament_with_cover,
@@ -829,11 +830,20 @@ fn import_backup(
         .import_backup(&data_directory(&app)?.join("backups"), &bytes)
 }
 #[tauri::command]
-fn export_backup(app: tauri::AppHandle, name: String) -> Result<String, ApplicationError> {
+fn export_backup(
+    app: tauri::AppHandle,
+    database: tauri::State<Database>,
+    name: String,
+) -> Result<String, ApplicationError> {
     let source =
         SqliteTournamentRepository::backup_path(&data_directory(&app)?.join("backups"), &name)?;
     let target = exports_directory(&app)?.join(format!("librett-backup-{}.sqlite", Uuid::new_v4()));
     std::fs::copy(source, &target).map_err(|_| ApplicationError::Storage)?;
+    database
+        .0
+        .lock()
+        .map_err(|_| ApplicationError::Storage)?
+        .record_export(&name)?;
     Ok(target.to_string_lossy().into_owned())
 }
 #[tauri::command]
@@ -880,6 +890,7 @@ fn change_schedule(
 #[tauri::command]
 fn save_report(
     app: tauri::AppHandle,
+    database: tauri::State<Database>,
     kind: String,
     format: String,
     content: String,
@@ -893,6 +904,11 @@ fn save_report(
     let path =
         exports_directory(&app)?.join(format!("librett-{kind}-{}.{}", Uuid::new_v4(), format));
     std::fs::write(&path, content.as_bytes()).map_err(|_| ApplicationError::Storage)?;
+    database
+        .0
+        .lock()
+        .map_err(|_| ApplicationError::Storage)?
+        .record_export(&format!("{kind}.{format}"))?;
     Ok(path.to_string_lossy().into_owned())
 }
 #[tauri::command]
@@ -991,4 +1007,28 @@ fn get_category_report(
         .lock()
         .map_err(|_| ApplicationError::Storage)?
         .category_report(tournament_id, category_id)
+}
+
+#[tauri::command]
+fn get_action_history(
+    database: tauri::State<Database>,
+    kinds: Vec<String>,
+    tournament_id: Option<Uuid>,
+    category_id: Option<Uuid>,
+    action: Option<String>,
+    before_at: Option<String>,
+    before_id: Option<i64>,
+) -> Result<librett_storage_sqlite::HistoryPage, ApplicationError> {
+    database
+        .0
+        .lock()
+        .map_err(|_| ApplicationError::Storage)?
+        .action_history(
+            kinds,
+            tournament_id,
+            category_id,
+            action,
+            before_at,
+            before_id,
+        )
 }

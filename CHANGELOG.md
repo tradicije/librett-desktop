@@ -27,6 +27,9 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Added
 
+- Global History in the sidebar, styled with shared theme colors, compact filters, dated event rows, type icons and expandable change details; newest first with filters for multiple history types, action, tournament and category, stable paginated loading, contextual labels and before/after details for results, draws/rules, profiles, registrations, attendance, cash, tables, completion, Trash, backups and file exports.
+- SQLite schema 20 records committed data changes through immutable transactional audit triggers and preserves names after deletion/renaming without duplicating image data. Existing dated result/draw/cash/completion/Trash records are imported as clearly marked historical entries; previously unrecorded edits are not fabricated. Older databases receive a pre-v20 safety snapshot. Restoring a backup restores its history and records the restore action.
+
 - Attendance-aware cash desk separates estimates for unconfirmed arrivals from outstanding debt. Collecting payment requires an active registration and confirmed arrival in both UI and transactional backend checks; doubles partners pay independently. Withdrawn/archived registrations stop contributing debt or estimates, while original charges and payments remain in the audit ledger and refunds remain available.
 - Registrations default to active entries, with withdrawn history accessible through filters. Once a category has started, registration changes are blocked to preserve its draw and results; retirements/walkovers are recorded in Matches.
 - Prepared draws remain available before arrival checks. The first match result requires confirmed arrivals or an explicit organizer override, recorded in the write receipt without confirming attendance or enabling payment. Cash reports use the same effective debt/estimate calculations as the desk.

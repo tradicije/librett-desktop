@@ -179,3 +179,7 @@ Choose **Move to trash** on a tournament card and confirm to remove it from the 
 Registrations without confirmed arrival contribute to an estimate rather than outstanding debt. Confirm each player’s arrival in **Registrations** to enable payment collection; doubles partners can pay their shares independently. Withdrawn registrations disappear from the default active list and no longer contribute estimates or debt. Their financial history remains available, and received payments can be refunded even after withdrawal.
 
 Draws can be prepared before arrival checks. Before the first result, LibreTT asks the organizer to confirm missing arrivals or explicitly start without checking them; this exception does not enable payment. After matches start, record retirement or walkover in **Matches** instead of changing registrations, to preserve the draw and completed results.
+
+### Action history
+
+**History** in the sidebar shows newest actions first, with type/action, tournament and category filters and change details. The new log records edits from the upgrade onward; existing saved result, draw and cash history is included.

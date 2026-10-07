@@ -60,6 +60,7 @@ impl SqliteTournamentRepository {
         }
         drop(destination);
         let metadata = io_error(fs::metadata(&target))?;
+        self.record_file_action("created", &name)?;
         Ok(BackupInfo {
             name,
             size: metadata.len(),
@@ -173,7 +174,7 @@ impl SqliteTournamentRepository {
         let integrity: String = source
             .query_row("PRAGMA quick_check", [], |r| r.get(0))
             .map_err(|_| ApplicationError::InvalidBackup)?;
-        if !(1..=19).contains(&version) || ![0, 1279415380].contains(&app) || integrity != "ok" {
+        if !(1..=20).contains(&version) || ![0, 1279415380].contains(&app) || integrity != "ok" {
             return Err(ApplicationError::InvalidBackup);
         }
         let recognizable:bool=source.query_row("SELECT EXISTS(SELECT 1 FROM pragma_table_info('tournaments') WHERE name='name') AND EXISTS(SELECT 1 FROM pragma_table_info('categories') WHERE name='tournament_id')",[],|r|r.get(0)).map_err(|_|ApplicationError::InvalidBackup)?;
@@ -221,6 +222,10 @@ impl SqliteTournamentRepository {
             self.connection
                 .execute_batch("PRAGMA foreign_keys=ON;")
                 .map_err(|_| ApplicationError::Storage)?;
+            self.record_file_action(
+                "restored",
+                &path.file_name().unwrap_or_default().to_string_lossy(),
+            )?;
             Ok(())
         })();
         let _ = fs::remove_file(stage);

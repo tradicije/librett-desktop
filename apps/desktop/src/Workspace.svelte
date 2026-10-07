@@ -1,4 +1,5 @@
 <script lang="ts">
+  import ActionHistory from './ActionHistory.svelte';
   import TournamentTrash from './TournamentTrash.svelte';
   import InfoRows from './InfoRows.svelte';
   import Backups, {type RestoreSource} from './Backups.svelte';
@@ -41,7 +42,7 @@
   let route = $derived(history[historyIndex]);
   let childDirty = $state(false);
   let inPlayers = $derived(route.view === 'players' || route.view === 'player-create' || route.view === 'player-edit');
-  let pageLabel = $derived(route.view === 'trash' ? text.trash : route.view === 'backups' ? (language==='sr'?'Rezervne kopije':'Backups') : route.view === 'tournament-create' ? text.addTournament : route.view === 'dashboard' ? text.dashboard : inPlayers ? text.playerTab : text.tournaments);
+  let pageLabel = $derived(route.view === 'history' ? (language==='sr'?'Istorija':'History') : route.view === 'trash' ? text.trash : route.view === 'backups' ? (language==='sr'?'Rezervne kopije':'Backups') : route.view === 'tournament-create' ? text.addTournament : route.view === 'dashboard' ? text.dashboard : inPlayers ? text.playerTab : text.tournaments);
   let mode = $derived(route.view === 'dashboard' ? 'dashboard' : 'tournaments');
   let childBusy = $state(false);
   let selectedId = $derived((['tournament', 'category', 'category-create', 'category-edit'].includes(route.view)) ? route.id : null);
@@ -59,6 +60,7 @@
   let selectedCategory = $derived(activeCategories.find(c => c.id === route.categoryId));
   let breadcrumbs = $derived.by(() => {
     const items: { label: string; route: Route }[] = [];
+    if(route.view==='history')return [{label:language==='sr'?'Istorija':'History',route:{view:'history' as const}}];
     if(route.view==='trash')return [{label:text.trash,route:{view:'trash' as const}}];
     if(route.view==='backups')return [{label:language==='sr'?'Rezervne kopije':'Backups',route:{view:'backups' as const}}];
     if (inPlayers) {
@@ -199,10 +201,11 @@
     </div>
     {#if !sidebarCollapsed}<p class="sidebar-label">{text.workspace}</p>{/if}
     <nav id={`${uid}-sidebar-nav`} aria-label={text.navigation}>
-      <button data-open-tab class="nav-item" class:active={!inPlayers && !['backups','trash'].includes(route.view)} aria-current={!inPlayers && !['backups','trash'].includes(route.view) ? 'page' : undefined} disabled={navigationLocked} aria-label={text.tournaments} title={text.tournaments} onclick={openTournaments}><Icon name="trophy" />{#if !sidebarCollapsed}<span>{text.tournaments}</span>{/if}</button>
+      <button data-open-tab class="nav-item" class:active={!inPlayers && !['backups','trash','history'].includes(route.view)} aria-current={!inPlayers && !['backups','trash','history'].includes(route.view) ? 'page' : undefined} disabled={navigationLocked} aria-label={text.tournaments} title={text.tournaments} onclick={openTournaments}><Icon name="trophy" />{#if !sidebarCollapsed}<span>{text.tournaments}</span>{/if}</button>
       <button data-open-tab class="nav-item" class:active={inPlayers} aria-current={inPlayers ? 'page' : undefined} disabled={navigationLocked} aria-label={text.playerTab} title={text.playerTab} onclick={() => navigate({ view: 'players' })}><Icon name="users" />{#if !sidebarCollapsed}<span>{text.playerTab}</span>{/if}</button>
       <button data-open-tab class="nav-item" class:active={route.view==='backups'} disabled={navigationLocked} aria-label={language==='sr'?'Rezervne kopije':'Backups'} title={language==='sr'?'Rezervne kopije':'Backups'} onclick={()=>navigate({view:'backups'})}><Icon name="backup"/>{#if !sidebarCollapsed}<span>{language==='sr'?'Rezervne kopije':'Backups'}</span>{/if}</button>
       <button data-open-tab class="nav-item" class:active={route.view==='trash'} aria-current={route.view==='trash' ? 'page' : undefined} disabled={navigationLocked} aria-label={text.trash} title={text.trash} onclick={()=>navigate({view:'trash'})}><Icon name="trash"/>{#if !sidebarCollapsed}<span>{text.trash}</span>{/if}</button>
+      <button data-open-tab class="nav-item" class:active={route.view==='history'} aria-current={route.view==='history' ? 'page' : undefined} disabled={navigationLocked} aria-label={language==='sr'?'Istorija':'History'} title={language==='sr'?'Istorija':'History'} onclick={()=>navigate({view:'history'})}><Icon name="history"/>{#if !sidebarCollapsed}<span>{language==='sr'?'Istorija':'History'}</span>{/if}</button>
     </nav>
     <div class="sidebar-bottom">
       <span class="icon-label" title={text.local}><Icon name="desktop" size={16} />{#if !sidebarCollapsed}{text.local}{/if}</span>
@@ -255,6 +258,8 @@
           <span class="pill" id={`${uid}-league-status`}>{text.later}</span>
         </button>
       </div>
+    {:else if route.view === 'history'}
+      <ActionHistory {language} {active} bind:busy={childBusy}/>
     {:else if route.view === 'trash'}
       <TournamentTrash {language} {active} bind:busy={childBusy} onrestored={(tournament) => { tournaments = [tournament, ...tournaments.filter(t => t.id !== tournament.id)]; notice = 'tournamentRestored'; }} />
     {:else if route.view === 'backups'}
