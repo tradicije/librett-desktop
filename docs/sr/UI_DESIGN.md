@@ -167,4 +167,10 @@ Obaveštenje zauzima celu širinu mreže kartica uz kompaktne razmake. Linkovi n
 
 Obaveštenje ima naslov od 22px, odvojene pasuse za besplatan softver i povraćaj novca i donji red sa oznakom zvaničnih linkova levo, a imenovanim linkovima desno. U uskom prozoru donji red prelazi u vertikalni raspored.
 
-Prvi ekran centrira naslov, obe kartice i obaveštenje zajedno unutar prostora za sadržaj. Jedna flex kolona minimalne visine jednake prostoru za skrolovanje centrira sve sekcije zajedno i raste kada sadržaj zahteva skrolovanje; stara pravila fiksnog gornjeg razmaka su uklonjena.
+Prvi ekran centrira naslov, obe kartice i obaveštenje zajedno unutar prostora za sadržaj. Grid red veličine prostora za skrolovanje centrira jedan blok svih sekcija i raste kada sadržaj zahteva skrolovanje; stara pravila fiksnog gornjeg razmaka su uklonjena.
+
+Nazivi zvaničnih linkova prate jezik interfejsa: **LibreTT sajt / Izvorni kod** na srpskom i **LibreTT Website / Source Code** na engleskom.
+
+Centriranje početne strane koristi grid red veličine dostupnog prostora, sa minimalnom visinom prema sadržaju, i jedan `home-block` koji obuhvata naslov, kartice i obaveštenje. Pri promeni jezika prati se prirodna visina bloka; niski prozori dozvoljavaju skrolovanje bez odsecanja vrha. Ovim se zamenjuje procentualna minimalna visina unutar flex rasporeda.
+
+Traka sa logom i preferencama na početnoj strani postavljena je preko okvira sadržaja, pa ne oduzima visinu rasporedu. Početni blok centrira se unutar celog okvira ispod gornjih tabova, uz jednake gornje i donje razmake koji čuvaju prostor za logo u nižim prozorima. Trake ostalih stranica zadržavaju normalan raspored.

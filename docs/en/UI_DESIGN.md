@@ -189,4 +189,10 @@ The notice spans the full width of the mode-card grid with compact spacing. Link
 
 The notice uses a 22px heading, separate primary free-software and secondary refund paragraphs, and a bottom row with official-link labels on the left and named links on the right. Narrow windows stack the links row.
 
-The initial screen centers the heading, both mode cards and the notice together within the content area. A single flex column with a minimum height matching the scroll area centers all sections together and grows when content needs scrolling; legacy top-offset rules are removed.
+The initial screen centers the heading, both mode cards and the notice together within the content area. A viewport-sized grid row centers one block containing all sections and grows when content needs scrolling; legacy top-offset rules are removed.
+
+Official-link names follow the interface language: **LibreTT sajt / Izvorni kod** in Serbian and **LibreTT Website / Source Code** in English.
+
+Home centering uses a grid row sized to the available scroll area with a content minimum, and one `home-block` wrapping the heading, cards and notice. Its natural height follows language changes, while short windows scroll without clipping the top. This replaces percentage-based minimum heights inside the flex layout.
+
+The home toolbar overlays the workspace frame instead of consuming layout height. Home content centers within the full frame below the title tabs, using symmetric vertical padding to keep the logo/preferences clear in short windows. Other workspace toolbars retain their normal layout.

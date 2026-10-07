@@ -248,6 +248,7 @@
     {#if mode === 'tournaments' && error}<div class="error" role="alert">{text[error]} {#if !loaded && desktopAvailable}<button disabled={loading} onclick={load}>{text.retry}</button>{/if}</div>{/if}
     <div class="notice" role="status" aria-live="polite">{notice ? text[notice] : ''}</div>
     {#if mode === 'dashboard'}
+      <div class="home-block">
       <div class="heading"><div><p class="eyebrow">{text.workspace}</p><h1>{text.chooseMode}</h1><p class="muted">{text.dashboardIntro}</p></div></div>
       <div class="mode-grid">
         <button data-open-tab class="mode-card" onclick={openTournaments}>
@@ -264,6 +265,7 @@
         </button>
       </div>
       <FreeSoftwareNotice {language}/>
+      </div>
     {:else if route.view === 'guide'}
       <TournamentGuide {language}/>
     {:else if route.view === 'history'}

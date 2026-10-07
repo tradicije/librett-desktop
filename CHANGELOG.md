@@ -6,6 +6,12 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Interface
 
+- Corrected the home block’s vertical reference: the logo/preferences toolbar no longer shifts centering downward. The block centers within the full window area below the title tabs, with symmetric clearance for the toolbar.
+
+- Home centering now places the entire mode-selection block in one viewport-sized grid row, allowing translated content to change height without relying on percentage heights inside a flex layout.
+
+- Localized the home notice links: Serbian uses “LibreTT sajt” and “Izvorni kod”; English retains “LibreTT Website” and “Source Code”.
+
 - The home content uses one layout with a minimum height matching its scroll area, centering the heading, tournament/league cards and free-software notice together and growing for scrolling in short windows. Removed the old fixed top-offset rules.
 
 - Refined the home notice with a larger heading, separate free-software/refund paragraphs and an aligned official-links row that wraps on narrow windows.

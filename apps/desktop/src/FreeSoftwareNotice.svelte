@@ -21,8 +21,8 @@
   <div class="official-links">
     <span>{text.officialLinks}</span>
     <div class="link-list">
-    <a href="https://librett.org" target="_blank" rel="noopener noreferrer" onclick={event => open(event, 'website')}>LibreTT Website<Icon name="arrow-right" size={15}/></a>
-    <a href="https://github.com/tradicije/librett-desktop" target="_blank" rel="noopener noreferrer" onclick={event => open(event, 'source')}>Source Code<Icon name="arrow-right" size={15}/></a>
+    <a href="https://librett.org" target="_blank" rel="noopener noreferrer" onclick={event => open(event, 'website')}>{text.officialWebsite}<Icon name="arrow-right" size={15}/></a>
+    <a href="https://github.com/tradicije/librett-desktop" target="_blank" rel="noopener noreferrer" onclick={event => open(event, 'source')}>{text.officialSourceCode}<Icon name="arrow-right" size={15}/></a>
     </div>
   </div>
   {#if failed}<p class="link-error" role="alert">{text.officialLinkError}</p>{/if}
