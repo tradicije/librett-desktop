@@ -154,8 +154,6 @@ Kategorije sa grupama imaju switch Isti klub u grupi pri dodavanju i u podešava
 
 Glavni levi meni prikazuje Turnire, Igrače, Rezervne kopije, Istoriju i na kraju Korpu, jednu stavku ispod druge sa nazivima. Vodič ostaje pri dnu iznad separatora i lokalnog rada. Smanjeni meni prikazuje ikonice bez okvira dugmića, sa dostupnim nazivima i hover opisima. Vodič ima numerisane korake, prečice do koraka, pitanja za česte probleme i rečnik; prečice skroluju bez dodavanja stavki istorije pregledača.
 
-Početna strana ima dugme Vodič za vođenje turnira, jer na tom ekranu levi meni nije prikazan.
-
 Diskretna horizontalna linija odvaja donju dugmad od lokalnog rada, sa po 18px razmaka iznad i ispod linije u proširenom i smanjenom meniju.
 
 Navigacija levog menija počinje direktno stavkom Turniri, bez malog naslova iznad nje.

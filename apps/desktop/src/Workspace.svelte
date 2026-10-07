@@ -262,7 +262,6 @@
           <span class="pill" id={`${uid}-league-status`}>{text.later}</span>
         </button>
       </div>
-      <div class="home-guide"><button data-open-tab class="secondary icon-label" disabled={navigationLocked} onclick={()=>navigate({view:'guide'})}><Icon name="guide" size={18}/>{language==='sr'?'Vodič za vođenje turnira':'Tournament guide'}</button></div>
     {:else if route.view === 'guide'}
       <TournamentGuide {language}/>
     {:else if route.view === 'history'}
@@ -366,7 +365,6 @@
 </dialog>
 
 <style>
-  .home-guide { margin-top:24px; }
   .guide-navigation { margin-top:auto; padding-top:24px; }
   .sidebar-bottom { margin-top:18px; padding-top:18px; border-top:1px solid var(--border-subtle); }
   .tournament-card-actions { display: flex; align-items: center; gap: 8px; margin-top: auto; }
