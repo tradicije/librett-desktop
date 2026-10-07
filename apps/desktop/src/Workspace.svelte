@@ -242,7 +242,7 @@
         <label><Icon name="globe" size={18} /><span class="preference-label">{text.language}</span><Select label={text.language} bind:value={language} options={[{ value: 'sr', label: 'Srpski' }, { value: 'en', label: 'English' }]} /></label>
       </div>
     </header>
-    <div class="workspace-scroll">
+    <div class="workspace-scroll" class:dashboard-scroll={mode === 'dashboard'}>
     <div class="workspace-content" class:mode-content={mode === 'dashboard'}>
     {#if !desktopAvailable}<p class="banner">{text.preview}</p>{/if}
     {#if mode === 'tournaments' && error}<div class="error" role="alert">{text[error]} {#if !loaded && desktopAvailable}<button disabled={loading} onclick={load}>{text.retry}</button>{/if}</div>{/if}

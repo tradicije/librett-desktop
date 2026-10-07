@@ -6,6 +6,8 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Interface
 
+- The home content uses one layout with a minimum height matching its scroll area, centering the heading, tournament/league cards and free-software notice together and growing for scrolling in short windows. Removed the old fixed top-offset rules.
+
 - Refined the home notice with a larger heading, separate free-software/refund paragraphs and an aligned official-links row that wraps on narrow windows.
 
 - Fixed the home free-software notice inheriting full-height sidebar styles; it now spans the mode-card area with compact spacing and named Website/Source Code links.

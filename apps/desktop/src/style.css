@@ -153,7 +153,7 @@ form > .primary { justify-self: start; }
 .dashboard-shell main { width: 100%; }
 .dashboard-shell .app-toolbar { padding: 20px 40px; border: 0; }
 .dashboard-logo { display: block; width: 125px; height: auto; }
-.mode-content { max-width: 850px; padding-top: clamp(45px, 10vh, 110px); }
+.mode-content { max-width: 850px; }
 .mode-content .heading { margin-bottom: 36px; }
 .mode-content h1 { font-size: 32px; letter-spacing: -1.1px; }
 .mode-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
@@ -253,7 +253,6 @@ form > .primary { justify-self: start; }
   .dashboard-shell .app-toolbar { padding: 16px; }
   .dashboard-logo { width: 105px; }
   .header-navigation { gap: 12px; }
-  .mode-content { padding-top: 40px; }
   .mode-content h1 { font-size: 28px; }
   .mode-grid, .form-fields { grid-template-columns: 1fr; }
   .mode-card { min-height: 220px; }
@@ -390,3 +389,15 @@ input[type="file"]:hover:enabled::file-selector-button { background: var(--surfa
 .set-score { display: grid; gap: 3px; padding: 6px 10px; background: var(--surface); border-radius: 4px; text-align: center; }
 .set-score small { font-size: 10px; color: var(--text-muted); }
 .set-score strong { font-size: 12px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+
+/* One full-height home layout centers all sections together and grows for scrolling. */
+.workspace-scroll.dashboard-scroll .mode-content {
+  width: 100%;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-block: 28px;
+}
+.dashboard-scroll .mode-content > * { flex-shrink: 0; }
+.dashboard-scroll .notice:empty { display: none; }

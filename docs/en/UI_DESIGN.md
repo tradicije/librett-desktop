@@ -188,3 +188,5 @@ The initial tournament/league selection screen includes a restrained notice belo
 The notice spans the full width of the mode-card grid with compact spacing. Links are labeled **LibreTT Website** and **Source Code**. Its semantic section avoids inheriting global sidebar styles.
 
 The notice uses a 22px heading, separate primary free-software and secondary refund paragraphs, and a bottom row with official-link labels on the left and named links on the right. Narrow windows stack the links row.
+
+The initial screen centers the heading, both mode cards and the notice together within the content area. A single flex column with a minimum height matching the scroll area centers all sections together and grows when content needs scrolling; legacy top-offset rules are removed.

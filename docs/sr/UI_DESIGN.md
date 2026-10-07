@@ -166,3 +166,5 @@ Prvi ekran sa izborom turnira ili lige ispod kartica prikazuje obaveštenje da j
 Obaveštenje zauzima celu širinu mreže kartica uz kompaktne razmake. Linkovi nose nazive **LibreTT Website** i **Source Code**. Sekcija ne preuzima globalne stilove bočnog menija.
 
 Obaveštenje ima naslov od 22px, odvojene pasuse za besplatan softver i povraćaj novca i donji red sa oznakom zvaničnih linkova levo, a imenovanim linkovima desno. U uskom prozoru donji red prelazi u vertikalni raspored.
+
+Prvi ekran centrira naslov, obe kartice i obaveštenje zajedno unutar prostora za sadržaj. Jedna flex kolona minimalne visine jednake prostoru za skrolovanje centrira sve sekcije zajedno i raste kada sadržaj zahteva skrolovanje; stara pravila fiksnog gornjeg razmaka su uklonjena.
