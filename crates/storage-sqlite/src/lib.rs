@@ -72,9 +72,9 @@ impl SqliteTournamentRepository {
         let path = path.as_ref();
         let connection = Connection::open(path)?;
         let version: i64 = connection.query_row("PRAGMA user_version", [], |row| row.get(0))?;
-        if (1..20).contains(&version) {
+        if (1..21).contains(&version) {
             // VACUUM INTO creates a consistent SQLite snapshot before changing an existing schema.
-            let backup = path.with_extension(format!("pre-v20-{}.sqlite", Uuid::new_v4()));
+            let backup = path.with_extension(format!("pre-v21-{}.sqlite", Uuid::new_v4()));
             connection.execute("VACUUM INTO ?1", [backup.to_string_lossy().as_ref()])?;
         }
         Self::initialize(connection)
@@ -84,7 +84,7 @@ impl SqliteTournamentRepository {
         connection.busy_timeout(Duration::from_secs(5))?;
         connection.execute_batch("PRAGMA foreign_keys = ON;")?;
         let version: i64 = connection.query_row("PRAGMA user_version", [], |row| row.get(0))?;
-        if version > 20 {
+        if version > 21 {
             return Err(rusqlite::Error::InvalidQuery);
         }
         if version == 0 {
@@ -212,6 +212,41 @@ impl SqliteTournamentRepository {
         if version < 20 {
             let transaction = connection.transaction()?;
             transaction.execute_batch(include_str!("../migrations/020_action_history.sql"))?;
+            transaction.commit()?;
+        }
+        if version < 21 {
+            let transaction = connection.transaction()?;
+            // Two definitions shipped under migration 11. Accept only those known
+            // definitions; do not silently repair arbitrary imported schema changes.
+            let definition: String = transaction.query_row(
+                "SELECT sql FROM sqlite_schema WHERE type='table' AND name='category_configurations'",
+                [], |row| row.get(0),
+            )?;
+            let canonical = include_str!("../migrations/011_category_rules.sql")
+                .split(';')
+                .next()
+                .unwrap()
+                .trim();
+            let legacy = canonical.replace(" ON DELETE CASCADE", "");
+            if definition.trim() != canonical && definition.trim() != legacy {
+                return Err(rusqlite::Error::InvalidQuery);
+            }
+            // Preserve triggers verbatim so later backup validation still detects
+            // unexpected triggers or altered audit/guard definitions.
+            let triggers: Vec<String> = {
+                let mut statement = transaction.prepare(
+                    "SELECT sql FROM sqlite_schema WHERE type='trigger' AND tbl_name='category_configurations' ORDER BY name",
+                )?;
+                let rows = statement.query_map([], |row| row.get(0))?;
+                rows.collect::<Result<_, _>>()?
+            };
+            transaction.execute_batch("CREATE TEMP TABLE category_rules_upgrade AS SELECT * FROM category_configurations; DROP TABLE category_configurations;")?;
+            transaction.execute_batch(canonical)?;
+            transaction.execute_batch("INSERT INTO category_configurations SELECT * FROM category_rules_upgrade; DROP TABLE temp.category_rules_upgrade;")?;
+            for trigger in triggers {
+                transaction.execute_batch(&trigger)?;
+            }
+            transaction.execute_batch("PRAGMA user_version = 21;")?;
             transaction.commit()?;
         }
         Ok(Self { connection })

@@ -174,7 +174,7 @@ impl SqliteTournamentRepository {
         let integrity: String = source
             .query_row("PRAGMA quick_check", [], |r| r.get(0))
             .map_err(|_| ApplicationError::InvalidBackup)?;
-        if !(1..=20).contains(&version) || ![0, 1279415380].contains(&app) || integrity != "ok" {
+        if !(1..=21).contains(&version) || ![0, 1279415380].contains(&app) || integrity != "ok" {
             return Err(ApplicationError::InvalidBackup);
         }
         let recognizable:bool=source.query_row("SELECT EXISTS(SELECT 1 FROM pragma_table_info('tournaments') WHERE name='name') AND EXISTS(SELECT 1 FROM pragma_table_info('categories') WHERE name='tournament_id')",[],|r|r.get(0)).map_err(|_|ApplicationError::InvalidBackup)?;

@@ -36,6 +36,20 @@ mod tests {
                 "DROP TABLE action_history; DROP TABLE tournament_trash; PRAGMA user_version=18;",
             )
             .unwrap();
+        // Older installs shipped this table without cascading deletion, while
+        // fresh installs used a changed migration 11 under the same app version.
+        let legacy = include_str!("../migrations/011_category_rules.sql")
+            .split(';')
+            .next()
+            .unwrap()
+            .replace(" ON DELETE CASCADE", "");
+        let retained: Vec<String> = repo.connection.prepare("SELECT sql FROM sqlite_schema WHERE type='trigger' AND tbl_name='category_configurations'").unwrap().query_map([], |r| r.get(0)).unwrap().map(Result::unwrap).collect();
+        repo.connection.execute_batch("CREATE TEMP TABLE saved_rules AS SELECT * FROM category_configurations; DROP TABLE category_configurations;").unwrap();
+        repo.connection.execute_batch(&legacy).unwrap();
+        repo.connection.execute_batch("INSERT INTO category_configurations SELECT * FROM saved_rules; DROP TABLE temp.saved_rules;").unwrap();
+        for trigger in retained {
+            repo.connection.execute_batch(&trigger).unwrap();
+        }
         drop(repo);
         for _ in 0..2 {
             let repo = SqliteTournamentRepository::open(&path).unwrap();
@@ -45,7 +59,7 @@ mod tests {
         let backups = std::fs::read_dir(&directory)
             .unwrap()
             .map(|p| p.unwrap().path())
-            .filter(|p| p.to_string_lossy().contains("pre-v20-"))
+            .filter(|p| p.to_string_lossy().contains("pre-v21-"))
             .collect::<Vec<_>>();
         assert_eq!(backups.len(), 1);
         let old_backup = std::fs::read(&backups[0]).unwrap();

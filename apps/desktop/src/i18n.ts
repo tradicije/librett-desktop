@@ -13,7 +13,7 @@ const sr = {
   tournamentTrashed: 'Turnir je premešten u korpu.', tournamentRestored: 'Turnir je vraćen.',
   tournamentUnavailable: 'Turnir nije dostupan u aktivnoj listi. Ako je u korpi, vrati ga da nastaviš rad.',
 
-  invalid_backup: 'Rezervna kopija nije ispravna ili je iz novije verzije aplikacije.',
+  invalid_backup: 'Rezervna kopija je oštećena ili njena struktura nije podržana. Proveri da obe aplikacije koriste najnoviju verziju.',
   schedule_conflict: 'Raspored je promenjen. Učitaj trenutno stanje i pokušaj ponovo.',
   player_busy: 'Igrač je već dodeljen drugom stolu. Oslobodi taj sto ili završi meč.',
   table_busy: 'Sto je zauzet ili broj stola nije ispravan (1–128).',
@@ -131,7 +131,7 @@ const en: Messages = {
   tournamentTrashed: 'Tournament moved to trash.', tournamentRestored: 'Tournament restored.',
   tournamentUnavailable: 'This tournament is unavailable in the active list. If it is in Trash, restore it to continue.',
 
-  invalid_backup: 'Invalid backup or a backup from a newer app version.',
+  invalid_backup: 'The backup is damaged or its database structure is unsupported. Make sure both apps use the latest version.',
   schedule_conflict: 'The schedule changed. Reload and try again.',
   player_busy: 'A player is already assigned to another table. Release it or finish the match.',
   table_busy: 'The table is occupied or its number is invalid (1–128).',

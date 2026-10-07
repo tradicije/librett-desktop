@@ -42,8 +42,8 @@ Tab Igrači prikazuje zajedničku listu. Dodaj/Izmeni otvara zasebne ekrane za
 profile i fotografije, a čuvanje vraća na listu. Brisanje traži potvrdu i čuva
 igrače sa postojećim prijavama. Prijave unutar turnira koriste tu bazu i mogu
 da se povuku i vrate;
-dolazak igrača važi kroz sve kategorije istog turnira. Šema verzije 20 sadrži neizmenjive nacrte žreba i verzije pravila kategorije; pre migracije starijih baza pravi se konzistentan
-`pre-v20-<uuid>.sqlite` backup.
+dolazak igrača važi kroz sve kategorije istog turnira. Šema verzije 21 sadrži neizmenjive nacrte žreba i verzije pravila kategorije; pre migracije starijih baza pravi se konzistentan
+`pre-v21-<uuid>.sqlite` backup.
 
 Nazad/Napred prati istoriju aktivnog radnog taba. Home dugme u gornjoj traci
 vraća na stalni početni ekran koji nema bočni meni. Čuvanje zaključava navigaciju do završetka.
@@ -533,3 +533,8 @@ Automatska popuna lucky loser-a zadržava izbor kandidata i rešavanje izjednač
 `TournamentGuide.svelte` prikazuje lokalizovan sadržaj iz `tournament-guide.ts`; ruta vodiča koristi tabove, breadcrumbs i nazad/napred navigaciju. Kada se postupci promene, ažuriraj oba jezika sadržaja i Markdown kopije u `docs/en/TOURNAMENT_GUIDE.md` i `docs/sr/TOURNAMENT_GUIDE.md`.
 
 Novi rasporedi koriste verziju algoritma 2; sačuvani rasporedi verzije 1 ostaju dostupni za pregled i uređivanje bez ponovnog generisanja mesta.
+
+
+## Kompatibilnost bekapa (šema 21)
+
+Migracija 21 usklađuje `category_configurations` sa kaskadnim brisanjem kategorije, čuva pravila i postojeće okidače i ne pravi veštačku istoriju. Prihvata samo dve poznate definicije tabele ranije objavljene pod migracijom 11. Restore prvo migrira privremenu kopiju i poredi celu strukturu pre zamene aktivne baze; neočekivani okidači i ograničenja ostaju odbijeni. Bekapi šeme 18 prenosivi su između macOS-a, Windows-a i Linux-a; instalacije moraju sadržati ovu ispravku. Verzija aplikacije i verzija šeme baze nisu isto. Pre nadogradnje postojeće baze pravi se sigurnosna kopija.

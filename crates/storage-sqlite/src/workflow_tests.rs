@@ -559,6 +559,18 @@ fn backup_restore_validates_before_replacement_and_preserves_safety_copy() {
     );
     assert_eq!(repo.list().unwrap().len(), 2);
     assert!(SqliteTournamentRepository::backup_path(&directory, "../librett.sqlite").is_err());
+    // Migration must not hide unexpected imported triggers.
+    let altered = directory.join("librett-altered.sqlite");
+    std::fs::copy(directory.join(&backup.name), &altered).unwrap();
+    let foreign = rusqlite::Connection::open(&altered).unwrap();
+    foreign.execute_batch("CREATE TRIGGER unexpected_rules AFTER UPDATE ON category_configurations BEGIN SELECT 1; END; PRAGMA user_version=20;").unwrap();
+    drop(foreign);
+    assert_eq!(
+        repo.import_backup(&directory, &std::fs::read(&altered).unwrap())
+            .unwrap_err(),
+        ApplicationError::InvalidBackup
+    );
+    assert_eq!(repo.list().unwrap().len(), 2);
     repo.restore_backup(&directory, &backup.name).unwrap();
     assert_eq!(repo.list().unwrap().len(), 1);
     assert_eq!(repo.list().unwrap()[0].name, "Đorđe i Željko");

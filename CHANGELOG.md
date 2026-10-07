@@ -15,6 +15,8 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Fixed
 
+- Backup restore/import now accepts older databases whose category-rules table shipped without a cascading foreign key. Schema 21 normalizes both known definitions without weakening imported-schema validation; backup errors no longer incorrectly imply that every rejected file is newer. Verified restore/import against a copy of a real schema-18 backup.
+
 - Group seeds now follow alternating snake order (two groups: 1/4 and 2/3). Automatically selected lucky losers use maximum matching to minimize opening-round group rematches without changing the selected candidates or manual slots.
 
 - Restarting a draw after a category has started requires explicit confirmation in Settings and server-side authorization; old draw/results stay in history while the new revision starts without scores or table assignments.

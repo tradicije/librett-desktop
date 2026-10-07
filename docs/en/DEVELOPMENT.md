@@ -42,8 +42,8 @@ The Players tab shows the shared directory. Add/Edit opens dedicated profile
 screens, including photos, and returns to the list after saving. Delete asks for
 confirmation and protects profiles with existing registrations. Tournament
 registration uses that directory. Entries can be withdrawn/restored, and player
-attendance is shared across categories in a tournament. Schema version 20 includes immutable draw drafts and versioned category rules; older on-disk databases receive a consistent
-`pre-v20-<uuid>.sqlite` backup before migration.
+attendance is shared across categories in a tournament. Schema version 21 includes immutable draw drafts and versioned category rules; older on-disk databases receive a consistent
+`pre-v21-<uuid>.sqlite` backup before migration.
 
 Back/Forward follows the active workspace’s screen history. The top Home button
 returns to the pinned mode-selection workspace. The mode chooser has no sidebar. Saves lock navigation until
@@ -545,3 +545,8 @@ Automatic lucky-loser allocation preserves the qualification cutoff and tie hand
 `TournamentGuide.svelte` renders localized content from `tournament-guide.ts`; the guide route participates in workspace tabs, breadcrumbs and back/forward navigation. Update both content languages and their Markdown copies at `docs/en/TOURNAMENT_GUIDE.md` and `docs/sr/TOURNAMENT_GUIDE.md` when workflows change.
 
 New proposals use draw algorithm version 2; saved version 1 layouts remain readable/editable without regenerating their positions.
+
+
+## Backup compatibility (schema 21)
+
+Migration 21 rebuilds `category_configurations` with cascading category deletion, preserving rules and existing triggers without generating artificial history. It accepts only the two known table definitions previously shipped under migration 11. Restore migrates a temporary copy and compares the complete schema before replacing the live database; unexpected triggers/constraints remain rejected. Older schema-18 backups are portable between macOS, Windows and Linux; both installations must contain the compatibility fix. The application version and database schema version are distinct. A safety snapshot is created before upgrading an existing database.
