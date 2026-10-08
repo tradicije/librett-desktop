@@ -26,6 +26,11 @@ Dostupni su i konačan plasman, završavanje kategorija/turnira i ponovno otvara
 Build instalera je podešen za macOS, Windows i Linux. Pogledaj
 [uputstvo za instalere i izdanje](docs/sr/RELEASE.md). Provera na pravom turniru još predstoji.
 
+## Uvoz Player Registry baze — neobjavljena dopuna
+
+Igrači sada imaju jednosmerni uvoz iz LibreTT Player Registry preko HTTPS-a ili JSON fajla: pregledaj mapiranja, dopuni godišta, potvrdi i sačuvaj lokalno. Lokalne izmene i istorijski turnirski snimci ostaju; profili, kontakti, beleške, uplate i turniri ne šalju se nazad. Fotografije se preuzimaju/seku samo izričito. Pogledaj [upotrebu i ograničenja](docs/sr/REGISTRY_IMPORT.md) i [provere](docs/sr/REGISTRY_VERIFICATION_2026_10_08.md). Dopuna koda ne menja postojeći beta release/verziju.
+
+
 ## Filozofija projekta
 
 Stoni tenis nastaje radom ljudi: igrača koji treniraju, klubova koji ih okupljaju,

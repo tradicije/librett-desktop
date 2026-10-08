@@ -42,8 +42,8 @@ The Players tab shows the shared directory. Add/Edit opens dedicated profile
 screens, including photos, and returns to the list after saving. Delete asks for
 confirmation and protects profiles with existing registrations. Tournament
 registration uses that directory. Entries can be withdrawn/restored, and player
-attendance is shared across categories in a tournament. Schema version 21 includes immutable draw drafts and versioned category rules; older on-disk databases receive a consistent
-`pre-v21-<uuid>.sqlite` backup before migration.
+attendance is shared across categories in a tournament. Schema version 22 includes immutable draw drafts and versioned category rules; older on-disk databases receive a consistent
+`pre-v22-<uuid>.sqlite` backup before migration.
 
 Back/Forward follows the active workspace’s screen history. The top Home button
 returns to the pinned mode-selection workspace. The mode chooser has no sidebar. Saves lock navigation until
@@ -555,3 +555,9 @@ Migration 21 rebuilds `category_configurations` with cascading category deletion
 ## Beta 2 tournament simulation
 
 See [the simulation report](BETA2_SIMULATION.md) for scenarios, reproducible commands, results and verification limits.
+
+## Registry import development (schema 22)
+
+Migration 022 adds source cache, remote/local mappings, memberships, staged previews, receipts and sticky override triggers. No installed user database is modified by tests; existing application data receives a pre-v22 backup when the new app opens it. Source contracts/fixtures under `crates/application/contracts` are copies of LibreTT Player Registry's draft unsigned v1, retained with AGPL attribution. Update both projects together and run shared contract plus WordPress-export roundtrip tests. See [usage](REGISTRY_IMPORT.md), ADR 0019 and [actual verification](REGISTRY_VERIFICATION_2026_10_08.md).
+
+For Fedora rootless Podman, `tools/dev/registry-check build` creates a native-dependency image. `tools/dev/registry-check cargo check --locked --workspace`, `cargo test --locked --workspace` or `cargo fmt --all --check` runs inside it (prefix each command with the wrapper). Source/cache/target are local; no deployment or GUI launch is performed.

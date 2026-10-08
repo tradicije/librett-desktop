@@ -17,6 +17,7 @@ mod matches;
 mod player_cash_tests;
 mod players;
 mod registration;
+mod registry;
 mod scheduling;
 mod trash;
 pub use history::{HistoryItem, HistoryOption, HistoryPage};
@@ -72,9 +73,9 @@ impl SqliteTournamentRepository {
         let path = path.as_ref();
         let connection = Connection::open(path)?;
         let version: i64 = connection.query_row("PRAGMA user_version", [], |row| row.get(0))?;
-        if (1..21).contains(&version) {
+        if (1..22).contains(&version) {
             // VACUUM INTO creates a consistent SQLite snapshot before changing an existing schema.
-            let backup = path.with_extension(format!("pre-v21-{}.sqlite", Uuid::new_v4()));
+            let backup = path.with_extension(format!("pre-v22-{}.sqlite", Uuid::new_v4()));
             connection.execute("VACUUM INTO ?1", [backup.to_string_lossy().as_ref()])?;
         }
         Self::initialize(connection)
@@ -84,7 +85,7 @@ impl SqliteTournamentRepository {
         connection.busy_timeout(Duration::from_secs(5))?;
         connection.execute_batch("PRAGMA foreign_keys = ON;")?;
         let version: i64 = connection.query_row("PRAGMA user_version", [], |row| row.get(0))?;
-        if version > 21 {
+        if version > 22 {
             return Err(rusqlite::Error::InvalidQuery);
         }
         if version == 0 {
@@ -247,6 +248,11 @@ impl SqliteTournamentRepository {
                 transaction.execute_batch(&trigger)?;
             }
             transaction.execute_batch("PRAGMA user_version = 21;")?;
+            transaction.commit()?;
+        }
+        if version < 22 {
+            let transaction = connection.transaction()?;
+            transaction.execute_batch(include_str!("../migrations/022_registry.sql"))?;
             transaction.commit()?;
         }
         Ok(Self { connection })

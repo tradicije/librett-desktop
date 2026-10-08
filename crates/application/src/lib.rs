@@ -1,3 +1,4 @@
+pub mod registry;
 use librett_domain::{CompetitionFormat, Discipline, DomainError, Tournament};
 use serde::Serialize;
 use uuid::Uuid;
@@ -5,6 +6,9 @@ use uuid::Uuid;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ApplicationError {
+    InvalidRegistry,
+    RegistryConflict,
+    RegistryFetch,
     AttendanceRequired,
     RegistrationInactive,
     CompetitionStarted,

@@ -33,7 +33,7 @@ mod tests {
         }
         repo.connection
             .execute_batch(
-                "DROP TABLE action_history; DROP TABLE tournament_trash; PRAGMA user_version=18;",
+                "DROP TRIGGER registry_local_overrides; DROP TABLE registry_memberships; DROP TABLE registry_links; DROP TABLE registry_clubs; DROP TABLE registry_sources; DROP TABLE registry_jobs; DROP TABLE registry_receipts; DROP TABLE registry_import_context; DROP TABLE action_history; DROP TABLE tournament_trash; PRAGMA user_version=18;",
             )
             .unwrap();
         // Older installs shipped this table without cascading deletion, while
@@ -59,7 +59,7 @@ mod tests {
         let backups = std::fs::read_dir(&directory)
             .unwrap()
             .map(|p| p.unwrap().path())
-            .filter(|p| p.to_string_lossy().contains("pre-v21-"))
+            .filter(|p| p.to_string_lossy().contains("pre-v22-"))
             .collect::<Vec<_>>();
         assert_eq!(backups.len(), 1);
         let old_backup = std::fs::read(&backups[0]).unwrap();

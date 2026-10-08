@@ -1,0 +1,447 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:librett:registry:public-snapshot:1:unsigned",
+  "$comment": "Phase 0 design baseline. Requires mandatory parser and semantic validation in docs/en/CONTRACT_VALIDATION.md. Not a signature or runtime implementation.",
+  "$defs": {
+    "uuid": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$(?![\\s\\S])"
+    },
+    "positiveCounter": {
+      "type": "string",
+      "maxLength": 19,
+      "pattern": "^(?:[1-9][0-9]{0,17}|[1-8][0-9]{18}|9[0-1][0-9]{17}|92[0-1][0-9]{16}|922[0-2][0-9]{15}|9223[0-2][0-9]{14}|92233[0-6][0-9]{13}|922337[0-1][0-9]{12}|92233720[0-2][0-9]{10}|922337203[0-5][0-9]{9}|9223372036[0-7][0-9]{8}|92233720368[0-4][0-9]{7}|922337203685[0-3][0-9]{6}|9223372036854[0-6][0-9]{5}|92233720368547[0-6][0-9]{4}|922337203685477[0-4][0-9]{3}|9223372036854775[0-7][0-9]{2}|922337203685477580[0-6]|9223372036854775807)$(?![\\s\\S])"
+    },
+    "counter": {
+      "anyOf": [
+        {
+          "const": "0"
+        },
+        {
+          "$ref": "#/$defs/positiveCounter"
+        }
+      ]
+    },
+    "text200": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "allOf": [
+        {
+          "pattern": "\\S"
+        },
+        {
+          "pattern": "^[^\\u0000-\\u001f\\u007f-\\u009f]*$(?![\\s\\S])"
+        }
+      ]
+    },
+    "slug": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$(?![\\s\\S])"
+    },
+    "httpsUrl": {
+      "type": "string",
+      "maxLength": 2048,
+      "format": "uri",
+      "pattern": "^https://[^\\s/@?#]+(?::[0-9]+)?(?:/[^\\s#]*)?$(?![\\s\\S])"
+    },
+    "player": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "revision": {
+          "$ref": "#/$defs/positiveCounter"
+        },
+        "slug": {
+          "$ref": "#/$defs/slug"
+        },
+        "display_name": {
+          "$ref": "#/$defs/text200"
+        },
+        "given_name": {
+          "$ref": "#/$defs/text200"
+        },
+        "family_name": {
+          "$ref": "#/$defs/text200"
+        },
+        "birth_year": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9999
+        },
+        "country": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "allOf": [
+            {
+              "pattern": "\\S"
+            },
+            {
+              "pattern": "^[^\\u0000-\\u001f\\u007f-\\u009f]*$(?![\\s\\S])"
+            }
+          ]
+        },
+        "region": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "allOf": [
+            {
+              "pattern": "\\S"
+            },
+            {
+              "pattern": "^[^\\u0000-\\u001f\\u007f-\\u009f]*$(?![\\s\\S])"
+            }
+          ]
+        },
+        "biography": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 5000,
+          "allOf": [
+            {
+              "pattern": "\\S"
+            },
+            {
+              "pattern": "^[^\\u0000-\\u0009\\u000b-\\u001f\\u007f-\\u009f]*$(?![\\s\\S])"
+            }
+          ]
+        },
+        "photo_id": {
+          "$ref": "#/$defs/uuid"
+        }
+      },
+      "required": [
+        "id",
+        "revision",
+        "slug",
+        "display_name"
+      ],
+      "additionalProperties": false
+    },
+    "club": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "revision": {
+          "$ref": "#/$defs/positiveCounter"
+        },
+        "slug": {
+          "$ref": "#/$defs/slug"
+        },
+        "name": {
+          "$ref": "#/$defs/text200"
+        },
+        "abbreviation": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32,
+          "allOf": [
+            {
+              "pattern": "\\S"
+            },
+            {
+              "pattern": "^[^\\u0000-\\u001f\\u007f-\\u009f]*$(?![\\s\\S])"
+            }
+          ]
+        },
+        "aliases": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/text200"
+          },
+          "maxItems": 20,
+          "uniqueItems": true
+        },
+        "country": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "allOf": [
+            {
+              "pattern": "\\S"
+            },
+            {
+              "pattern": "^[^\\u0000-\\u001f\\u007f-\\u009f]*$(?![\\s\\S])"
+            }
+          ]
+        },
+        "region": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "allOf": [
+            {
+              "pattern": "\\S"
+            },
+            {
+              "pattern": "^[^\\u0000-\\u001f\\u007f-\\u009f]*$(?![\\s\\S])"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "revision",
+        "slug",
+        "name"
+      ],
+      "additionalProperties": false
+    },
+    "membership": {
+      "type": "object",
+      "properties": {
+        "player_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "club_id": {
+          "$ref": "#/$defs/uuid"
+        }
+      },
+      "required": [
+        "player_id",
+        "club_id"
+      ],
+      "additionalProperties": false
+    },
+    "media": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "revision": {
+          "$ref": "#/$defs/positiveCounter"
+        },
+        "content_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$(?![\\s\\S])"
+        },
+        "mime_type": {
+          "enum": [
+            "image/jpeg",
+            "image/png"
+          ]
+        },
+        "byte_length": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5242880
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        },
+        "content_url": {
+          "$ref": "#/$defs/httpsUrl"
+        },
+        "attribution": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500,
+          "allOf": [
+            {
+              "pattern": "\\S"
+            },
+            {
+              "pattern": "^[^\\u0000-\\u001f\\u007f-\\u009f]*$(?![\\s\\S])"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "revision",
+        "content_sha256",
+        "mime_type",
+        "byte_length",
+        "width",
+        "height",
+        "content_url",
+        "attribution"
+      ],
+      "additionalProperties": false
+    },
+    "tombstone": {
+      "type": "object",
+      "properties": {
+        "entity_type": {
+          "enum": [
+            "player",
+            "club",
+            "media"
+          ]
+        },
+        "entity_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "revision": {
+          "$ref": "#/$defs/positiveCounter"
+        },
+        "removed_at_checkpoint": {
+          "$ref": "#/$defs/positiveCounter"
+        }
+      },
+      "required": [
+        "entity_type",
+        "entity_id",
+        "revision",
+        "removed_at_checkpoint"
+      ],
+      "additionalProperties": false
+    },
+    "policy": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "allOf": [
+            {
+              "pattern": "\\S"
+            },
+            {
+              "pattern": "^[^\\u0000-\\u001f\\u007f-\\u009f]*$(?![\\s\\S])"
+            }
+          ]
+        },
+        "purpose": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000,
+          "allOf": [
+            {
+              "pattern": "\\S"
+            },
+            {
+              "pattern": "^[^\\u0000-\\u001f\\u007f-\\u009f]*$(?![\\s\\S])"
+            }
+          ]
+        },
+        "dataset_terms_url": {
+          "$ref": "#/$defs/httpsUrl"
+        },
+        "media_terms_url": {
+          "$ref": "#/$defs/httpsUrl"
+        },
+        "distribution_scope": {
+          "const": "public-download"
+        }
+      },
+      "required": [
+        "version",
+        "purpose",
+        "dataset_terms_url",
+        "media_terms_url",
+        "distribution_scope"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "type": "object",
+  "properties": {
+    "format": {
+      "const": "librett-registry-public-snapshot"
+    },
+    "schema_version": {
+      "const": 1,
+      "type": "integer"
+    },
+    "registry_id": {
+      "$ref": "#/$defs/uuid"
+    },
+    "registry_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "allOf": [
+        {
+          "pattern": "\\S"
+        },
+        {
+          "pattern": "^[^\\u0000-\\u001f\\u007f-\\u009f]*$(?![\\s\\S])"
+        }
+      ]
+    },
+    "authority_generation": {
+      "type": "null"
+    },
+    "checkpoint": {
+      "$ref": "#/$defs/counter"
+    },
+    "exported_at": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$(?![\\s\\S])"
+    },
+    "publication_policy": {
+      "$ref": "#/$defs/policy"
+    },
+    "players": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/player"
+      },
+      "maxItems": 20000
+    },
+    "clubs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/club"
+      },
+      "maxItems": 5000
+    },
+    "memberships": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/membership"
+      },
+      "maxItems": 40000,
+      "uniqueItems": true
+    },
+    "media": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/media"
+      },
+      "maxItems": 20000
+    },
+    "tombstones": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/tombstone"
+      },
+      "maxItems": 50000
+    }
+  },
+  "required": [
+    "format",
+    "schema_version",
+    "registry_id",
+    "registry_name",
+    "authority_generation",
+    "checkpoint",
+    "exported_at",
+    "publication_policy",
+    "players",
+    "clubs",
+    "memberships",
+    "media",
+    "tombstones"
+  ],
+  "additionalProperties": false
+}

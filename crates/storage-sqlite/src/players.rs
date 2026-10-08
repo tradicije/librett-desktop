@@ -2,7 +2,7 @@ use super::*;
 use librett_application::PlayerRepository;
 use librett_domain::{Entry, EntryMember, EntryStatus, Player, PlayerProfile};
 
-fn read_player(row: &rusqlite::Row<'_>) -> rusqlite::Result<Player> {
+pub(crate) fn read_player(row: &rusqlite::Row<'_>) -> rusqlite::Result<Player> {
     let id: String = row.get(0)?;
     Ok(Player {
         id: Uuid::parse_str(&id).map_err(|error| {

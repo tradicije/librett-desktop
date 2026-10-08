@@ -25,6 +25,10 @@ application. Category draws, match scoring, group standings, qualification and
 knockout progression, final standings and confirmed category/tournament
 completion are available. Installer builds are configured for macOS, Windows and Linux. See the [installer and release guide](docs/en/RELEASE.md); real-tournament validation is pending.
 
+## Player Registry import — unreleased addition
+
+Players now includes one-way import from LibreTT Player Registry via HTTPS or JSON file: review mappings, complete missing birth years, confirm and keep data locally. Local edits and historical tournament snapshots are preserved; no local profiles, contacts, notes, payments or tournament data are uploaded. Photos are fetched/cropped only on explicit request. See [usage and limits](docs/en/REGISTRY_IMPORT.md) and [verification](docs/en/REGISTRY_VERIFICATION_2026_10_08.md). This source addition does not change the existing beta release/version.
+
 ## Project philosophy
 
 Table tennis is built by people: players who train, clubs that bring them

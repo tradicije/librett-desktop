@@ -9,3 +9,9 @@ authors.workspace = true
 librett-domain = { path = "../domain" }
 serde.workspace = true
 uuid.workspace = true
+
+serde_json = "1"
+jsonschema = { version = "0.58", default-features = false }
+url = "2.5"
+chrono = { version = "0.4", default-features = false, features = ["std"] }
+sha2 = "0.10"

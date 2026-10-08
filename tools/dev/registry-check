@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Copyright (C) 2026 Aleksa Dimitrijević. AGPL-3.0-or-later.
+set -euo pipefail
+desktopProjectRoot="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)"
+desktopImage=localhost/librett-desktop-dev:fedora44
+if [[ "${1:-}" == build ]]; then
+    exec podman build --tag "$desktopImage" --file "$desktopProjectRoot/tools/dev/registry.Containerfile" "$desktopProjectRoot/tools/dev"
+fi
+mkdir -p "$desktopProjectRoot/target/registry-cargo"
+exec podman run --rm --userns=keep-id --user "$(id -u):$(id -g)" --security-opt label=disable \
+    --volume "$desktopProjectRoot:/workspace:rw" --workdir /workspace \
+    --env CARGO_HOME=/workspace/target/registry-cargo --env CARGO_TARGET_DIR=/workspace/target/container \
+    "$desktopImage" "$@"

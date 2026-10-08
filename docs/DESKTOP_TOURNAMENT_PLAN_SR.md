@@ -1,5 +1,7 @@
 # Plan desktop aplikacije za stonoteniske turnire
 
+**Razvojno ažuriranje 2026-10-08:** Jednosmerni uvoz/osvežavanje registra implementirano je u kodu; vidi [obim/ograničenja](sr/REGISTRY_IMPORT.md). Autentifikovana replikacija, Desktop upload i automatsko spajanje identiteta nisu uključeni.
+
 Datum: 2026-10-01. Status: predlog za zajednički pregled, pre implementacije.
 Naziv aplikacije i krovni identitet: LibreTT. Autor će postojeći WordPress
 projekat zasebno preimenovati u librett-wordpress.

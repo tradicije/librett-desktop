@@ -1,4 +1,7 @@
 const sr = {
+  invalid_registry: 'JSON registra nije podržan ili prelazi ograničenja. Proveri podatke i format.',
+  registry_conflict: 'Izvor, mapiranje ili lokalni profil je promenjen. Napravi novi pregled; zastareli podaci se ne primenjuju.',
+  registry_fetch: 'Preuzimanje nije uspelo. Potrebna je javna HTTPS adresa bez preusmeravanja, podržan sadržaj i važeći sertifikat.',
   attendance_required: 'Prvo potvrdi dolazak. Naplata nije dostupna bez potvrđenog dolaska.',
   registration_inactive: 'Prijava je povučena ili kategorija uklonjena. Naplata nije dostupna.',
   competition_started: 'Kategorija je već počela i ne može da se ukloni ili menja prijave. Odustajanje evidentiraj u Mečevima kao predaju ili walkover, uz očuvanje rezultata.',
@@ -124,6 +127,9 @@ const sr = {
 };
 type Messages = typeof sr;
 const en: Messages = {
+  invalid_registry: 'Registry JSON is unsupported or exceeds limits. Check the data and format.',
+  registry_conflict: 'The source, mapping or local profile changed. Create a new preview; stale data is not applied.',
+  registry_fetch: 'Download failed. A public HTTPS URL without redirects, supported content and a valid certificate are required.',
   attendance_required: 'Confirm attendance first. Payment is unavailable without confirmed arrival.',
   registration_inactive: 'The registration is withdrawn or the category removed. Payment is unavailable.',
   competition_started: 'The category has started and cannot be removed or have its registrations changed. Record withdrawal in Matches as retirement or walkover to preserve results.',
@@ -251,7 +257,7 @@ export type Language = 'sr' | 'en';
 export const messages = { sr, en };
 export type MessageKey = keyof Messages;
 export function errorKey(error: unknown): MessageKey {
-  return typeof error === 'string' && ['attendance_required', 'registration_inactive', 'competition_started', 'invalid_backup', 'schedule_conflict', 'player_busy', 'table_busy', 'competition_closed', 'completion_conflict', 'competition_incomplete', 'birth_year_required', 'invalid_result', 'match_conflict', 'result_impact', 'player_conflict', 'cash_conflict', 'invalid_rules', 'draw_conflict', 'invalid_cash', 'player_in_use', 'invalid_profile', 'name_required', 'name_too_long', 'duplicate_category', 'not_found', 'storage', 'invalid_members', 'already_registered'].includes(error)
+  return typeof error === 'string' && ['invalid_registry', 'registry_conflict', 'registry_fetch', 'attendance_required', 'registration_inactive', 'competition_started', 'invalid_backup', 'schedule_conflict', 'player_busy', 'table_busy', 'competition_closed', 'completion_conflict', 'competition_incomplete', 'birth_year_required', 'invalid_result', 'match_conflict', 'result_impact', 'player_conflict', 'cash_conflict', 'invalid_rules', 'draw_conflict', 'invalid_cash', 'player_in_use', 'invalid_profile', 'name_required', 'name_too_long', 'duplicate_category', 'not_found', 'storage', 'invalid_members', 'already_registered'].includes(error)
     ? error as MessageKey : 'error';
 }
 export function savedLanguage(): Language {

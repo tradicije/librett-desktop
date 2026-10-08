@@ -1,5 +1,6 @@
 <script lang="ts">
   import PlayerName from './PlayerName.svelte';
+  import RegistryImport from './RegistryImport.svelte';
   import { playerLabel } from './player-label';
   import { onMount, tick, untrack } from 'svelte';
   import Icon from './Icon.svelte';
@@ -56,6 +57,7 @@
 </div>
 {#if error}<p class="error" role="alert">{text[error]}{#if error !== 'player_in_use'}<button onclick={load} disabled={loading || busy}>{text.retry}</button>{/if}</p>{/if}
 <p role="status" class="notice">{notice ? text.playerDeleted : ''}</p>
+<RegistryImport {language} bind:busy onimported={load} />
 <section class="panel player-directory">
   <div class="section-heading"><h2>{text.directory}</h2><span class="pill">{players.length}</span></div>
   <div class="directory-toolbar"><label class="search-field"><Icon name="search" size={17} /><input aria-label={text.searchPlayers} placeholder={text.searchPlayers} type="search" bind:value={search} /></label><span class="muted">{filtered.length} / {players.length}</span></div>

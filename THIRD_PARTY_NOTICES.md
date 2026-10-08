@@ -26,3 +26,18 @@ redistributed font files.
 
 This document currently records UI icon and font attribution. A complete dependency
 license inventory must be prepared before publishing release installers.
+
+## Registry import dependencies
+
+Direct Rust additions are pinned in Cargo.lock: jsonschema, url, chrono, sha2, reqwest and image. Their license copies are retained below; transitive release-license inventory remains required. Serde/serde_json and base64 were already used. Registry schema and fixtures retain Aleksa Dimitrijević AGPL-3.0-or-later attribution.
+
+- jsonschema 0.58.6: [LICENSE](docs/licenses/jsonschema-0.58.6-LICENSE.txt).
+- url 2.5.8: [LICENSE-APACHE](docs/licenses/url-2.5.8-LICENSE-APACHE.txt).
+- url 2.5.8: [LICENSE-MIT](docs/licenses/url-2.5.8-LICENSE-MIT.txt).
+- chrono 0.4.45: [LICENSE.txt](docs/licenses/chrono-0.4.45-LICENSE.txt).
+- sha2 0.10.9: [LICENSE-APACHE](docs/licenses/sha2-0.10.9-LICENSE-APACHE.txt).
+- sha2 0.10.9: [LICENSE-MIT](docs/licenses/sha2-0.10.9-LICENSE-MIT.txt).
+- reqwest 0.13.5: [LICENSE-APACHE](docs/licenses/reqwest-0.13.5-LICENSE-APACHE.txt).
+- reqwest 0.13.5: [LICENSE-MIT](docs/licenses/reqwest-0.13.5-LICENSE-MIT.txt).
+- image 0.25.10: [LICENSE-APACHE](docs/licenses/image-0.25.10-LICENSE-APACHE.txt).
+- image 0.25.10: [LICENSE-MIT](docs/licenses/image-0.25.10-LICENSE-MIT.txt).

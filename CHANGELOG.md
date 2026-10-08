@@ -4,6 +4,14 @@ Notable changes to LibreTT are recorded here in English.
 
 ## Unreleased
 
+### Added — one-way registry import (2026-10-08)
+
+- Players directory HTTPS/file snapshot preview, explicit mappings/completion, conflict choices, optional photo fetch/crop and confirmation; Serbian/English UI.
+- Bounded schema/graph JSON validation, HTTPS public-address pinning/timeouts, source provenance and SQLite migration 22 with pre-v22 backup.
+- Transactional idempotent import/refresh preserving sticky local edits, contacts/notes/photos, local deletions and historical entry snapshots; no registry uploads.
+- Shared contract fixtures, actual WordPress-export roundtrip/restart/backup and rollback/withdrawal tests. See registry verification documentation for actual checks and platform limits. Existing beta release/version is unchanged.
+
+
 ### Branding
 
 - Added a standalone branding copyright and identity policy, with an English original and Serbian translation. The policy reserves applicable trademark rights without claiming registration or revoking existing AGPL copyright permissions.

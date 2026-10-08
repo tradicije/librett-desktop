@@ -42,8 +42,8 @@ Tab Igrači prikazuje zajedničku listu. Dodaj/Izmeni otvara zasebne ekrane za
 profile i fotografije, a čuvanje vraća na listu. Brisanje traži potvrdu i čuva
 igrače sa postojećim prijavama. Prijave unutar turnira koriste tu bazu i mogu
 da se povuku i vrate;
-dolazak igrača važi kroz sve kategorije istog turnira. Šema verzije 21 sadrži neizmenjive nacrte žreba i verzije pravila kategorije; pre migracije starijih baza pravi se konzistentan
-`pre-v21-<uuid>.sqlite` backup.
+dolazak igrača važi kroz sve kategorije istog turnira. Šema verzije 22 sadrži neizmenjive nacrte žreba i verzije pravila kategorije; pre migracije starijih baza pravi se konzistentan
+`pre-v22-<uuid>.sqlite` backup.
 
 Nazad/Napred prati istoriju aktivnog radnog taba. Home dugme u gornjoj traci
 vraća na stalni početni ekran koji nema bočni meni. Čuvanje zaključava navigaciju do završetka.
@@ -543,3 +543,9 @@ Migracija 21 usklađuje `category_configurations` sa kaskadnim brisanjem kategor
 ## Simulacija turnira pred beta 2
 
 [Izveštaj simulacije](BETA2_SIMULATION.md) sadrži scenarije, komande za ponavljanje, rezultate i granice provere.
+
+## Razvoj uvoza registra (šema 22)
+
+Migracija 022 dodaje izvor, remote/local mapiranja, članstva, privatne preglede, potvrde i okidače lokalnih prioriteta. Testovi ne menjaju instaliranu korisničku bazu; nova aplikacija pravi pre-v22 backup kada otvori staru bazu. Ugovori/primeri u `crates/application/contracts` su kopije nepotpisanog v1 nacrta LibreTT Player Registry sa AGPL atribucijom. Ažuriraj oba projekta zajedno i pokreni ugovorne i WordPress roundtrip testove. Pogledaj [upotrebu](REGISTRY_IMPORT.md), ADR 0019 i [stvarne provere](REGISTRY_VERIFICATION_2026_10_08.md).
+
+Fedora rootless Podman: `tools/dev/registry-check build` pravi sliku sa native bibliotekama. `tools/dev/registry-check cargo check --locked --workspace`, `cargo test --locked --workspace` ili `cargo fmt --all --check` radi unutra (svakoj komandi dodaj wrapper). Source/cache/target ostaju lokalni; nema deployment-a ni GUI pokretanja.
