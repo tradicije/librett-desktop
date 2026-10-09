@@ -47,7 +47,7 @@ body { margin: 0; }
 html.linux-window { --window-radius: 0px; }
 html.windows-window { --window-radius: 0px; }
 button, input, textarea, select { font: inherit; }
-button { cursor: pointer; }
+button { cursor: pointer; -webkit-text-fill-color: currentColor; }
 button:disabled { cursor: default; opacity: .45; }
 button, a, input, textarea { -webkit-tap-highlight-color: transparent; }
 button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible {
@@ -56,8 +56,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 34px; padding: 7px 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text-primary); font-weight: 550; }
 button:hover:enabled { background: var(--surface-hover); }
 button, input, textarea { transition: background-color 120ms, border-color 120ms; }
-.icon { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; line-height: 0; }
-.icon svg { display: block; }
+.icon { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; line-height: 0; color: inherit; }
+.icon svg { display: block; color: inherit; stroke: currentColor; }
 .icon-label { display: inline-flex; align-items: center; gap: 8px; }
 .shell { display: flex; min-height: 100vh; --workspace-toolbar-height: 62px; }
 aside { position: sticky; top: 0; align-self: flex-start; width: 208px; flex-shrink: 0; height: 100vh; height: 100dvh; overflow-y: auto; overscroll-behavior-y: none; display: flex; flex-direction: column; padding: 24px 12px 18px; border-right: 1px solid var(--border-subtle); background: var(--surface); }
@@ -68,6 +68,7 @@ nav { display: grid; gap: 3px; }
 .nav-item { justify-content: flex-start; min-height: 36px; padding: 8px 12px; border: 1px solid transparent; color: var(--text-secondary); background: transparent; font-size: 12px; }
 .nav-item.active { color: var(--text-primary); background: var(--primary-subtle); border-color: var(--border-subtle); }
 .nav-item.active .icon { color: var(--primary); }
+.nav-item:not(.active) .icon { color: var(--text-secondary); }
 .sidebar-bottom { margin-top: auto; padding: 24px 12px 0; font-size: 11px; color: var(--text-secondary); }
 .sidebar-bottom .icon { color: var(--primary); }
 .sidebar-bottom .icon-label { white-space: nowrap; }
@@ -144,10 +145,10 @@ form > .primary { justify-self: start; }
 .select-control { position: relative; width: 100%; min-width: 0; }
 .select-trigger { justify-content: space-between; width: 100%; min-height: 36px; padding: 8px 10px; gap: 12px; color: var(--text-primary); background: var(--background); text-align: left; font-weight: 400; font-size: 12px; }
 .select-trigger > span { overflow-wrap: anywhere; }
-.select-trigger > svg { flex-shrink: 0; display: block; width: 14px; }
+.select-trigger > svg { flex-shrink: 0; display: block; width: 14px; color: inherit; stroke: currentColor; }
 .select-trigger:hover:enabled { border-color: var(--text-muted); }
 .select-menu { position: absolute; top: calc(100% + 5px); left: 0; min-width: 100%; width: max-content; max-width: min(480px, 80vw); max-height: 260px; overflow: auto; z-index: 30; padding: 5px; border: 1px solid var(--border); border-radius: 7px; background: var(--surface-raised); box-shadow: 0 8px 24px #0002; }
-.select-menu button { display: block; width: 100%; min-height: 32px; border: 0; padding: 7px 10px; text-align: left; background: transparent; font-size: 12px; font-weight: 400; }
+.select-menu button { display: block; width: 100%; min-height: 32px; border: 0; padding: 7px 10px; text-align: left; background: transparent; color: var(--text-primary); -webkit-text-fill-color: currentColor; font-size: 12px; font-weight: 400; }
 .select-menu button.highlighted, .select-menu button:hover { background: var(--surface-hover); }
 .select-menu button[aria-selected="true"] { color: var(--primary); font-weight: 550; }
 .dashboard-shell main { width: 100%; }

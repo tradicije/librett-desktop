@@ -299,25 +299,27 @@
 <style>
   .backup-warning { position: fixed; bottom: 1rem; right: 1rem; z-index: 100; max-width: min(34rem, calc(100vw - 2rem)); display: flex; align-items: center; gap: 1rem; padding: 1rem; border: 1px solid var(--border); border-radius: .75rem; background: var(--surface); box-shadow: 0 4px 20px #0003; }
   .backup-warning button { flex-shrink: 0; }
-  .work-titlebar { height: 48px; position: fixed; top: 0; left: 0; right: 0; z-index: 30; display: flex; align-items: center; gap: 6px; background: var(--background); border-bottom: 1px solid var(--border); user-select: none; }
+  .work-titlebar { height: 48px; position: fixed; top: 0; left: 0; right: 0; z-index: 30; display: flex; align-items: center; gap: 6px; background: var(--background); color: var(--text-primary); border-bottom: 1px solid var(--border); user-select: none; }
   .window-drag-space { align-self: stretch; width: 12px; flex-shrink: 0; }
   .mac-titlebar > .window-drag-space:first-child { width: 80px; }
   .titlebar-info { flex-shrink: 0; margin-right: 12px; }
   .trailing-drag { flex: 1; min-width: 24px; }
   .work-tabs { display: flex; overflow-x: auto; min-width: 0; max-width: calc(100% - 80px); height: 100%; align-items: center; gap: 4px; overflow-y: hidden; scrollbar-width: none; }
   .work-tabs::-webkit-scrollbar { display: none; }
-  .work-tab { display: flex; flex: 0 0 180px; width: 180px; min-width: 180px; max-width: 180px; border: 1px solid transparent; border-radius: 6px; }
-  .work-tab.active { background: var(--surface); border-color: var(--border); }
-  .work-tab-select { background: transparent; border: 0; flex: 1; min-width: 0; display: flex; overflow: hidden; text-align: left; font-size: 12px; }
+  .work-tab { display: flex; flex: 0 0 180px; width: 180px; min-width: 180px; max-width: 180px; border: 1px solid transparent; border-radius: 6px; color: var(--text-secondary); }
+  .work-tab.active { background: var(--surface); border-color: var(--border); color: var(--text-primary); }
+  .work-tab-select { background: transparent; border: 0; flex: 1; min-width: 0; display: flex; overflow: hidden; text-align: left; font-size: 12px; color: inherit; }
   .work-tab-dot { flex-shrink: 0; font-size: 9px; }
   .work-tab-label { display: block; min-width: 0; flex: 1; white-space: nowrap; overflow: hidden; }
   .work-tab-label:global(.overflowing) { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 20px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 20px), transparent); }
-  .work-tab-close { border: 0; background: transparent; min-width: 28px; padding: 2px 7px; }
+  .work-tab-close { border: 0; background: transparent; min-width: 28px; padding: 2px 7px; color: var(--text-secondary); }
+  .work-tab-select:hover:enabled, .work-tab-close:hover:enabled { color: var(--text-primary); }
   .workspace-context-menu { position: fixed; z-index: 100; padding: 5px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; box-shadow: 0 8px 24px #0002; }
   .workspace-context-menu button { border: 0; width: 100%; }
-  .titlebar-home.active { background: var(--surface); }
-  .titlebar-home { border: 0; background: transparent; width: 32px; flex-shrink: 0; padding: 6px; }
-  .new-work-tab { border: 0; background: transparent; font-size: 20px; width: 32px; flex-shrink: 0; }
+  .titlebar-home.active { background: var(--primary-subtle); color: var(--primary); }
+  .titlebar-home { border: 0; background: transparent; width: 32px; flex-shrink: 0; padding: 6px; color: var(--text-secondary); }
+  .new-work-tab { border: 0; background: transparent; font-size: 20px; width: 32px; flex-shrink: 0; color: var(--text-secondary); }
+  .titlebar-home:hover:enabled, .new-work-tab:hover:enabled { color: var(--primary); }
   .workspace-frame { position: fixed; inset: 48px 0 0; overflow: hidden; }
   .workspace-frame[hidden] { display: none; }
   .workspace-frame :global(.shell) { height: 100%; min-height: 0; }

@@ -47,6 +47,8 @@ Notable changes to LibreTT are recorded here in English.
 
 ### Fixed
 
+- Explicitly inherit themed colors for shared SVG icons and select chevrons, set button text-fill and dropdown option colors, and distinguish active/inactive workspace tabs and sidebar icons for consistent light/dark contrast in embedded webviews.
+
 - Backup restore/import now accepts older databases whose category-rules table shipped without a cascading foreign key. Schema 21 normalizes both known definitions without weakening imported-schema validation; backup errors no longer incorrectly imply that every rejected file is newer. Verified restore/import against a copy of a real schema-18 backup.
 
 - Group seeds now follow alternating snake order (two groups: 1/4 and 2/3). Automatically selected lucky losers use maximum matching to minimize opening-round group rematches without changing the selected candidates or manual slots.
