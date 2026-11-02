@@ -1,18 +1,25 @@
-use super::*;
+mod support;
+
 use librett_application::{
     add_category_with_fee, create_player, create_tournament, record_cash, register_entries,
-    register_entry, CashRepository, CategoryRepository, PlayerRepository,
+    register_entry, ApplicationError, CashRepository, CategoryRepository, PlayerRepository,
+    TournamentRepository,
 };
-use librett_domain::{CashKind, CashRecord};
+use librett_domain::{CashKind, CashRecord, CompetitionFormat, Discipline};
+use librett_storage_sqlite::SqliteTournamentRepository;
+use rusqlite::{params, Connection};
+use support::{connection, TestDatabase};
+use uuid::Uuid;
 
 #[test]
 fn batch_entries_are_atomic_and_archived_categories_keep_cash_history() {
-    let path = std::env::temp_dir().join(format!("librett-category-{}.sqlite", Uuid::new_v4()));
+    let database = TestDatabase::new();
+    let path = database.path();
     let tid;
     let cid;
     let expected;
     {
-        let mut r = SqliteTournamentRepository::open(&path).unwrap();
+        let mut r = SqliteTournamentRepository::open(path).unwrap();
         tid = create_tournament(&mut r, "Cup").unwrap().id;
         let t = add_category_with_fee(
             &mut r,
@@ -38,14 +45,14 @@ fn batch_entries_are_atomic_and_archived_categories_keep_cash_history() {
         assert!(r.list_entries(cid).unwrap().is_empty());
         assert!(r.list_cash(tid).unwrap().is_empty());
         // Failure on a later entry must roll back earlier entries and fees too.
-        r.connection.execute_batch("CREATE TEMP TRIGGER fail_second BEFORE INSERT ON cash_records WHEN (SELECT count(*) FROM cash_records)>0 BEGIN SELECT RAISE(ABORT,'later failure'); END;").unwrap();
+        connection(path).execute_batch("CREATE TRIGGER fail_second BEFORE INSERT ON cash_records WHEN (SELECT count(*) FROM cash_records)>0 BEGIN SELECT RAISE(ABORT,'later failure'); END;").unwrap();
         assert_eq!(
             register_entries(&mut r, tid, cid, vec![vec![players[0]], vec![players[1]]]),
             Err(ApplicationError::Storage)
         );
         assert!(r.list_entries(cid).unwrap().is_empty());
         assert!(r.list_cash(tid).unwrap().is_empty());
-        r.connection
+        connection(path)
             .execute_batch("DROP TRIGGER fail_second;")
             .unwrap();
         let entries =
@@ -132,12 +139,11 @@ fn batch_entries_are_atomic_and_archived_categories_keep_cash_history() {
         assert_eq!(entries.len(), 2);
         assert_eq!(r.list_cash(tid).unwrap().len(), 5);
     }
-    let r = SqliteTournamentRepository::open(&path).unwrap();
+    let r = SqliteTournamentRepository::open(path).unwrap();
     assert!(r.find(tid).unwrap().categories[0].archived);
     assert_eq!(r.list_entries(cid).unwrap().len(), 2);
     assert_eq!(&r.list_cash(tid).unwrap()[..3], expected.as_slice());
     drop(r);
-    std::fs::remove_file(path).unwrap();
 }
 
 #[test]
@@ -171,7 +177,7 @@ fn v6_migration_preserves_fee_and_creates_one_pre_v8_backup() {
         assert_eq!(t.categories[0].fee_minor, 12345);
         assert!(!t.categories[0].archived);
         assert_eq!(
-            r.connection
+            connection(&path)
                 .query_row("PRAGMA user_version", [], |r| r.get::<_, i64>(0))
                 .unwrap(),
             22
@@ -289,18 +295,10 @@ fn v7_category_names_allow_different_disciplines_and_preserve_references() {
         assert_eq!(cash.len(), 1);
         assert_eq!(cash[0].id, rid);
         assert_eq!(cash[0].amount_minor, 12345);
-        assert_eq!(
-            r.connection
-                .query_row("PRAGMA foreign_keys", [], |row| row.get::<_, i64>(0))
-                .unwrap(),
-            1
-        );
-        assert!(r
-            .connection
+        assert!(connection(&path)
             .execute("DELETE FROM categories WHERE id=?1", [cid.to_string()])
             .is_err());
-        assert!(r
-            .connection
+        assert!(connection(&path)
             .execute("DELETE FROM cash_records", [])
             .is_err());
     }

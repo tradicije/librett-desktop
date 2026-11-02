@@ -7,22 +7,16 @@ use uuid::Uuid;
 mod backup;
 mod cash;
 mod category_rules;
-#[cfg(test)]
-mod category_tests;
 mod completion;
 mod draw;
 mod history;
 mod matches;
-#[cfg(test)]
-mod player_cash_tests;
 mod players;
 mod registration;
 mod registry;
 mod scheduling;
 mod trash;
 pub use history::{HistoryItem, HistoryOption, HistoryPage};
-#[cfg(test)]
-mod workflow_tests;
 
 pub struct SqliteTournamentRepository {
     connection: Connection,
@@ -444,6 +438,34 @@ mod tests {
             assert_eq!(repository.list().unwrap(), vec![expected]);
         }
         std::fs::remove_file(path).unwrap();
+    }
+
+    #[test]
+    fn initialization_enables_foreign_keys_for_new_and_v7_databases() {
+        for migrate in [false, true] {
+            let connection = Connection::open_in_memory().unwrap();
+            if migrate {
+                for sql in [
+                    include_str!("../migrations/001_tournaments.sql"),
+                    include_str!("../migrations/002_players.sql"),
+                    include_str!("../migrations/003_player_profiles.sql"),
+                    include_str!("../migrations/004_registration_status.sql"),
+                    include_str!("../migrations/005_cash.sql"),
+                    include_str!("../migrations/006_category_fees.sql"),
+                    include_str!("../migrations/007_category_archive.sql"),
+                ] {
+                    connection.execute_batch(sql).unwrap();
+                }
+            }
+            let repository = SqliteTournamentRepository::initialize(connection).unwrap();
+            assert_eq!(
+                repository
+                    .connection
+                    .query_row("PRAGMA foreign_keys", [], |row| row.get::<_, i64>(0))
+                    .unwrap(),
+                1
+            );
+        }
     }
 
     #[test]

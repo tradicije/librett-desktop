@@ -4,7 +4,7 @@ Date: October 7, 2026.
 
 ## Result
 
-All 41 core tests passed (5 domain and 36 storage tests), together with the existing cash-calculation and report-format checks. No new application defect was found in the executed scenarios. Two repeatable scenarios were added to `crates/storage-sqlite/src/workflow_tests.rs`.
+All 41 core tests passed (5 domain and 36 storage tests), together with the existing cash-calculation and report-format checks. No new application defect was found in the executed scenarios. Two repeatable scenarios were added to `crates/storage-sqlite/tests/workflow_tests.rs`.
 
 ## Combined tournament
 

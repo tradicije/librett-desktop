@@ -1,15 +1,19 @@
-use super::*;
+mod support;
+
 use librett_application::{
     add_category_with_fee, create_player, create_tournament, record_cash, register_entry,
-    CategoryRepository, PlayerCashRepository,
+    ApplicationError, CategoryRepository, PlayerCashRepository,
 };
-use librett_domain::{cash_share, CashKind, CashRecord};
+use librett_domain::{cash_share, CashKind, CashRecord, CompetitionFormat, Discipline};
+use librett_storage_sqlite::SqliteTournamentRepository;
+use rusqlite::{params, Connection};
+use support::{connection, TestDatabase};
+use uuid::Uuid;
 
 #[test]
 fn payment_requires_arrival_and_active_registration_but_refunds_remain_available() {
     use librett_application::{set_entry_status, set_player_attendance};
-    let mut r =
-        SqliteTournamentRepository::initialize(Connection::open_in_memory().unwrap()).unwrap();
+    let mut r = SqliteTournamentRepository::open(":memory:").unwrap();
     let tid = create_tournament(&mut r, "Arrival cup").unwrap().id;
     let a = create_player(&mut r, "A", "").unwrap().id;
     let b = create_player(&mut r, "B", "").unwrap().id;
@@ -111,8 +115,7 @@ fn payment_requires_arrival_and_active_registration_but_refunds_remain_available
 
 #[test]
 fn mixed_payment_selection_rolls_back_if_one_registration_is_withdrawn() {
-    let mut r =
-        SqliteTournamentRepository::initialize(Connection::open_in_memory().unwrap()).unwrap();
+    let mut r = SqliteTournamentRepository::open(":memory:").unwrap();
     let tid = create_tournament(&mut r, "Atomic cup").unwrap().id;
     let p = create_player(&mut r, "Player", "").unwrap().id;
     let mut ids = Vec::new();
@@ -151,14 +154,15 @@ fn mixed_payment_selection_rolls_back_if_one_registration_is_withdrawn() {
 
 #[test]
 fn player_settlement_splits_pairs_and_is_atomic_idempotent_and_persistent() {
-    let path = std::env::temp_dir().join(format!("librett-player-cash-{}.sqlite", Uuid::new_v4()));
+    let database = TestDatabase::new();
+    let path = database.path();
     let tid;
     let player;
     let partner;
     let singles;
     let doubles;
     {
-        let mut r = SqliteTournamentRepository::open(&path).unwrap();
+        let mut r = SqliteTournamentRepository::open(path).unwrap();
         tid = create_tournament(&mut r, "Cup").unwrap().id;
         player = create_player(&mut r, "Aleksa", "").unwrap().id;
         partner = create_player(&mut r, "Marko", "").unwrap().id;
@@ -198,14 +202,14 @@ fn player_settlement_splits_pairs_and_is_atomic_idempotent_and_persistent() {
         };
         record_cash(&mut r, tid, record).unwrap();
         let request = Uuid::new_v4();
-        r.connection.execute_batch("CREATE TEMP TRIGGER fail_second_settlement BEFORE INSERT ON cash_allocations WHEN (SELECT count(*) FROM cash_allocations)>0 BEGIN SELECT RAISE(ABORT,'test later failure'); END;").unwrap();
+        connection(path).execute_batch("CREATE TRIGGER fail_second_settlement BEFORE INSERT ON cash_allocations WHEN (SELECT count(*) FROM cash_allocations)>0 BEGIN SELECT RAISE(ABORT,'test later failure'); END;").unwrap();
         assert_eq!(
             r.settle_player_cash(request, tid, player, vec![singles, doubles], true),
             Err(ApplicationError::Storage)
         );
         assert_eq!(r.cash_ledger(tid).unwrap().records.len(), 3);
         assert!(r.cash_ledger(tid).unwrap().allocations.is_empty());
-        r.connection
+        connection(path)
             .execute_batch("DROP TRIGGER fail_second_settlement;")
             .unwrap();
         r.settle_player_cash(request, tid, player, vec![singles, doubles], true)
@@ -285,16 +289,14 @@ fn player_settlement_splits_pairs_and_is_atomic_idempotent_and_persistent() {
                 .amount_minor,
             25_000
         );
-        assert!(r
-            .connection
+        assert!(connection(path)
             .execute("DELETE FROM cash_allocations", [])
             .is_err());
-        assert!(r
-            .connection
+        assert!(connection(path)
             .execute("UPDATE cash_settlements SET paid=0", [])
             .is_err());
     }
-    let r = SqliteTournamentRepository::open(&path).unwrap();
+    let r = SqliteTournamentRepository::open(path).unwrap();
     let ledger = r.cash_ledger(tid).unwrap();
     let net = ledger
         .records
@@ -307,13 +309,11 @@ fn player_settlement_splits_pairs_and_is_atomic_idempotent_and_persistent() {
         .sum::<i64>();
     assert_eq!(net, 150_000);
     drop(r);
-    std::fs::remove_file(path).unwrap();
 }
 
 #[test]
 fn historical_pair_payments_and_discounts_split_without_rounding_loss() {
-    let mut r =
-        SqliteTournamentRepository::initialize(Connection::open_in_memory().unwrap()).unwrap();
+    let mut r = SqliteTournamentRepository::open(":memory:").unwrap();
     let tid = create_tournament(&mut r, "Cup").unwrap().id;
     let a = create_player(&mut r, "A", "").unwrap().id;
     let b = create_player(&mut r, "B", "").unwrap().id;
