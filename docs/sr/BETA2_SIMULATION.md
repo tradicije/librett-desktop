@@ -4,7 +4,7 @@ Datum: 7. oktobar 2026.
 
 ## Rezultat
 
-Prošlo je svih 41 testova jezgra (5 domena i 36 skladišta), kao i postojeće provere obračuna blagajne i formatiranja izveštaja. U izvršenim scenarijima nije pronađen novi kvar aplikacije. Dodata su dva ponovljiva scenarija u `crates/storage-sqlite/src/workflow_tests.rs`.
+Prošlo je svih 41 testova jezgra (5 domena i 36 skladišta), kao i postojeće provere obračuna blagajne i formatiranja izveštaja. U izvršenim scenarijima nije pronađen novi kvar aplikacije. Dodata su dva ponovljiva scenarija u `crates/storage-sqlite/tests/workflow_tests.rs`.
 
 ## Povezani turnir
 

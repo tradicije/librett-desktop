@@ -1,16 +1,22 @@
-use super::*;
+mod support;
+
 use librett_application::{
-    self as app, CategoryRulesRepository, CompletionRequest, PlayerCashRepository,
-    PlayerRepository, SaveFillersRequest, SaveMatchRequest, ScheduleAction, ScheduleRequest,
+    self as app, ApplicationError, CategoryRulesRepository, CompletionRequest,
+    PlayerCashRepository, PlayerRepository, SaveFillersRequest, SaveMatchRequest, ScheduleAction,
+    ScheduleRequest, TournamentRepository,
 };
 use librett_domain::{
-    CategoryRules, DrawMode, DrawSettings, FillerChoice, KnockoutFilling, MatchOutcome,
-    MatchResult, PlayerProfile, SetScore, ThirdPlaceRule,
+    CategoryRules, CompetitionFormat, Discipline, DrawMode, DrawSettings, FillerChoice,
+    KnockoutFilling, MatchOutcome, MatchResult, PlayerProfile, SetScore, ThirdPlaceRule,
 };
+use librett_storage_sqlite::SqliteTournamentRepository;
+use rusqlite::params;
 use std::collections::HashMap;
+use support::{connection, TestDatabase};
+use uuid::Uuid;
 
 fn repository() -> SqliteTournamentRepository {
-    SqliteTournamentRepository::initialize(Connection::open_in_memory().unwrap()).unwrap()
+    SqliteTournamentRepository::open(":memory:").unwrap()
 }
 fn category(
     repo: &mut SqliteTournamentRepository,
@@ -188,7 +194,9 @@ fn finish_groups(repo: &mut SqliteTournamentRepository, tournament: Uuid, catego
 }
 #[test]
 fn odd_draw_scores_completion_locks_reopen_and_history() {
-    let mut repo = repository();
+    let database = TestDatabase::new();
+    let path = database.path();
+    let mut repo = SqliteTournamentRepository::open(path).unwrap();
     let tournament = app::create_tournament(&mut repo, "Bubušinac 2027")
         .unwrap()
         .id;
@@ -247,7 +255,7 @@ fn odd_draw_scores_completion_locks_reopen_and_history() {
         .is_some());
     complete(&mut repo, tournament, Some(id), false).unwrap();
     assert_eq!(
-        repo.connection
+        connection(path)
             .query_row("SELECT count(*) FROM completion_history", [], |r| r
                 .get::<_, i64>(0))
             .unwrap(),
@@ -647,8 +655,7 @@ fn tournament_trash_preserves_results_cash_history_and_backup_restore() {
     let original = repo.find(tournament).unwrap();
     let results = serde_json::to_value(repo.category_results(tournament, id).unwrap()).unwrap();
     let cash = repo.cash_ledger(tournament).unwrap();
-    let history: i64 = repo
-        .connection
+    let history: i64 = connection(&path)
         .query_row("SELECT count(*) FROM completion_history", [], |r| r.get(0))
         .unwrap();
     repo.trash_tournament(tournament).unwrap();
@@ -663,9 +670,8 @@ fn tournament_trash_preserves_results_cash_history_and_backup_restore() {
         .update_tournament_details(tournament, "Changed", None, &original.name, None)
         .is_err());
     // Cash remains editable on completed tournaments, but never while in trash.
-    assert!(repo.connection.execute("INSERT INTO cash_records(id,entry_id,kind,amount_minor,note) VALUES(?1,?2,'payment',1,'')", params![Uuid::new_v4().to_string(),entries[0].id.to_string()]).is_err());
-    assert!(repo
-        .connection
+    assert!(connection(&path).execute("INSERT INTO cash_records(id,entry_id,kind,amount_minor,note) VALUES(?1,?2,'payment',1,'')", params![Uuid::new_v4().to_string(),entries[0].id.to_string()]).is_err());
+    assert!(connection(&path)
         .execute(
             "UPDATE tournaments SET name='Changed' WHERE id=?1",
             [tournament.to_string()]
@@ -686,7 +692,7 @@ fn tournament_trash_preserves_results_cash_history_and_backup_restore() {
     );
     assert_eq!(repo.cash_ledger(tournament).unwrap(), cash);
     assert_eq!(
-        repo.connection
+        connection(&path)
             .query_row("SELECT count(*) FROM completion_history", [], |r| r
                 .get::<_, i64>(0))
             .unwrap(),
@@ -711,7 +717,9 @@ fn tournament_trash_preserves_results_cash_history_and_backup_restore() {
 
 #[test]
 fn trashed_open_tournament_rejects_stale_sporting_writes_and_unknown_ids() {
-    let mut repo = repository();
+    let database = TestDatabase::new();
+    let path = database.path();
+    let mut repo = SqliteTournamentRepository::open(path).unwrap();
     let tournament = app::create_tournament(&mut repo, "Otvoreni kup")
         .unwrap()
         .id;
@@ -739,15 +747,13 @@ fn trashed_open_tournament_rejects_stale_sporting_writes_and_unknown_ids() {
         app::set_player_attendance(&mut repo, tournament, entrants[0], true),
         Err(ApplicationError::NotFound)
     );
-    assert!(repo
-        .connection
+    assert!(connection(path)
         .execute(
             "UPDATE categories SET name='Stale' WHERE id=?1",
             [id.to_string()]
         )
         .is_err());
-    assert!(repo
-        .connection
+    assert!(connection(path)
         .execute(
             "UPDATE entries SET status='withdrawn' WHERE category_id=?1",
             [id.to_string()]
@@ -1224,8 +1230,7 @@ fn beta2_full_event_simulation_on_disk() {
                 .unwrap()]
         );
     }
-    let history: i64 = repo
-        .connection
+    let history: i64 = connection(&path)
         .query_row("SELECT count(*) FROM action_history", [], |r| r.get(0))
         .unwrap();
     assert!(history > 100);
@@ -1245,15 +1250,13 @@ fn beta2_full_event_simulation_on_disk() {
         );
     }
     assert!(
-        destination
-            .connection
+        connection(directory.join("second-computer.sqlite"))
             .query_row("SELECT count(*) FROM action_history", [], |r| r
                 .get::<_, i64>(0))
             .unwrap()
             >= history
     );
-    let integrity: String = destination
-        .connection
+    let integrity: String = connection(directory.join("second-computer.sqlite"))
         .query_row("PRAGMA integrity_check", [], |r| r.get(0))
         .unwrap();
     assert_eq!(integrity, "ok");
