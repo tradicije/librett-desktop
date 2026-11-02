@@ -4,6 +4,7 @@
   import { messages, errorKey, type Language, type MessageKey } from './i18n';
   import { registryMessages } from './registry-messages';
   import Icon from './Icon.svelte';
+  import { IconChevronDown } from '@tabler/icons-svelte';
   import Select from './Select.svelte';
   import ImageCropDialog from './ImageCropDialog.svelte';
   let {language,busy=$bindable(false),onimported}:{language:Language;busy?:boolean;onimported:()=>Promise<void>}=$props();
@@ -12,6 +13,7 @@
   let localPlayers=$state<Player[]>([]);let choices=$state<Record<string,RegistryDecision>>({});let page=$state(0);let reviewed=$state(false);let dirty=$state(false);let notice=$state('');let error=$state<MessageKey|null>(null);
   let crop:ImageCropDialog;
   let fileInput:HTMLInputElement;
+  let expanded=$state(false);
   const uid=$props.id();
   let mappingOptions=$derived([{value:'',label:text.defaultMapping},...localPlayers.map(player=>({value:player.id,label:`${player.name} · ${player.birth_year??'—'} · ${player.club} · ${player.id.slice(0,8)}`}))]);
   function fieldLabel(field:string){return field==='birth_year'?text.year:field==='country'?text.country:field==='name'?text.name:field==='club'?text.club:text.photo;}
@@ -30,9 +32,14 @@
   async function photo(id:string){if(!preview||busy)return;busy=true;error=null;try{const [encoded,mime]=await downloadRegistryPhoto(preview.id,id);const decoded=atob(encoded);const bytes=new Uint8Array(decoded.length);for(let i=0;i<decoded.length;i++)bytes[i]=decoded.charCodeAt(i);const image=await crop.crop(new File([bytes],'registry-photo',{type:mime}));if(image){choice(id,{photo:image});notice=text.photoReady;}}catch(cause){error=errorKey(cause);}finally{busy=false;}}
 </script>
 <section class="panel registry-import" aria-labelledby={`${uid}-title`} aria-busy={busy}>
-  <div class="section-heading registry-heading">
-    <div class="registry-title"><span class="row-icon"><Icon name="globe" size={19} /></span><div><h2 id={`${uid}-title`}>{text.title}</h2><p class="muted">{text.intro}</p></div></div>
-  </div>
+  <h2 class="registry-heading" id={`${uid}-title`}>
+    <button class="registry-toggle" aria-expanded={expanded} aria-controls={`${uid}-content`} onclick={()=>expanded=!expanded}>
+      <span class="registry-title"><span class="row-icon"><Icon name="globe" size={19} /></span><span>{text.title}</span></span>
+      <span class="registry-chevron" class:expanded><IconChevronDown size={18} stroke={1.75} aria-hidden="true" /></span>
+    </button>
+  </h2>
+  <div id={`${uid}-content`} hidden={!expanded}>
+  <p class="registry-intro muted">{text.intro}</p>
   <div class="source-form">
     <label class="field-label" for={`${uid}-url`}>{text.source}</label>
     <div class="source-controls">
@@ -87,15 +94,19 @@
       <div class="import-confirmation"><label class="check review-check"><input type="checkbox" disabled={busy||dirty} bind:checked={reviewed} />{text.reviewed}</label><div class="buttons"><button class="primary" disabled={busy||!ready} onclick={confirm}><Icon name="check-circle" size={17} />{text.confirm}</button><button class="secondary" disabled={busy} onclick={()=>cancel(preview!.id)}>{text.cancel}</button></div></div>
     </div>
   {/if}
+  </div>
 </section>
 <ImageCropDialog {language} bind:this={crop} />
 <style>
   .registry-import { margin-bottom:24px; }
-  .registry-heading { margin-bottom:20px; }
-  .registry-title { display:flex; align-items:flex-start; gap:12px; min-width:0; }
+  .registry-heading { margin:0; }
+  .registry-toggle { width:100%; justify-content:space-between; padding:0; border:0; background:transparent; text-align:left; font-size:inherit; font-weight:inherit; }
+  .registry-toggle:hover:enabled { background:transparent; color:var(--primary); }
+  .registry-title { display:flex; align-items:center; gap:12px; min-width:0; }
   .registry-title .row-icon { flex-shrink:0; }
-  .registry-title h2 { margin:0; }
-  .registry-title p { margin:7px 0 0; max-width:760px; font-size:11px; line-height:1.7; }
+  .registry-chevron { display:flex; flex-shrink:0; color:var(--text-muted); }
+  .registry-chevron.expanded { transform:rotate(180deg); }
+  .registry-intro { margin:16px 0 20px; max-width:760px; font-size:11px; line-height:1.7; }
   .source-form { display:grid; gap:7px; }
   .source-controls { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
   .source-controls input[type=url] { flex:1 1 280px; }
