@@ -141,7 +141,7 @@ crates/storage-sqlite/        repozitorijumi, migracije, projekcije
 crates/lan-host/              kasniji API i uparivanje
 packages/contracts/           transportne šeme i primeri
 packages/ui/                  zajednički prikaz kad se potreba potvrdi
-specs/                        pravilnici i prihvatni scenariji
+docs/specs/                   pravilnici i prihvatni scenariji
 docs/adr/                     odluke i obrazloženja
 ```
 
@@ -246,7 +246,7 @@ Kriterijumi rangiranja podešavaju se po kategoriji. Podrazumevani
 redosled je međusobni rezultat, mini-tabela samo između izjednačenih učesnika
 kada ih je tri ili više, zatim odnos setova pa odnos poena. Nulti imenitelj i
 nastavak razrešavanja delimičnog izjednačenja definisani su u
-[specifikaciji žreba](../specs/draw-and-ranking.md). Pozitivan broj dobijenih
+[specifikaciji žreba](specs/draw-and-ranking.md). Pozitivan broj dobijenih
 setova/poena uz nula izgubljenih daje najbolji odnos; nula prema nula ostaje
 izjednačeno. Ako ostane više bye mesta nego nosilaca, preostala mesta se dodeljuju
 nasumično i organizator može da ih izmeni.
@@ -334,7 +334,7 @@ Planirani fajlovi u novom projektu:
   početni engleski dokument sa srpskim pandanom `CONTRIBUTING-sr.md`.
 - `docs/en/` i `docs/sr/` — korisničko uputstvo, arhitektura, backup/restore,
   žreb, pravilnici, blagajna i buduće integracije.
-- `docs/adr/` — arhitektonske odluke; `specs/` — proverljivi poslovni scenariji.
+- `docs/adr/` — arhitektonske odluke; `docs/specs/` — proverljivi poslovni scenariji.
 
 Dokumentacija prati ponašanje svake isporučene faze, sa označenim budućim
 funkcijama. Ovaj radni plan je trenutno srpski; engleski pandan pripremamo pri

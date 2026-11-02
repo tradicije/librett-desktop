@@ -3,22 +3,23 @@
   import { invoke } from '@tauri-apps/api/core';
   import { listen } from '@tauri-apps/api/event';
   import { getCurrentWindow } from '@tauri-apps/api/window';
-  import Workspace from './Workspace.svelte';
-  import type {RestoreSource} from './Backups.svelte';
-  import {restoreBackup,importBackup,automaticBackup} from './api';
-  import AboutDialog from './AboutDialog.svelte';
-  import DiscardDialog from './DiscardDialog.svelte';
-  import { registerDiscardConfirmation, confirmDiscard } from './confirmation';
+  import Workspace from '$lib/features/workspace/Workspace.svelte';
+  import type {RestoreSource} from '$lib/features/backups/Backups.svelte';
+  import { restoreBackup, importBackup, automaticBackup } from '$lib/api/backups';
+  import AboutDialog from '$lib/dialogs/AboutDialog.svelte';
+  import DiscardDialog from '$lib/dialogs/DiscardDialog.svelte';
+  import { registerDiscardConfirmation, confirmDiscard } from '$lib/dialogs/confirmation';
   let discardDialog: DiscardDialog;
   let aboutDialog: AboutDialog;
-  import Icon from './Icon.svelte';
-  import WindowControls from './WindowControls.svelte';
-  import { fadeOverflow } from './tab-label';
-  import { savedSidebarCollapsed, saveSidebarCollapsed } from './sidebar';
-  import { desktopAvailable, type Tournament } from './api';
-  import { messages, savedLanguage, type Language } from './i18n';
-  import { applyTheme, savedTheme, saveTheme, watchSystemTheme, type ThemePreference, type ResolvedTheme } from './theme';
-  import type { Route, WorkspaceStatus } from './workspace';
+  import Icon from '$lib/components/Icon.svelte';
+  import WindowControls from '$lib/components/WindowControls.svelte';
+  import { fadeOverflow } from '$lib/features/workspace/tab-label';
+  import { savedSidebarCollapsed, saveSidebarCollapsed } from '$lib/features/workspace/sidebar';
+  import { desktopAvailable } from '$lib/api/core';
+  import { type Tournament } from '$lib/api/tournaments';
+  import { messages, savedLanguage, type Language } from '$lib/i18n';
+  import { applyTheme, savedTheme, saveTheme, watchSystemTheme, type ThemePreference, type ResolvedTheme } from '$lib/theme';
+  import type { Route, WorkspaceStatus } from '$lib/features/workspace/workspace';
 
   type Tab = { id: string; initialRoute: Route; status: WorkspaceStatus; instance?: { travel: (delta: number) => void; getRoute: () => Route; goHome: () => void }; scroll: number; focus?: HTMLElement };
   function makeTab(initialRoute: Route): Tab {

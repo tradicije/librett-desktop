@@ -43,6 +43,32 @@ All user-facing functionality must support Serbian and English, including
 validation messages and printed output. Use stable translation keys rather
 than storing translated domain states. User-entered names are not translations.
 
+## Code layout and tests
+
+Follow the [project layout and module rules](docs/en/DEVELOPMENT.md#project-layout-and-module-rules).
+
+- Put frontend screens and helpers in `apps/desktop/src/lib/features/<feature>/`,
+  shared controls in `components/`, dialogs in `dialogs/`, and typed IPC calls
+  in `api/<feature>.ts`. Use `$lib/...` across features; keep Vite and TypeScript
+  alias definitions aligned.
+- Keep Tauri commands in `src-tauri/src/commands/`, startup in `main.rs`, and
+  shared desktop state in `state.rs`. Keep application operations and contracts
+  in feature modules with explicit public re-exports from `application/src/lib.rs`.
+- Keep storage integration tests in `crates/storage-sqlite/tests/`, using the
+  public API and isolated databases. Private connection checks remain unit tests;
+  do not widen production visibility just to access internals from tests.
+- Put frontend regression tests beside the relevant module as `*.test.ts` and
+  run them with Vitest. Test actual TypeScript imports, without source-reading
+  verification scripts. `npm test` runs all suites; `npm run test:watch` watches;
+  `npm run test:cash` and `npm run test:reports` run focused suites.
+- Put acceptance specifications in `docs/specs/` and architecture decisions in
+  `docs/adr/`. Update English and Serbian development/contribution documentation
+  whenever the layout, module rules or check commands change.
+
+Before review, run `npm run check`, `npm test`, `npm run build`,
+`cargo fmt --all --check`, and `npm run test:core`. With native prerequisites,
+also run `cargo check --locked --workspace` and `cargo test --locked --workspace`.
+
 ## Verification and review
 
 Once implementation starts, add meaningful tests for business rules and

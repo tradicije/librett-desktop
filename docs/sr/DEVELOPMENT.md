@@ -21,6 +21,7 @@ Iz korena repozitorijuma:
 npm ci
 npm run check
 npm run build
+npm test
 npm run test:core
 npm run desktop -- dev
 ```
@@ -48,6 +49,76 @@ dolazak igrača važi kroz sve kategorije istog turnira. Šema verzije 22 sadrž
 Nazad/Napred prati istoriju aktivnog radnog taba. Home dugme u gornjoj traci
 vraća na stalni početni ekran koji nema bočni meni. Čuvanje zaključava navigaciju do završetka.
 Lokalna administracija za sada nema prijavu nalogom niti kontrolu korisničkih uloga.
+
+## Struktura projekta i pravila modula
+
+```text
+apps/desktop/
+  src/
+    App.svelte                 okvir aplikacije
+    main.ts, style.css         ulazna tačka i zajednički stilovi
+    lib/
+      api/                     tipizovani Tauri pozivi i DTO-i po funkcionalnosti
+      features/<feature>/      ekrani, komponente i pomoćne funkcije modula
+      components/              zajedničke kontrole i prikaz
+      dialogs/                 dijalozi i potvrda odbacivanja izmena
+      utils/                   zajedničke čiste pomoćne funkcije
+      i18n.ts, theme.ts        jezik i tema
+  src-tauri/src/
+    main.rs                    pokretanje, sistemski prozor i registracija komandi
+    commands/                  Tauri adapteri komandi po funkcionalnosti
+    state.rs                   zajedničko stanje baze i izveštaja za štampu
+    registry_http.rs           ograničeno preuzimanje iz registra
+  vite.config.ts               Svelte i podešavanje $lib aliasa
+  vitest.config.ts             frontend testovi uz nasleđena Vite podešavanja
+crates/
+  domain/src/                  pravila takmičenja nezavisna od platforme
+  application/src/             operacije, DTO-i i ugovori repozitorijuma po modulu
+  storage-sqlite/
+    src/                       SQLite adapteri i privatni jedinični testovi
+    tests/                     integracioni testovi javnog API-ja repozitorijuma
+      support/                 zasebne SQL konekcije i privremene baze
+      fixtures/                test podaci
+    migrations/                verzionisane SQLite migracije
+docs/specs/                    prihvatni scenariji i poslovne specifikacije
+docs/adr/                      arhitektonske odluke
+```
+
+- `App.svelte` ostaje okvir aplikacije. Ekrane i njihove pomoćne funkcije drži
+  u `src/lib/features/<feature>/`, zajedničke vizuelne kontrole u `components/`,
+  a dijaloge u `dialogs/`. Nemoj ponovo gomilati fajlove direktno u `src/`.
+- `$lib` označava `apps/desktop/src/lib` u Vite-u, TypeScript-u, Svelte proveri
+  i Vitest-u. Za uvoz između modula i zajedničke delove koristi `$lib/...`;
+  relativni importi odgovaraju susednim fajlovima istog modula. Definicije
+  aliasa u `vite.config.ts` i `tsconfig.json` moraju biti usklađene. Vitest
+  nasleđuje Vite alias.
+- Tauri pozive i pripadajuće tipove uvozi iz `$lib/api/<feature>`, a detekciju
+  desktop okruženja iz `$lib/api/core`. `api/index.ts` ostaje fasada javnih
+  izvoza; implementacije pripadaju modulima. UI ne pristupa SQLite-u direktno.
+- Tauri komande pripadaju `src-tauri/src/commands/<feature>.rs` i registruju
+  se u `main.rs`. Sistemsko podešavanje i zajedničko stanje drži odvojeno.
+- Operacije aplikacije, tipove zahteva/odgovora i ugovore repozitorijuma drži
+  u odgovarajućem `crates/application/src/<feature>.rs`. `lib.rs` sadrži module
+  i eksplicitne javne izvoze koji čuvaju postojeće importe. Domenska pravila
+  ostaju nezavisna od adaptera.
+- Storage integracioni testovi pripadaju `crates/storage-sqlite/tests/` i
+  koriste javni API repozitorijuma. Zasebna SQL konekcija može da proverava
+  sačuvano stanje ili izazove grešku radi provere rollback-a. Provere privatnog
+  stanja pojedinačne konekcije ostaju jedinični testovi uz implementaciju;
+  nemoj otvarati interne detalje samo radi testova.
+- Frontend regresione testove čistih funkcija piši uz modul kao `*.test.ts`.
+  Uvozi stvarni TypeScript modul i `describe`, `it`, `expect` iz `vitest`;
+  nemoj ručno čitati i transpajlovati izvorni kod u skriptama. Testovi blagajne
+  pokrivaju dolaske, procenu, dug, povlačenje/povraćaj, vraćanje prijave,
+  arhiviranje i zaokruživanje dubla. Testovi izveštaja pokrivaju HTML escaping,
+  CSV formule, navodnike, srpski tekst i krajeve redova.
+- Prihvatne specifikacije drži u `docs/specs/` i ažuriraj odgovarajuću
+  dokumentaciju na srpskom i engleskom kada se putanje, komande ili ponašanje promene.
+
+`npm test` pokreće sve frontend testove, `npm run test:watch` prati izmene,
+a `npm run test:cash` / `npm run test:reports` pokreću pojedinačnu grupu.
+Komande koriste Vitest u Node okruženju; Tauri i pokrenuta desktop aplikacija
+nisu potrebni.
 
 ## Naziv desktop aplikacije
 
@@ -126,6 +197,9 @@ Posle novih zavisnosti restartuj razvojnu komandu ako ih Vite ne prepozna.
 ## Provere
 
 ```sh
+npm run check
+npm test
+npm run build
 cargo fmt --all -- --check
 cargo test --workspace --exclude librett-desktop
 cargo clippy --workspace --exclude librett-desktop -- -D warnings
@@ -172,7 +246,7 @@ CARGO_TARGET_DIR=/tmp/librett-target cargo test --workspace --exclude librett-de
 ```
 
 Pogledaj [ADR 0001](../adr/0001-desktop-foundation.md) i
-[prihvatne scenarije](../../specs/tournament-setup.md).
+[prihvatne scenarije](../specs/tournament-setup.md).
 
 ## Blagajna
 

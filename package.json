@@ -3,7 +3,7 @@
   "version": "0.1.0-beta.1",
   "private": true,
   "license": "AGPL-3.0-or-later",
-  "author": "Aleksa Dimitrijević",
+  "author": "Aleksa Dimitrijevi\u0107",
   "workspaces": [
     "apps/desktop"
   ],
@@ -14,10 +14,12 @@
     "desktop:install-icon": "node scripts/install-linux-dev-icon.mjs",
     "desktop:generate-icons": "node scripts/generate-desktop-icons.mjs",
     "desktop": "npm run tauri --workspace @librett/desktop --",
-    "test:reports": "node scripts/verify-reports.mjs",
-    "test:cash": "node scripts/verify-cash.mjs",
+    "test:reports": "npm run test --workspace @librett/desktop -- src/lib/features/reports/report-format.test.ts",
+    "test:cash": "npm run test --workspace @librett/desktop -- src/lib/features/cash/cash-balance.test.ts",
     "test:core": "cargo test --workspace --exclude librett-desktop",
     "desktop:build": "npm run desktop -- build",
-    "desktop:collect": "node scripts/collect-installers.mjs"
+    "desktop:collect": "node scripts/collect-installers.mjs",
+    "test": "npm run test --workspace @librett/desktop",
+    "test:watch": "npm run test:watch --workspace @librett/desktop"
   }
 }
