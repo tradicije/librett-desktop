@@ -21,6 +21,7 @@ From the repository root:
 npm ci
 npm run check
 npm run build
+npm test
 npm run test:core
 npm run desktop -- dev
 ```
@@ -48,6 +49,74 @@ attendance is shared across categories in a tournament. Schema version 22 includ
 Back/Forward follows the active workspace’s screen history. The top Home button
 returns to the pinned mode-selection workspace. The mode chooser has no sidebar. Saves lock navigation until
 completion. Local administration currently has no login or enforced user roles.
+
+## Project layout and module rules
+
+```text
+apps/desktop/
+  src/
+    App.svelte                 application shell
+    main.ts, style.css         entry point and shared styles
+    lib/
+      api/                     typed Tauri calls and DTOs by feature
+      features/<feature>/      screens, feature components and helpers
+      components/              reusable UI controls and presentation
+      dialogs/                 dialogs and discard-confirmation service
+      utils/                   shared pure helpers
+      i18n.ts, theme.ts        language and theme services
+  src-tauri/src/
+    main.rs                    startup, native window setup and IPC registration
+    commands/                  Tauri command adapters by feature
+    state.rs                   shared database and print-report state
+    registry_http.rs           bounded registry downloads
+  vite.config.ts               Svelte and $lib alias configuration
+  vitest.config.ts             frontend tests, inheriting the Vite configuration
+crates/
+  domain/src/                  platform-independent competition rules
+  application/src/             feature operations, DTOs and repository contracts
+  storage-sqlite/
+    src/                       SQLite adapters and private unit tests
+    tests/                     integration tests using the public repository API
+      support/                 independent SQL connections and temporary databases
+      fixtures/                test data
+    migrations/                versioned SQLite migrations
+docs/specs/                    acceptance scenarios and business specifications
+docs/adr/                      architecture decisions
+```
+
+- Keep `App.svelte` as the shell. Put feature screens and their local helpers
+  under `src/lib/features/<feature>/`; put shared visual controls in
+  `components/` and dialogs in `dialogs/`. Do not grow a new flat `src/` directory.
+- `$lib` resolves to `apps/desktop/src/lib` in Vite, TypeScript, Svelte checking
+  and Vitest. Use `$lib/...` for cross-feature/shared imports; relative imports
+  are suitable for siblings inside one feature. Keep both alias definitions in
+  `vite.config.ts` and `tsconfig.json` consistent. Vitest inherits Vite's alias.
+- Import Tauri calls and related types from `$lib/api/<feature>`; use
+  `$lib/api/core` for desktop detection. `api/index.ts` keeps the public exports
+  available as a facade; implementations belong in their feature modules.
+  UI code must not access SQLite directly.
+- Tauri commands belong in `src-tauri/src/commands/<feature>.rs`; register them
+  in `main.rs`. Keep platform setup and shared state separate from commands.
+- Application operations, request/response types and repository traits belong
+  in the matching `crates/application/src/<feature>.rs`. Keep `lib.rs` focused
+  on module declarations and explicit public re-exports so existing consumers
+  keep their imports. Domain rules remain independent of adapters.
+- Storage integration tests belong in `crates/storage-sqlite/tests/` and use
+  the public repository API. Independent SQL connections may inspect persisted
+  state or inject failures. Keep checks of private connection-local behavior
+  as unit tests beside the implementation; do not expose internals for tests.
+- Put pure frontend regression tests beside their feature as `*.test.ts`.
+  Import the actual TypeScript module and `describe`, `it`, `expect` from
+  `vitest`; do not read source files and transpile them manually in scripts.
+  Cash tests cover arrival estimates, debt, withdrawal/refund, restoration,
+  archive status and doubles rounding. Report tests cover HTML escaping, CSV
+  formula protection, quoting, Serbian text and line endings.
+- Keep acceptance specifications in `docs/specs/` and update the relevant
+  English and Serbian documentation when paths, commands or behavior change.
+
+Run `npm test` for all frontend tests, `npm run test:watch` while editing, or
+`npm run test:cash` / `npm run test:reports` for a focused suite. These commands
+use Vitest in Node and do not require Tauri or a running desktop application.
 
 ## Desktop application name
 
@@ -122,13 +191,16 @@ See [Tauri GTK application ID configuration](https://v2.tauri.app/reference/conf
 Icons use the official `@tabler/icons-svelte` package. Only selected components
 are imported, rendered using `currentColor`, and bundled for offline use.
 Decorative icons accompany visible labels. There is no external icon-library
-folder requirement. Preserve [Tabler's MIT notice](../../docs/licenses/tabler-icons-MIT.txt)
+folder requirement. Preserve [Tabler's MIT notice](../licenses/tabler-icons-MIT.txt)
 when distributing the application. Restart the dev command after installing
 new dependencies if Vite does not pick them up.
 
 ## Checks
 
 ```sh
+npm run check
+npm test
+npm run build
 cargo fmt --all -- --check
 cargo test --workspace --exclude librett-desktop
 cargo clippy --workspace --exclude librett-desktop -- -D warnings
@@ -177,7 +249,7 @@ CARGO_TARGET_DIR=/tmp/librett-target cargo test --workspace --exclude librett-de
 ```
 
 See [ADR 0001](../adr/0001-desktop-foundation.md) and
-[setup scenarios](../../specs/tournament-setup.md).
+[setup scenarios](../specs/tournament-setup.md).
 
 ## Cash desk
 

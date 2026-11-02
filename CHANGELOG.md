@@ -4,6 +4,12 @@ Notable changes to LibreTT are recorded here in English.
 
 ## Unreleased
 
+### Developer tooling and layout
+
+- Split the frontend Tauri API into feature modules with a compatibility facade; organize screens and helpers under `src/lib/features/`, shared controls under `components/`, and dialogs under `dialogs/`, with a shared `$lib` alias for Vite, TypeScript and Vitest.
+- Replace standalone cash/report verification scripts with colocated Vitest regression suites. Add `npm test` and watch mode while retaining focused cash/report commands.
+- Document the frontend, Tauri command, application-layer and storage-test layout and module rules in English and Serbian; correct specification and license links after moving specifications to `docs/specs/`.
+
 ### Added — one-way registry import (2026-10-08)
 
 - Players directory HTTPS/file snapshot preview, explicit mappings/completion, conflict choices, optional photo fetch/crop and confirmation; Serbian/English UI.

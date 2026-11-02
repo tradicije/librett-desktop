@@ -42,6 +42,32 @@ Sve korisničke funkcije podržavaju srpski i engleski, uključujući validaciju
 i štampu. Koristi stabilne prevodne ključeve; prevedeni statusi se ne čuvaju
 kao domenski podaci. Nazivi koje korisnik unosi nisu prevodni tekstovi.
 
+## Struktura koda i testovi
+
+Prati [strukturu projekta i pravila modula](docs/sr/DEVELOPMENT.md#struktura-projekta-i-pravila-modula).
+
+- Frontend ekrane i pomoćne funkcije drži u `apps/desktop/src/lib/features/<feature>/`,
+  zajedničke kontrole u `components/`, dijaloge u `dialogs/`, a tipizovane IPC
+  pozive u `api/<feature>.ts`. Između modula koristi `$lib/...` i uskladi Vite
+  i TypeScript alias.
+- Tauri komande pripadaju `src-tauri/src/commands/`, pokretanje `main.rs` fajlu,
+  a zajedničko desktop stanje `state.rs` fajlu. Operacije i ugovori aplikacije
+  pripadaju modulima uz eksplicitne javne izvoze iz `application/src/lib.rs`.
+- Storage integracioni testovi pripadaju `crates/storage-sqlite/tests/`, koriste
+  javni API i izolovane baze. Provere privatne konekcije ostaju jedinični testovi;
+  nemoj širiti vidljivost produkcionog koda samo radi pristupa iz testova.
+- Frontend regresione testove piši uz odgovarajući modul kao `*.test.ts` i
+  pokreći kroz Vitest. Uvozi stvarni TypeScript kod bez skripti koje čitaju
+  izvore. `npm test` pokreće sve testove, `npm run test:watch` prati izmene,
+  a `npm run test:cash` i `npm run test:reports` pokreću pojedinačne grupe.
+- Prihvatne specifikacije pripadaju `docs/specs/`, a arhitektonske odluke
+  `docs/adr/`. Kada menjaš strukturu, pravila modula ili komande za proveru,
+  ažuriraj razvojna uputstva i uputstva za doprinos na oba jezika.
+
+Pre pregleda pokreni `npm run check`, `npm test`, `npm run build`,
+`cargo fmt --all --check` i `npm run test:core`. Uz sistemske zavisnosti pokreni
+i `cargo check --locked --workspace` i `cargo test --locked --workspace`.
+
 ## Provera i pregled
 
 Kada implementacija počne, dodaj smislene testove poslovnih pravila i regresija.
